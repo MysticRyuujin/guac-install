@@ -22,12 +22,12 @@ echo "GUACAMOLE_HOME=/etc/guacamole" >> /etc/default/tomcat8
 wget -O guacamole-0.9.9.war http://downloads.sourceforge.net/project/guacamole/current/binary/guacamole-0.9.9.war
 wget -O guacamole-server-0.9.9.tar.gz http://sourceforge.net/projects/guacamole/files/current/source/guacamole-server-0.9.9.tar.gz
 wget -O guacamole-auth-jdbc-0.9.9.tar.gz http://sourceforge.net/projects/guacamole/files/current/extensions/guacamole-auth-jdbc-0.9.9.tar.gz
-wget -O mysql-connector-java-5.1.38.tar.gz http://dev.mysql.com/get/Downloads/Connector/j/mysql-connector-java-5.1.38.tar.gz
+wget -O mysql-connector-java-5.1.39.tar.gz http://dev.mysql.com/get/Downloads/Connector/j/mysql-connector-java-5.1.39.tar.gz
 
 #Extract Guacamole Files
 tar -xzf guacamole-server-0.9.9.tar.gz
 tar -xzf guacamole-auth-jdbc-0.9.9.tar.gz
-tar -xzf mysql-connector-java-5.1.38.tar.gz
+tar -xzf mysql-connector-java-5.1.39.tar.gz
 
 # MAKE DIRECTORIES
 mkdir /etc/guacamole
@@ -47,7 +47,7 @@ cd ..
 mv guacamole-0.9.9.war /etc/guacamole/guacamole.war
 ln -s /etc/guacamole/guacamole.war /var/lib/tomcat8/webapps/
 ln -s /usr/local/lib/freerdp/* /usr/lib/x86_64-linux-gnu/freerdp/.
-cp mysql-connector-java-5.1.38/mysql-connector-java-5.1.38-bin.jar /etc/guacamole/lib/
+cp mysql-connector-java-5.1.39/mysql-connector-java-5.1.39-bin.jar /etc/guacamole/lib/
 cp guacamole-auth-jdbc-0.9.9/mysql/guacamole-auth-jdbc-mysql-0.9.9.jar /etc/guacamole/extensions/
 
 # Configure guacamole.properties
@@ -62,20 +62,16 @@ ln -s /etc/guacamole /usr/share/tomcat8/.guacamole
 # restart tomcat
 service tomcat8 restart
 
-mysql -u root -p$mysqlrootpassword
-create database guacamole_db;
-create user 'guacamole_user'@'localhost' identified by "$guacdbuserpassword";
-GRANT SELECT,INSERT,UPDATE,DELETE ON guacamole_db.* TO 'guacamole_user'@'localhost';
-flush privileges;
-quit
+# Create guacamole_db and grant guacamole_user permissions to it
+echo "create database guacamole_db; create user 'guacamole_user'@'localhost' identified by \"$guacdbuserpassword\";GRANT SELECT,INSERT,UPDATE,DELETE ON guacamole_db.* TO 'guacamole_user'@'localhost';flush privileges;" | mysql -u root -p$mysqlrootpassword
 
 cat guacamole-auth-jdbc-0.9.9/mysql/schema/*.sql | mysql -u root -p$mysqlrootpassword guacamole_db
 
 rm libjpeg-turbo-official_1.5.0_amd64.deb
 rm guacamole-server-0.9.9.tar.gz
 rm guacamole-auth-jdbc-0.9.9.tar.gz
-rm mysql-connector-java-5.1.38.tar.gz
+rm mysql-connector-java-5.1.39.tar.gz
 
-rm -rf mysql-connector-java-5.1.38/
+rm -rf mysql-connector-java-5.1.39/
 rm -rf guacamole-auth-jdbc-0.9.9/
 rm -rf guacamole-server-0.9.9/
