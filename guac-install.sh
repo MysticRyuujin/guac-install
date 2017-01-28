@@ -9,7 +9,11 @@ debconf-set-selections <<< "mysql-server mysql-server/root_password_again passwo
 read -s -p "Enter the password that will be used for the Guacamole database: " guacdbuserpassword
 
 # Install Features
-apt-get -y install libcairo2-dev libjpeg-turbo8-dev libpng12-dev libossp-uuid-dev libavcodec-dev libavutil-dev libswscale-dev libfreerdp-dev libpango1.0-dev libssh2-1-dev libtelnet-dev libvncserver-dev libpulse-dev libssl-dev libvorbis-dev libwebp-dev mysql-server mysql-client mysql-common mysql-utilities tomcat8 freerdp ghostscript jq wget curl
+apt-get -y install libcairo2-dev libjpeg-turbo8-dev libpng12-dev libossp-uuid-dev libavcodec-dev libavutil-dev \
+libswscale-dev libfreerdp-dev libpango1.0-dev libssh2-1-dev libtelnet-dev libvncserver-dev libpulse-dev libssl-dev \
+libvorbis-dev libwebp-dev mysql-server mysql-client mysql-common mysql-utilities tomcat8 freerdp ghostscript jq wget curl
+
+# If Apt-Get fails to run completely the rest of this isn't going to work...
 if [ $? != 0 ]
 then
     echo "apt-get failed to install all required dependencies. Are you on Ubuntu 16.04.01 LTS?"
@@ -67,9 +71,20 @@ ln -s /etc/guacamole /usr/share/tomcat8/.guacamole
 service tomcat8 restart
 
 # Create guacamole_db and grant guacamole_user permissions to it
-echo "create database guacamole_db; create user 'guacamole_user'@'localhost' identified by \"$guacdbuserpassword\";GRANT SELECT,INSERT,UPDATE,DELETE ON guacamole_db.* TO 'guacamole_user'@'localhost';flush privileges;" | mysql -u root -p$mysqlrootpassword
 
+# SQL Code
+SQLCODE="
+create database guacamole_db;
+create user 'guacamole_user'@'localhost' identified by \"$guacdbuserpassword\";
+GRANT SELECT,INSERT,UPDATE,DELETE ON guacamole_db.* TO 'guacamole_user'@'localhost';
+flush privileges;"
+
+# Execute SQL Code
+echo $SQLCODE | mysql -u root -p$mysqlrootpassword
+
+# Add Guacamole Schema to newly created database
 cat guacamole-auth-jdbc-0.9.10-incubating/mysql/schema/*.sql | mysql -u root -p$mysqlrootpassword guacamole_db
 
+# Cleanup
 rm -rf guacamole-*
 rm -rf mysql-connector-java-5.1.40*
