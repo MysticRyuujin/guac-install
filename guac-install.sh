@@ -34,7 +34,7 @@ wget $SERVER/incubator/guacamole/$VERSION-incubating/binary/guacamole-$VERSION-i
 wget $SERVER/incubator/guacamole/$VERSION-incubating/binary/guacamole-auth-jdbc-$VERSION-incubating.tar.gz
 wget https://dev.mysql.com/get/Downloads/Connector-J/mysql-connector-java-5.1.40.tar.gz
 
-#Extract Guacamole Files
+# Extract Guacamole Files
 tar -xzf guacamole-server-$VERSION-incubating.tar.gz
 tar -xzf guacamole-auth-jdbc-$VERSION-incubating.tar.gz
 tar -xzf mysql-connector-java-5.1.40.tar.gz
@@ -77,8 +77,8 @@ service tomcat8 restart
 # SQL Code
 SQLCODE="
 create database guacamole_db;
-create user 'guacamole_user'@'localhost' identified by \"$guacdbuserpassword\";
-GRANT SELECT,INSERT,UPDATE,DELETE ON guacamole_db.* TO 'guacamole_user'@'localhost';
+create user 'guacamole_user'@'%' identified by \"$guacdbuserpassword\";
+GRANT SELECT,INSERT,UPDATE,DELETE ON guacamole_db.* TO 'guacamole_user'@'%';
 flush privileges;"
 
 # Execute SQL Code
