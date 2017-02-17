@@ -77,8 +77,8 @@ service tomcat8 restart
 # SQL Code
 SQLCODE="
 create database guacamole_db;
-create user 'guacamole_user'@'%' identified by \"$guacdbuserpassword\";
-GRANT SELECT,INSERT,UPDATE,DELETE ON guacamole_db.* TO 'guacamole_user'@'%';
+create user 'guacamole_user'@'localhost' identified by \"$guacdbuserpassword\";
+GRANT SELECT,INSERT,UPDATE,DELETE ON guacamole_db.* TO 'guacamole_user'@'localhost';
 flush privileges;"
 
 # Execute SQL Code
