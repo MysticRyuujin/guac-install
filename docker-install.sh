@@ -7,7 +7,8 @@ read -s -p "Enter the password that will be used for MySQL Root: " MYSQLROOTPASS
 read -s -p "Enter the password that will be used for the Guacamole database: " GUACDBUSERPASSWORD
 
 #Install Stuff
-apt-get install docker.io mysql-client wget jq curl
+apt-get update
+apt-get install build-essential docker.io mysql-client wget jq curl
 
 # Download the guacamole auth files for MySQL
 SERVER=$(curl -s 'https://www.apache.org/dyn/closer.cgi?as_json=1' | jq --raw-output '.preferred')
