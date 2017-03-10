@@ -1,5 +1,5 @@
-VERSION = "0.9.11"
-SERVER=$(curl -s 'https://www.apache.org/dyn/closer.cgi?as_json=1' | jq --raw-output '.preferred')
+VERSION="0.9.11"
+SERVER=$(curl -s 'https://www.apache.org/dyn/closer.cgi?as_json=1' | jq --raw-output '.preferred|rtrimstr("/")')
 
 # Stop Tomcat
 service tomcat8 stop
