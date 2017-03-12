@@ -1,6 +1,7 @@
 #!/bin/bash
 
 VERSION="0.9.11"
+SERVER=$(curl -s 'https://www.apache.org/dyn/closer.cgi?as_json=1' | jq --raw-output '.preferred|rtrimstr("/")')
 
 # Grab a password for MySQL Root
 read -s -p "Enter the password that will be used for MySQL Root: " mysqlrootpassword
@@ -19,7 +20,7 @@ libvorbis-dev libwebp-dev mysql-server mysql-client mysql-common mysql-utilities
 # If Apt-Get fails to run completely the rest of this isn't going to work...
 if [ $? != 0 ]
 then
-    echo "apt-get failed to install all required dependencies. Are you on Ubuntu 16.04.01 LTS?"
+    echo "apt-get failed to install all required dependencies. Are you on Ubuntu 16.04 LTS?"
     exit
 fi
 
@@ -29,16 +30,15 @@ echo "# GUACAMOLE EVN VARIABLE" >> /etc/default/tomcat8
 echo "GUACAMOLE_HOME=/etc/guacamole" >> /etc/default/tomcat8
 
 # Download Guacample Files
-SERVER=$(curl -s 'https://www.apache.org/dyn/closer.cgi?as_json=1' | jq --raw-output '.preferred')
-wget $SERVER/incubator/guacamole/$VERSION-incubating/source/guacamole-server-$VERSION-incubating.tar.gz
-wget $SERVER/incubator/guacamole/$VERSION-incubating/binary/guacamole-$VERSION-incubating.war
-wget $SERVER/incubator/guacamole/$VERSION-incubating/binary/guacamole-auth-jdbc-$VERSION-incubating.tar.gz
-wget https://dev.mysql.com/get/Downloads/Connector-J/mysql-connector-java-5.1.40.tar.gz
+wget ${SERVER}/incubator/guacamole/${VERSION}-incubating/source/guacamole-server-${VERSION}-incubating.tar.gz
+wget ${SERVER}/incubator/guacamole/${VERSION}-incubating/binary/guacamole-${VERSION}-incubating.war
+wget ${SERVER}/incubator/guacamole/${VERSION}-incubating/binary/guacamole-auth-jdbc-${VERSION}-incubating.tar.gz
+wget https://dev.mysql.com/get/Downloads/Connector-J/mysql-connector-java-5.1.41.tar.gz
 
 # Extract Guacamole Files
-tar -xzf guacamole-server-$VERSION-incubating.tar.gz
-tar -xzf guacamole-auth-jdbc-$VERSION-incubating.tar.gz
-tar -xzf mysql-connector-java-5.1.40.tar.gz
+tar -xzf guacamole-server-${VERSION}-incubating.tar.gz
+tar -xzf guacamole-auth-jdbc-${VERSION}-incubating.tar.gz
+tar -xzf mysql-connector-java-5.1.41.tar.gz
 
 # MAKE DIRECTORIES
 mkdir /etc/guacamole
@@ -46,7 +46,7 @@ mkdir /etc/guacamole/lib
 mkdir /etc/guacamole/extensions
 
 # Install GUACD
-cd guacamole-server-$VERSION-incubating
+cd guacamole-server-${VERSION}-incubating
 ./configure --with-init-dir=/etc/init.d
 make
 make install
@@ -55,11 +55,11 @@ systemctl enable guacd
 cd ..
 
 # Move files to correct locations
-mv guacamole-$VERSION-incubating.war /etc/guacamole/guacamole.war
+mv guacamole-${VERSION}-incubating.war /etc/guacamole/guacamole.war
 ln -s /etc/guacamole/guacamole.war /var/lib/tomcat8/webapps/
 ln -s /usr/local/lib/freerdp/* /usr/lib/x86_64-linux-gnu/freerdp/.
-cp mysql-connector-java-5.1.40/mysql-connector-java-5.1.40-bin.jar /etc/guacamole/lib/
-cp guacamole-auth-jdbc-$VERSION-incubating/mysql/guacamole-auth-jdbc-mysql-$VERSION-incubating.jar /etc/guacamole/extensions/
+cp mysql-connector-java-5.1.41/mysql-connector-java-5.1.41-bin.jar /etc/guacamole/lib/
+cp guacamole-auth-jdbc-${VERSION}-incubating/mysql/guacamole-auth-jdbc-mysql-${VERSION}-incubating.jar /etc/guacamole/extensions/
 
 # Configure guacamole.properties
 echo "mysql-hostname: localhost" >> /etc/guacamole/guacamole.properties
@@ -86,8 +86,8 @@ flush privileges;"
 echo $SQLCODE | mysql -u root -p$mysqlrootpassword
 
 # Add Guacamole Schema to newly created database
-cat guacamole-auth-jdbc-$VERSION-incubating/mysql/schema/*.sql | mysql -u root -p$mysqlrootpassword guacamole_db
+cat guacamole-auth-jdbc-${VERSION}-incubating/mysql/schema/*.sql | mysql -u root -p$mysqlrootpassword guacamole_db
 
 # Cleanup
 rm -rf guacamole-*
-rm -rf mysql-connector-java-5.1.40*
+rm -rf mysql-connector-java-5.1.41*
