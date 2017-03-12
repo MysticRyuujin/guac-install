@@ -5,13 +5,17 @@ Run script, enter MySQL Root Password and Guacample User password. Guacamole Use
 
 How to Run
 Download file directly from here:
-wget https://raw.githubusercontent.com/MysticRyuujin/guac-install/master/guac-install.sh
+
+<code>wget https://raw.githubusercontent.com/MysticRyuujin/guac-install/master/guac-install.sh</code>
 
 Make it executable:
-chmod +x guac-install.sh
+
+<code>chmod +x guac-install.sh</code>
 
 Convert it to Linux format (may need to install dos2unix via apt-get):
-dos2unix guac-install.sh
+
+<code>dos2unix guac-install.sh</code>
 
 Run it as root:
-./guac-install.sh
+
+<code>./guac-install.sh</code>
