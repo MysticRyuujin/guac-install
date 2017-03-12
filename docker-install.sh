@@ -2,6 +2,7 @@
 # WORKING ON UBUNTU 16.04.1 LTS
 
 VERSION="0.9.11"
+SERVER=$(curl -s 'https://www.apache.org/dyn/closer.cgi?as_json=1' | jq --raw-output '.preferred|rtrimstr("/")')
 
 read -s -p "Enter the password that will be used for MySQL Root: " MYSQLROOTPASSWORD
 read -s -p "Enter the password that will be used for the Guacamole database: " GUACDBUSERPASSWORD
@@ -11,8 +12,7 @@ apt-get update
 apt-get install docker.io mysql-client wget jq curl
 
 # Download the guacamole auth files for MySQL
-SERVER=$(curl -s 'https://www.apache.org/dyn/closer.cgi?as_json=1' | jq --raw-output '.preferred')
-wget $SERVER/incubator/guacamole/${VERSION}-incubating/binary/guacamole-auth-jdbc-${VERSION}-incubating.tar.gz
+wget ${SERVER}/incubator/guacamole/${VERSION}-incubating/binary/guacamole-auth-jdbc-${VERSION}-incubating.tar.gz
 tar -xzf guacamole-auth-jdbc-${VERSION}-incubating.tar.gz
 
 # Start MySQL
