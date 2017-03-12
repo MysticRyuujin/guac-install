@@ -1,5 +1,5 @@
 #!/bin/bash
-# WORKING ON UBUNTU 16.04.1 LTS
+# WORKING ON UBUNTU 16.04 LTS
 
 VERSION="0.9.11"
 SERVER=$(curl -s 'https://www.apache.org/dyn/closer.cgi?as_json=1' | jq --raw-output '.preferred|rtrimstr("/")')
