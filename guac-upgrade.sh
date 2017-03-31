@@ -17,7 +17,7 @@ cd ..
 
 # Download and replace Guacamole Client
 wget ${SERVER}/incubator/guacamole/${VERSION}-incubating/binary/guacamole-${VERSION}-incubating.war
-mv guacamole-0.9.11-incubating.war /etc/guacamole/guacamole.war
+mv guacamole-${VERSION}-incubating.war /etc/guacamole/guacamole.war
 
 # Download and upgrade SQL components
 wget ${SERVER}/incubator/guacamole/${VERSION}-incubating/binary/guacamole-auth-jdbc-${VERSION}-incubating.tar.gz
