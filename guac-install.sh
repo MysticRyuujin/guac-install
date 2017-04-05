@@ -1,6 +1,6 @@
 #!/bin/bash
 
-VERSION="0.9.11"
+VERSION="0.9.12"
 
 # Grab a password for MySQL Root
 read -s -p "Enter the password that will be used for MySQL Root: " mysqlrootpassword
