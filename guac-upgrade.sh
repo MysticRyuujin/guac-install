@@ -24,7 +24,8 @@ wget ${SERVER}/incubator/guacamole/${VERSION}-incubating/binary/guacamole-auth-j
 tar -xzf guacamole-auth-jdbc-${VERSION}-incubating.tar.gz
 cp guacamole-auth-jdbc-${VERSION}-incubating/mysql/guacamole-auth-jdbc-mysql-${VERSION}-incubating.jar /etc/guacamole/extensions/
 
-mysql -u root -p guacamole_db < guacamole-auth-jdbc-${VERSION}-incubating/mysql/schema/upgrade/upgrade-pre-${VERSION}.sql
+# Commented out this lines as there is no schema upgrade from 0.9.11 to 0.9.12
+# mysql -u root -p guacamole_db < guacamole-auth-jdbc-${VERSION}-incubating/mysql/schema/upgrade/upgrade-pre-${VERSION}.sql
 
 # Start Tomcat
 service tomcat8 start
