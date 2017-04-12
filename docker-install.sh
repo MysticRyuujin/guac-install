@@ -1,7 +1,7 @@
 #!/bin/bash
 # WORKING ON UBUNTU 16.04 LTS
 
-VERSION="0.9.11"
+VERSION="0.9.12"
 SERVER=$(curl -s 'https://www.apache.org/dyn/closer.cgi?as_json=1' | jq --raw-output '.preferred|rtrimstr("/")')
 
 read -s -p "Enter the password that will be used for MySQL Root: " MYSQLROOTPASSWORD
