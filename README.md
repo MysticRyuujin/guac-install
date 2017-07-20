@@ -13,10 +13,6 @@ Make it executable:
 
 <code>chmod +x guac-install.sh</code>
 
-Convert it to Linux format (may need to install dos2unix via apt-get):
-
-<code>dos2unix guac-install.sh</code>
-
 Run it as root:
 
 <code>./guac-install.sh</code>
