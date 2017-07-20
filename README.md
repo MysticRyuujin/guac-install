@@ -20,3 +20,6 @@ Convert it to Linux format (may need to install dos2unix via apt-get):
 Run it as root:
 
 <code>./guac-install.sh</code>
+
+Once installation is done you can access guacamole by browsing to: http://myserverip:8080/guacamole/
+The default credentials are guacadmin as both username and password.
