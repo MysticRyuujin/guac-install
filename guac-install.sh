@@ -1,6 +1,8 @@
 #!/bin/bash
 
+# Version Numbers of Guacamole and MySQL Connection/J to download
 VERSION="0.9.12"
+MCJVERSION = "5.1.43"
 
 # Grab a password for MySQL Root
 read -s -p "Enter the password that will be used for MySQL Root: " mysqlrootpassword
@@ -34,12 +36,12 @@ echo "GUACAMOLE_HOME=/etc/guacamole" >> /etc/default/tomcat8
 wget ${SERVER}/incubator/guacamole/${VERSION}-incubating/source/guacamole-server-${VERSION}-incubating.tar.gz
 wget ${SERVER}/incubator/guacamole/${VERSION}-incubating/binary/guacamole-${VERSION}-incubating.war
 wget ${SERVER}/incubator/guacamole/${VERSION}-incubating/binary/guacamole-auth-jdbc-${VERSION}-incubating.tar.gz
-wget https://dev.mysql.com/get/Downloads/Connector-J/mysql-connector-java-5.1.41.tar.gz
+wget https://dev.mysql.com/get/Downloads/Connector-J/mysql-connector-java-${MCJVERSION}.tar.gz
 
 # Extract Guacamole Files
 tar -xzf guacamole-server-${VERSION}-incubating.tar.gz
 tar -xzf guacamole-auth-jdbc-${VERSION}-incubating.tar.gz
-tar -xzf mysql-connector-java-5.1.41.tar.gz
+tar -xzf mysql-connector-java-${MCJVERSION}.tar.gz
 
 # MAKE DIRECTORIES
 mkdir /etc/guacamole
@@ -59,7 +61,7 @@ cd ..
 mv guacamole-${VERSION}-incubating.war /etc/guacamole/guacamole.war
 ln -s /etc/guacamole/guacamole.war /var/lib/tomcat8/webapps/
 ln -s /usr/local/lib/freerdp/* /usr/lib/x86_64-linux-gnu/freerdp/.
-cp mysql-connector-java-5.1.41/mysql-connector-java-5.1.41-bin.jar /etc/guacamole/lib/
+cp mysql-connector-java-${MCJVERSION}/mysql-connector-java-${MCJVERSION}-bin.jar /etc/guacamole/lib/
 cp guacamole-auth-jdbc-${VERSION}-incubating/mysql/guacamole-auth-jdbc-mysql-${VERSION}-incubating.jar /etc/guacamole/extensions/
 
 # Configure guacamole.properties
@@ -91,4 +93,4 @@ cat guacamole-auth-jdbc-${VERSION}-incubating/mysql/schema/*.sql | mysql -u root
 
 # Cleanup
 rm -rf guacamole-*
-rm -rf mysql-connector-java-5.1.41*
+rm -rf mysql-connector-java-${MCJVERSION}*
