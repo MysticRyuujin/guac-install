@@ -6,7 +6,7 @@ VERSION="0.9.12"
 apt-get update
 apt-get -y install build-essential libcairo2-dev libjpeg-turbo8-dev libpng12-dev libossp-uuid-dev libavcodec-dev libavutil-dev \
 libswscale-dev libfreerdp-dev libpango1.0-dev libssh2-1-dev libtelnet-dev libvncserver-dev libpulse-dev libssl-dev \
-libvorbis-dev libwebp-dev jq
+libvorbis-dev libwebp-dev jq curl wget
 
 # If Apt-Get fails to run completely the rest of this isn't going to work...
 if [ $? != 0 ]
