@@ -32,7 +32,7 @@ echo $SQLCODE | mysql -h 127.0.0.1 -P 3306 -u root -p$MYSQLROOTPASSWORD
 
 cat guacamole-auth-jdbc-${VERSION}-incubating/mysql/schema/*.sql | mysql -u root -p$MYSQLROOTPASSWORD -h 127.0.0.1 -P 3306 guacamole_db
 
-docker run --restart=always --name guacd -d glyptodon/guacd
-docker run --restart=always --name guacamole  --link mysql:mysql --link guacd:guacd -e MYSQL_HOSTNAME=127.0.0.1 -e MYSQL_DATABASE=guacamole_db -e MYSQL_USER=guacamole_user -e MYSQL_PASSWORD=$GUACDBUSERPASSWORD --detach -p 8080:8080 glyptodon/guacamole
+docker run --restart=always --name guacd -d guacamole/guacd
+docker run --restart=always --name guacamole  --link mysql:mysql --link guacd:guacd -e MYSQL_HOSTNAME=127.0.0.1 -e MYSQL_DATABASE=guacamole_db -e MYSQL_USER=guacamole_user -e MYSQL_PASSWORD=$GUACDBUSERPASSWORD --detach -p 8080:8080 guacamole/guacamole
 
 rm -rf guacamole-auth-jdbc-${VERSION}-incubating*
