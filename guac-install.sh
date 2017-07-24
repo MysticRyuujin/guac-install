@@ -2,7 +2,7 @@
 
 # Version Numbers of Guacamole and MySQL Connection/J to download
 VERSION="0.9.12"
-MCJVERSION = "5.1.43"
+MCJVERSION="5.1.43"
 
 # Grab a password for MySQL Root
 read -s -p "Enter the password that will be used for MySQL Root: " mysqlrootpassword
