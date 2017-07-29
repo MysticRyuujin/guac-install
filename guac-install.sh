@@ -22,9 +22,9 @@ fi
 
 # Install Features
 apt-get update
-apt-get -y install build-essential libcairo2-dev libpng12-dev libossp-uuid-dev libavcodec-dev libavutil-dev libswscale-dev \
-libfreerdp-dev libpango1.0-dev libssh2-1-dev libtelnet-dev libvncserver-dev libpulse-dev libssl-dev libvorbis-dev libwebp-dev \
-mysql-server mysql-client mysql-common mysql-utilities tomcat8 freerdp ghostscript jq wget curl $JPEGTURBO
+apt-get -y install build-essential libcairo2-dev $JPEGTURBO libpng12-dev libossp-uuid-dev libavcodec-dev libavutil-dev \
+libswscale-dev libfreerdp-dev libpango1.0-dev libssh2-1-dev libtelnet-dev libvncserver-dev libpulse-dev libssl-dev \
+libvorbis-dev libwebp-dev mysql-server mysql-client mysql-common mysql-utilities tomcat8 freerdp ghostscript jq wget curl
 
 # If Apt-Get fails to run completely the rest of this isn't going to work...
 if [ $? != 0 ]
