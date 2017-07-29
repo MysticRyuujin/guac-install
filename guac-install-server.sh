@@ -2,16 +2,24 @@
 
 VERSION="0.9.12"
 
+# Ubuntu and Debian have different names of the libjpeg-turbo library for some reason...
+if [ `egrep -c "ID=ubuntu" /etc/os-release` -gt 0 ]
+then
+    JPEGTURBO="libjpeg-turbo8-dev"
+else
+    JPEGTURBO="libjpeg62-turbo-dev"
+fi
+
 # Install Server Features
 apt-get update
-apt-get -y install build-essential libcairo2-dev libjpeg-turbo8-dev libpng12-dev libossp-uuid-dev libavcodec-dev libavutil-dev \
+apt-get -y install build-essential libcairo2-dev $JPEGTURBO libpng12-dev libossp-uuid-dev libavcodec-dev libavutil-dev \
 libswscale-dev libfreerdp-dev libpango1.0-dev libssh2-1-dev libtelnet-dev libvncserver-dev libpulse-dev libssl-dev \
 libvorbis-dev libwebp-dev jq curl wget
 
 # If Apt-Get fails to run completely the rest of this isn't going to work...
 if [ $? != 0 ]
 then
-    echo "apt-get failed to install all required dependencies. Are you on Ubuntu 16.04 LTS?"
+    echo "apt-get failed to install all required dependencies."
     exit
 fi
 
