@@ -29,7 +29,7 @@ libvorbis-dev libwebp-dev mysql-server mysql-client mysql-common mysql-utilities
 # If Apt-Get fails to run completely the rest of this isn't going to work...
 if [ $? != 0 ]
 then
-    echo "apt-get failed to install all required dependencies.
+    echo "apt-get failed to install all required dependencies"
     exit
 fi
 
