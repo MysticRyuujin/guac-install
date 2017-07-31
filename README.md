@@ -17,5 +17,5 @@ Run it as root:
 
 <code>./guac-install.sh</code>
 
-Once installation is done you can access guacamole by browsing to: http://myserverip:8080/guacamole/
-The default credentials are guacadmin as both username and password.
+Once installation is done you can access guacamole by browsing to: http://<host_or_ip>:8080/guacamole/
+The default credentials are guacadmin as both username and password. Please change them or disable guacadmin after install!
