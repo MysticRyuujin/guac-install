@@ -1,6 +1,6 @@
 #!/bin/bash
 
-VERSION="0.9.12"
+VERSION="0.9.13"
 
 # Ubuntu and Debian have different names of the libjpeg-turbo library for some reason...
 if [ `egrep -c "ID=ubuntu" /etc/os-release` -gt 0 ]
