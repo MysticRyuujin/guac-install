@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Version Numbers of Guacamole and MySQL Connection/J to download
-VERSION="0.9.12"
+VERSION="0.9.13"
 MCJVERSION="5.1.43"
 
 # Grab a password for MySQL Root

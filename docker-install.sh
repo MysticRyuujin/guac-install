@@ -1,7 +1,7 @@
 #!/bin/bash
 # WORKING ON UBUNTU 16.04 LTS
 
-VERSION="0.9.12"
+VERSION="0.9.13"
 
 read -s -p "Enter the password that will be used for MySQL Root: " MYSQLROOTPASSWORD
 read -s -p "Enter the password that will be used for the Guacamole database: " GUACDBUSERPASSWORD

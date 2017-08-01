@@ -1,5 +1,5 @@
 # Version Numbers of Guacamole and MySQL Connection/J to download
-VERSION="0.9.12"
+VERSION="0.9.13"
 MCJVERSION = "5.1.43"
 
 SERVER=$(curl -s 'https://www.apache.org/dyn/closer.cgi?as_json=1' | jq --raw-output '.preferred|rtrimstr("/")')
