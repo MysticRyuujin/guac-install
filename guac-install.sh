@@ -16,6 +16,9 @@ else
     TOMCAT="tomcat6"
 fi
 
+# If you want to force a specific tomcat install and not go with the newest just set it here and uncomment:
+#TOMCAT=""
+
 # Grab a password for MySQL Root
 read -s -p "Enter the password that will be used for MySQL Root: " mysqlrootpassword
 debconf-set-selections <<< "mysql-server mysql-server/root_password password $mysqlrootpassword"
