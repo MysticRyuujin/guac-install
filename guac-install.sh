@@ -68,7 +68,7 @@ cd ..
 # Move files to correct locations
 mv guacamole-${VERSION}-incubating.war /etc/guacamole/guacamole.war
 ln -s /etc/guacamole/guacamole.war /var/lib/tomcat8/webapps/
-ln -s /usr/local/lib/freerdp/* /usr/lib/x86_64-linux-gnu/freerdp/.
+ln -s /usr/local/lib/freerdp/* /usr/lib/$ARCH-linux-gnu/freerdp/.
 cp mysql-connector-java-${MCJVERSION}/mysql-connector-java-${MCJVERSION}-bin.jar /etc/guacamole/lib/
 cp guacamole-auth-jdbc-${VERSION}-incubating/mysql/guacamole-auth-jdbc-mysql-${VERSION}-incubating.jar /etc/guacamole/extensions/
 
