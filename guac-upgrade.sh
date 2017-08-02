@@ -4,10 +4,13 @@
 VERSION="0.9.13"
 MCJVERSION="5.1.43"
 
+# I'm assuming tomcat8, you can change it here...
+TOMCAT="tomcat8"
+
 SERVER=$(curl -s 'https://www.apache.org/dyn/closer.cgi?as_json=1' | jq --raw-output '.preferred|rtrimstr("/")')
 
 # Stop Tomcat
-service tomcat8 stop
+service ${TOMCAT} stop
 
 # Download and install Guacamole Server
 wget ${SERVER}/incubator/guacamole/${VERSION}-incubating/source/guacamole-server-${VERSION}-incubating.tar.gz
@@ -42,7 +45,7 @@ then
 fi
 
 # Start Tomcat
-service tomcat8 start
+service ${TOMCAT} start
 
 # Cleanup
 rm -rf guacamole*
