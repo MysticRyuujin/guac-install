@@ -21,9 +21,9 @@ fi
 
 # Grab a password for MySQL Root
 read -s -p "Enter the password that will be used for MySQL Root: " mysqlrootpassword
+echo
 debconf-set-selections <<< "mysql-server mysql-server/root_password password $mysqlrootpassword"
 debconf-set-selections <<< "mysql-server mysql-server/root_password_again password $mysqlrootpassword"
-echo
 
 # Grab a password for Guacamole Database User Account
 read -s -p "Enter the password that will be used for the Guacamole database: " guacdbuserpassword
