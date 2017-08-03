@@ -37,8 +37,8 @@ else
     JPEGTURBO="libjpeg62-turbo-dev"
 fi
 
-# Get architecture - 32 bit or 64 bit
-if [ $(getconf LONG_BIT | grep 64) ]; then ARCH="x86_64";  else ARCH="i386"; fi
+# Get build-folder
+BUILD_FOLDER=$(dpkg-architecture -qDEB_BUILD_GNU_TYPE)
 
 # Install Features
 apt-get -qq -y install build-essential libcairo2-dev ${JPEGTURBO} libpng12-dev libossp-uuid-dev libavcodec-dev libavutil-dev \
@@ -86,7 +86,7 @@ cd ..
 # Move files to correct locations
 mv guacamole-${VERSION}-incubating.war /etc/guacamole/guacamole.war
 ln -s /etc/guacamole/guacamole.war /var/lib/${TOMCAT}/webapps/
-ln -s /usr/local/lib/freerdp/* /usr/lib/$ARCH-linux-gnu/freerdp/.
+ln -s /usr/local/lib/freerdp/guac*.so /usr/lib/$BUILD_FOLDER/freerdp/
 cp mysql-connector-java-${MCJVERSION}/mysql-connector-java-${MCJVERSION}-bin.jar /etc/guacamole/lib/
 cp guacamole-auth-jdbc-${VERSION}-incubating/mysql/guacamole-auth-jdbc-mysql-${VERSION}-incubating.jar /etc/guacamole/extensions/
 
