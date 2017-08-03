@@ -4,11 +4,13 @@
 VERSION="0.9.13"
 
 read -s -p "Enter the password that will be used for MySQL Root: " MYSQLROOTPASSWORD
+echo
 read -s -p "Enter the password that will be used for the Guacamole database: " GUACDBUSERPASSWORD
+echo
 
 #Install Stuff
 apt-get update
-apt-get install docker.io mysql-client wget jq curl
+apt-get -qq -y install docker.io mysql-client wget jq curl
 
 # Get perfered download server
 SERVER=$(curl -s 'https://www.apache.org/dyn/closer.cgi?as_json=1' | jq --raw-output '.preferred|rtrimstr("/")')
