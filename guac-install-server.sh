@@ -12,7 +12,7 @@ fi
 
 # Install Server Features
 apt-get update
-apt-get -y install build-essential libcairo2-dev $JPEGTURBO libpng12-dev libossp-uuid-dev libavcodec-dev libavutil-dev \
+apt-get -qq -y install build-essential libcairo2-dev $JPEGTURBO libpng12-dev libossp-uuid-dev libavcodec-dev libavutil-dev \
 libswscale-dev libfreerdp-dev libpango1.0-dev libssh2-1-dev libtelnet-dev libvncserver-dev libpulse-dev libssl-dev \
 libvorbis-dev libwebp-dev jq curl wget
 
