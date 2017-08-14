@@ -37,19 +37,19 @@ else
     JPEGTURBO="libjpeg62-turbo-dev"
 fi
 
-# Get build-folder
-BUILD_FOLDER=$(dpkg-architecture -qDEB_BUILD_GNU_TYPE)
-
 # Install Features
 apt-get -qq -y install build-essential libcairo2-dev ${JPEGTURBO} libpng12-dev libossp-uuid-dev libavcodec-dev libavutil-dev \
 libswscale-dev libfreerdp-dev libpango1.0-dev libssh2-1-dev libtelnet-dev libvncserver-dev libpulse-dev libssl-dev \
-libvorbis-dev libwebp-dev mysql-server mysql-client mysql-common mysql-utilities ${TOMCAT} freerdp ghostscript jq wget curl
+libvorbis-dev libwebp-dev mysql-server mysql-client mysql-common mysql-utilities ${TOMCAT} freerdp ghostscript jq wget curl dpkg-dev
 
 # If Apt-Get fails to run completely the rest of this isn't going to work...
 if [ $? != 0 ]; then
     echo "apt-get failed to install all required dependencies"
     exit
 fi
+
+# Get build-folder
+BUILD_FOLDER=$(dpkg-architecture -qDEB_BUILD_GNU_TYPE)
 
 SERVER=$(curl -s 'https://www.apache.org/dyn/closer.cgi?as_json=1' | jq --raw-output '.preferred|rtrimstr("/")')
 
