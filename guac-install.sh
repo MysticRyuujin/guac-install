@@ -55,10 +55,10 @@ SERVER=$(curl -s 'https://www.apache.org/dyn/closer.cgi?as_json=1' | jq --raw-ou
 
 # Add GUACAMOLE_HOME to $TOMCAT ENV
 echo "" >> /etc/default/${TOMCAT}
-echo "# GUACAMOLE EVN VARIABLE" >> /etc/default/${TOMCAT}
+echo "# GUACAMOLE ENV VARIABLE" >> /etc/default/${TOMCAT}
 echo "GUACAMOLE_HOME=/etc/guacamole" >> /etc/default/${TOMCAT}
 
-# Download Guacample Files
+# Download Guacamole Files
 wget ${SERVER}/incubator/guacamole/${VERSION}-incubating/source/guacamole-server-${VERSION}-incubating.tar.gz
 wget ${SERVER}/incubator/guacamole/${VERSION}-incubating/binary/guacamole-${VERSION}-incubating.war
 wget ${SERVER}/incubator/guacamole/${VERSION}-incubating/binary/guacamole-auth-jdbc-${VERSION}-incubating.tar.gz
@@ -69,12 +69,11 @@ tar -xzf guacamole-server-${VERSION}-incubating.tar.gz
 tar -xzf guacamole-auth-jdbc-${VERSION}-incubating.tar.gz
 tar -xzf mysql-connector-java-${MCJVERSION}.tar.gz
 
-# MAKE DIRECTORIES
-mkdir /etc/guacamole
-mkdir /etc/guacamole/lib
-mkdir /etc/guacamole/extensions
+# Make Directories
+mkdir -p /etc/guacamole/lib
+mkdir -p /etc/guacamole/extensions
 
-# Install GUACD
+# Install guacd
 cd guacamole-server-${VERSION}-incubating
 ./configure --with-init-dir=/etc/init.d
 make
