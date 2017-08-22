@@ -1,11 +1,11 @@
 #!/bin/bash
 
-# Version Numbers of Guacamole and MySQL Connection/J to download
+# Version Numbers of Guacamole and MySQL Connector/J to download
 VERSION="0.9.13"
 MCJVERSION="5.1.43"
 
 # Update apt so we can search apt-cache for newest tomcat version supported
-apt-get update
+apt update
 
 # tomcat8 is newest, tomcat7 and tomcat6 should work too
 if [ $(apt-cache search "^tomcat8$" | wc -l) -gt 0 ]; then
@@ -38,13 +38,13 @@ else
 fi
 
 # Install Features
-apt-get -qq -y install build-essential libcairo2-dev ${JPEGTURBO} libpng12-dev libossp-uuid-dev libavcodec-dev libavutil-dev \
+apt -y install build-essential libcairo2-dev ${JPEGTURBO} libpng12-dev libossp-uuid-dev libavcodec-dev libavutil-dev \
 libswscale-dev libfreerdp-dev libpango1.0-dev libssh2-1-dev libtelnet-dev libvncserver-dev libpulse-dev libssl-dev \
 libvorbis-dev libwebp-dev mysql-server mysql-client mysql-common mysql-utilities ${TOMCAT} freerdp ghostscript jq wget curl dpkg-dev
 
 # If Apt-Get fails to run completely the rest of this isn't going to work...
 if [ $? != 0 ]; then
-    echo "apt-get failed to install all required dependencies"
+    echo "apt failed to install all required dependencies"
     exit
 fi
 
@@ -55,10 +55,10 @@ SERVER=$(curl -s 'https://www.apache.org/dyn/closer.cgi?as_json=1' | jq --raw-ou
 
 # Add GUACAMOLE_HOME to $TOMCAT ENV
 echo "" >> /etc/default/${TOMCAT}
-echo "# GUACAMOLE EVN VARIABLE" >> /etc/default/${TOMCAT}
+echo "# GUACAMOLE ENV VARIABLE" >> /etc/default/${TOMCAT}
 echo "GUACAMOLE_HOME=/etc/guacamole" >> /etc/default/${TOMCAT}
 
-# Download Guacample Files
+# Download Guacamole Files
 wget ${SERVER}/incubator/guacamole/${VERSION}-incubating/source/guacamole-server-${VERSION}-incubating.tar.gz
 wget ${SERVER}/incubator/guacamole/${VERSION}-incubating/binary/guacamole-${VERSION}-incubating.war
 wget ${SERVER}/incubator/guacamole/${VERSION}-incubating/binary/guacamole-auth-jdbc-${VERSION}-incubating.tar.gz
@@ -69,12 +69,11 @@ tar -xzf guacamole-server-${VERSION}-incubating.tar.gz
 tar -xzf guacamole-auth-jdbc-${VERSION}-incubating.tar.gz
 tar -xzf mysql-connector-java-${MCJVERSION}.tar.gz
 
-# MAKE DIRECTORIES
-mkdir /etc/guacamole
-mkdir /etc/guacamole/lib
-mkdir /etc/guacamole/extensions
+# Make Directories
+mkdir -p /etc/guacamole/lib
+mkdir -p /etc/guacamole/extensions
 
-# Install GUACD
+# Install guacd
 cd guacamole-server-${VERSION}-incubating
 ./configure --with-init-dir=/etc/init.d
 make
