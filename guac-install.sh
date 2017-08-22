@@ -5,7 +5,7 @@ VERSION="0.9.13"
 MCJVERSION="5.1.43"
 
 # Update apt so we can search apt-cache for newest tomcat version supported
-apt-get update
+apt update
 
 # tomcat8 is newest, tomcat7 and tomcat6 should work too
 if [ $(apt-cache search "^tomcat8$" | wc -l) -gt 0 ]; then
@@ -38,13 +38,13 @@ else
 fi
 
 # Install Features
-apt-get -qq -y install build-essential libcairo2-dev ${JPEGTURBO} libpng12-dev libossp-uuid-dev libavcodec-dev libavutil-dev \
+apt -y install build-essential libcairo2-dev ${JPEGTURBO} libpng12-dev libossp-uuid-dev libavcodec-dev libavutil-dev \
 libswscale-dev libfreerdp-dev libpango1.0-dev libssh2-1-dev libtelnet-dev libvncserver-dev libpulse-dev libssl-dev \
 libvorbis-dev libwebp-dev mysql-server mysql-client mysql-common mysql-utilities ${TOMCAT} freerdp ghostscript jq wget curl dpkg-dev
 
 # If Apt-Get fails to run completely the rest of this isn't going to work...
 if [ $? != 0 ]; then
-    echo "apt-get failed to install all required dependencies"
+    echo "apt failed to install all required dependencies"
     exit
 fi
 
