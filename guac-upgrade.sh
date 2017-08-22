@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Version Numbers of Guacamole and MySQL Connection/J to download
+# Version Numbers of Guacamole and MySQL Connector/J to download
 VERSION="0.9.13"
 MCJVERSION="5.1.43"
 
@@ -9,10 +9,10 @@ TOMCAT="tomcat8"
 
 SERVER=$(curl -s 'https://www.apache.org/dyn/closer.cgi?as_json=1' | jq --raw-output '.preferred|rtrimstr("/")')
 
-# Stop Tomcat
+# Stop tomcat
 service ${TOMCAT} stop
 
-# Download and install Guacamole Server
+# Download and install Guacamole server
 wget ${SERVER}/incubator/guacamole/${VERSION}-incubating/source/guacamole-server-${VERSION}-incubating.tar.gz
 tar -xzf guacamole-server-${VERSION}-incubating.tar.gz
 cd guacamole-server-${VERSION}-incubating
@@ -23,7 +23,7 @@ ldconfig
 systemctl enable guacd
 cd ..
 
-# Download and replace Guacamole Client
+# Download and replace Guacamole client
 wget ${SERVER}/incubator/guacamole/${VERSION}-incubating/binary/guacamole-${VERSION}-incubating.war
 mv guacamole-${VERSION}-incubating.war /etc/guacamole/guacamole.war
 
@@ -32,7 +32,7 @@ wget ${SERVER}/incubator/guacamole/${VERSION}-incubating/binary/guacamole-auth-j
 tar -xzf guacamole-auth-jdbc-${VERSION}-incubating.tar.gz
 cp guacamole-auth-jdbc-${VERSION}-incubating/mysql/guacamole-auth-jdbc-mysql-${VERSION}-incubating.jar /etc/guacamole/extensions/
 
-# Upgrade the MySQL Connector-J
+# Upgrade the MySQL Connector/J
 wget https://dev.mysql.com/get/Downloads/Connector-J/mysql-connector-java-${MCJVERSION}.tar.gz
 tar -xzf mysql-connector-java-${MCJVERSION}.tar.gz
 cp mysql-connector-java-${MCJVERSION}/mysql-connector-java-${MCJVERSION}-bin.jar /etc/guacamole/lib/
@@ -44,7 +44,7 @@ then
     mysql -u root -p guacamole_db < guacamole-auth-jdbc-${VERSION}-incubating/mysql/schema/upgrade/upgrade-pre-${VERSION}.sql
 fi
 
-# Start Tomcat
+# Start tomcat
 service ${TOMCAT} start
 
 # Cleanup
