@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Version Numbers of Guacamole and MySQL Connection/J to download
+# Version Numbers of Guacamole and MySQL Connector/J to download
 VERSION="0.9.13"
 MCJVERSION="5.1.43"
 
