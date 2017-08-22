@@ -31,7 +31,7 @@ wget ${SERVER}/incubator/guacamole/${VERSION}-incubating/source/guacamole-server
 # Extract Guacamole Files
 tar -xzf guacamole-server-${VERSION}-incubating.tar.gz
 
-# MAKE DIRECTORIES
+# Make Directories
 mkdir /etc/guacamole
 
 # Install guacd
