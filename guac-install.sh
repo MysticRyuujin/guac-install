@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Version Numbers of Guacamole and MySQL Connector/J to download
+# Version numbers of Guacamole and MySQL Connector/J to download
 VERSION="0.9.13"
 MCJVERSION="5.1.43"
 
@@ -25,7 +25,7 @@ echo
 debconf-set-selections <<< "mysql-server mysql-server/root_password password $mysqlrootpassword"
 debconf-set-selections <<< "mysql-server mysql-server/root_password_again password $mysqlrootpassword"
 
-# Grab a password for Guacamole Database User Account
+# Grab a password for Guacamole database user account
 read -s -p "Enter the password that will be used for the Guacamole database: " guacdbuserpassword
 echo
 
@@ -37,12 +37,12 @@ else
     JPEGTURBO="libjpeg62-turbo-dev"
 fi
 
-# Install Features
+# Install features
 apt -y install build-essential libcairo2-dev ${JPEGTURBO} libpng12-dev libossp-uuid-dev libavcodec-dev libavutil-dev \
 libswscale-dev libfreerdp-dev libpango1.0-dev libssh2-1-dev libtelnet-dev libvncserver-dev libpulse-dev libssl-dev \
 libvorbis-dev libwebp-dev mysql-server mysql-client mysql-common mysql-utilities ${TOMCAT} freerdp ghostscript jq wget curl dpkg-dev
 
-# If Apt-Get fails to run completely the rest of this isn't going to work...
+# If apt fails to run completely the rest of this isn't going to work...
 if [ $? != 0 ]; then
     echo "apt failed to install all required dependencies"
     exit
@@ -58,18 +58,18 @@ echo "" >> /etc/default/${TOMCAT}
 echo "# GUACAMOLE ENV VARIABLE" >> /etc/default/${TOMCAT}
 echo "GUACAMOLE_HOME=/etc/guacamole" >> /etc/default/${TOMCAT}
 
-# Download Guacamole Files
+# Download Guacamole files
 wget ${SERVER}/incubator/guacamole/${VERSION}-incubating/source/guacamole-server-${VERSION}-incubating.tar.gz
 wget ${SERVER}/incubator/guacamole/${VERSION}-incubating/binary/guacamole-${VERSION}-incubating.war
 wget ${SERVER}/incubator/guacamole/${VERSION}-incubating/binary/guacamole-auth-jdbc-${VERSION}-incubating.tar.gz
 wget https://dev.mysql.com/get/Downloads/Connector-J/mysql-connector-java-${MCJVERSION}.tar.gz
 
-# Extract Guacamole Files
+# Extract Guacamole files
 tar -xzf guacamole-server-${VERSION}-incubating.tar.gz
 tar -xzf guacamole-auth-jdbc-${VERSION}-incubating.tar.gz
 tar -xzf mysql-connector-java-${MCJVERSION}.tar.gz
 
-# Make Directories
+# Make directories
 mkdir -p /etc/guacamole/lib
 mkdir -p /etc/guacamole/extensions
 
@@ -103,17 +103,17 @@ service ${TOMCAT} restart
 
 # Create guacamole_db and grant guacamole_user permissions to it
 
-# SQL Code
+# SQL code
 SQLCODE="
 create database guacamole_db;
 create user 'guacamole_user'@'localhost' identified by \"$guacdbuserpassword\";
 GRANT SELECT,INSERT,UPDATE,DELETE ON guacamole_db.* TO 'guacamole_user'@'localhost';
 flush privileges;"
 
-# Execute SQL Code
+# Execute SQL code
 echo $SQLCODE | mysql -u root -p$mysqlrootpassword
 
-# Add Guacamole Schema to newly created database
+# Add Guacamole schema to newly created database
 cat guacamole-auth-jdbc-${VERSION}-incubating/mysql/schema/*.sql | mysql -u root -p$mysqlrootpassword guacamole_db
 
 # Cleanup
