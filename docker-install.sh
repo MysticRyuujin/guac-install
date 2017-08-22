@@ -9,13 +9,13 @@ read -s -p "Enter the password that will be used for the Guacamole database: " G
 echo
 
 #Install Stuff
-apt-get update
-apt-get -qq -y install docker.io mysql-client wget jq curl
+apt update
+apt -y install docker.io mysql-client wget jq curl
 
 # Get perfered download server
 SERVER=$(curl -s 'https://www.apache.org/dyn/closer.cgi?as_json=1' | jq --raw-output '.preferred|rtrimstr("/")')
 
-# Download the guacamole auth files for MySQL
+# Download the Guacamole auth files for MySQL
 wget ${SERVER}/incubator/guacamole/${VERSION}-incubating/binary/guacamole-auth-jdbc-${VERSION}-incubating.tar.gz
 tar -xzf guacamole-auth-jdbc-${VERSION}-incubating.tar.gz
 
