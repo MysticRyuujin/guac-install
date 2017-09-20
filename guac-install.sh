@@ -37,8 +37,16 @@ else
     JPEGTURBO="libjpeg62-turbo-dev"
 fi
 
+# Ubuntu 16.10 has a different name for libpng12-dev for some reason...
+if [ `egrep -c 'VERSION="16.10' /etc/os-release` -gt 0 ]
+then
+    LIBPNG="libpng-dev"
+else
+    LIBPNG="libpng12-dev"
+fi
+
 # Install features
-apt -y install build-essential libcairo2-dev ${JPEGTURBO} libpng12-dev libossp-uuid-dev libavcodec-dev libavutil-dev \
+apt -y install build-essential libcairo2-dev ${JPEGTURBO} ${LIBPNG} libossp-uuid-dev libavcodec-dev libavutil-dev \
 libswscale-dev libfreerdp-dev libpango1.0-dev libssh2-1-dev libtelnet-dev libvncserver-dev libpulse-dev libssl-dev \
 libvorbis-dev libwebp-dev mysql-server mysql-client mysql-common mysql-utilities ${TOMCAT} freerdp ghostscript jq wget curl dpkg-dev
 
