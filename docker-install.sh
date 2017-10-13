@@ -22,13 +22,16 @@ tar -xzf guacamole-auth-jdbc-${VERSION}-incubating.tar.gz
 # Start MySQL
 docker run --restart=always --detach --name=mysql --env="MYSQL_ROOT_PASSWORD=$MYSQLROOTPASSWORD" --publish 3306:3306 mysql
 
-# Create the Guacamole database and the user account
+# Sleep to let MySQL load (there's probably a better way to do this)
+echo "Waiting 30 seconds for MySQL to load"
+sleep 30
 
+# Create the Guacamole database and the user account
 # SQL Code
 SQLCODE="
-create database guacamole_db;
-create user 'guacamole_user'@'%' identified by '$guacdbuserpassword';
-GRANT SELECT,INSERT,UPDATE,DELETE ON guacamole_db.* TO 'guacamole_user'@'%';
+create database guacamole_db; 
+create user 'guacamole_user'@'%' identified by '$guacdbuserpassword'; 
+GRANT SELECT,INSERT,UPDATE,DELETE ON guacamole_db.* TO 'guacamole_user'@'%'; 
 flush privileges;"
 
 # Execute SQL Code
