@@ -7,10 +7,8 @@ MCJVERSION="5.1.43"
 # Update apt so we can search apt-cache for newest tomcat version supported
 apt update
 
-# tomcat8 is newest, tomcat7 and tomcat6 should work too
-if [ $(apt-cache search "^tomcat8$" | wc -l) -gt 0 ]; then
-    TOMCAT="tomcat8"
-elif [ $(apt-cache search "^tomcat7$" | wc -l) -gt 0 ]; then
+# tomcat8 seems to be broken, tomcat7 and tomcat6 should work
+if [ $(apt-cache search "^tomcat7$" | wc -l) -gt 0 ]; then
     TOMCAT="tomcat7"
 else
     TOMCAT="tomcat6"
@@ -30,7 +28,9 @@ read -s -p "Enter the password that will be used for the Guacamole database: " g
 echo
 
 # Ubuntu and Debian have different names of the libjpeg-turbo library for some reason...
-if [ `egrep -c "ID=ubuntu" /etc/os-release` -gt 0 ]
+source /etc/lsb-release
+
+if [ $DISTRIB_ID == "Ubuntu" ]
 then
     JPEGTURBO="libjpeg-turbo8-dev"
 else
@@ -38,7 +38,7 @@ else
 fi
 
 # Ubuntu 16.10 has a different name for libpng12-dev for some reason...
-if [ `egrep -c 'VERSION="16.10' /etc/os-release` -gt 0 ]
+if [ $DISTRIB_RELEASE == "16.10" ]
 then
     LIBPNG="libpng-dev"
 else
