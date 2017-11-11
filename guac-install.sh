@@ -56,15 +56,13 @@ if [ $? != 0 ]; then
     exit
 fi
 
-# Get build-folder
-BUILD_FOLDER=$(dpkg-architecture -qDEB_BUILD_GNU_TYPE)
-
-SERVER=$(curl -s 'https://www.apache.org/dyn/closer.cgi?as_json=1' | jq --raw-output '.preferred|rtrimstr("/")')
-
 # Add GUACAMOLE_HOME to $TOMCAT ENV
 echo "" >> /etc/default/${TOMCAT}
 echo "# GUACAMOLE ENV VARIABLE" >> /etc/default/${TOMCAT}
 echo "GUACAMOLE_HOME=/etc/guacamole" >> /etc/default/${TOMCAT}
+
+# Set SERVER to be the preferred download server from the Apache CDN
+SERVER=$(curl -s 'https://www.apache.org/dyn/closer.cgi?as_json=1' | jq --raw-output '.preferred|rtrimstr("/")')
 
 # Download Guacamole files
 wget ${SERVER}/incubator/guacamole/${VERSION}-incubating/source/guacamole-server-${VERSION}-incubating.tar.gz
@@ -89,6 +87,9 @@ make install
 ldconfig
 systemctl enable guacd
 cd ..
+
+# Get build-folder
+BUILD_FOLDER=$(dpkg-architecture -qDEB_BUILD_GNU_TYPE)
 
 # Move files to correct locations
 mv guacamole-${VERSION}-incubating.war /etc/guacamole/guacamole.war
