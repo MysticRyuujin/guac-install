@@ -2,10 +2,10 @@
 
 # Version Numbers of Guacamole and MySQL Connector/J to download
 VERSION="0.9.13"
-MCJVERSION="5.1.43"
+MCJVERSION="5.1.44"
 
-# I'm assuming tomcat8, you can change it here...
-TOMCAT="tomcat8"
+# I'm assuming tomcat7, you can change it here...
+TOMCAT="tomcat7"
 
 SERVER=$(curl -s 'https://www.apache.org/dyn/closer.cgi?as_json=1' | jq --raw-output '.preferred|rtrimstr("/")')
 
