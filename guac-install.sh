@@ -128,3 +128,5 @@ cat guacamole-auth-jdbc-${VERSION}-incubating/mysql/schema/*.sql | mysql -u root
 # Cleanup
 rm -rf guacamole-*
 rm -rf mysql-connector-java-${MCJVERSION}*
+
+echo -e "Installation Complete\nhttp://localhost:8080/guacamole/\nDefault login guacadmin:guacadmin\nBe sure to change the password."
