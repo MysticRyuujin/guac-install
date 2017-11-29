@@ -110,7 +110,7 @@ fi
 wget https://dev.mysql.com/get/Downloads/Connector-J/mysql-connector-java-${MCJVERSION}.tar.gz
 if [ ! -f ./mysql-connector-java-${MCJVERSION}.tar.gz ]; then
     echo "Failed to download guacamole-server-${VERSION}-incubating.tar.gz"
-    eco "https://dev.mysql.com/get/Downloads/Connector-J/mysql-connector-java-${MCJVERSION}.tar.gz"
+    echo "https://dev.mysql.com/get/Downloads/Connector-J/mysql-connector-java-${MCJVERSION}.tar.gz"
     exit
 fi
 
