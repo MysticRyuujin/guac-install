@@ -17,15 +17,33 @@ fi
 # If you want to force a specific tomcat install and not go with the newest just set it here and uncomment:
 #TOMCAT=""
 
-# Grab a password for MySQL Root
-read -s -p "Enter the password that will be used for MySQL Root: " mysqlrootpassword
+# Get MySQL root password and Guacamole User password
+echo 
+while true
+do
+    read -s -p "Enter a MySQL ROOT Password: " mysqlrootpassword
+    echo
+    read -s -p "Confirm MySQL ROOT Password: " password2
+    echo
+    [ "$mysqlrootpassword" = "$password2" ] && break
+    echo "Passwords don't match. Please try again."
+    echo
+done
 echo
+while true
+do
+    read -s -p "Enter a Guacamole User Database Password: " guacdbuserpassword
+    echo
+    read -s -p "Confirm Guacamole User Database Password: " password2
+    echo
+    [ "$guacdbuserpassword" = "$password2" ] && break
+    echo "Passwords don't match. Please try again."
+    echo
+done
+echo
+
 debconf-set-selections <<< "mysql-server mysql-server/root_password password $mysqlrootpassword"
 debconf-set-selections <<< "mysql-server mysql-server/root_password_again password $mysqlrootpassword"
-
-# Grab a password for Guacamole database user account
-read -s -p "Enter the password that will be used for the Guacamole database: " guacdbuserpassword
-echo
 
 # Ubuntu and Debian have different names of the libjpeg-turbo library for some reason...
 source /etc/lsb-release
@@ -64,11 +82,37 @@ echo "GUACAMOLE_HOME=/etc/guacamole" >> /etc/default/${TOMCAT}
 # Set SERVER to be the preferred download server from the Apache CDN
 SERVER=$(curl -s 'https://www.apache.org/dyn/closer.cgi?as_json=1' | jq --raw-output '.preferred|rtrimstr("/")')
 
-# Download Guacamole files
+# Download Guacamole Server
 wget ${SERVER}/incubator/guacamole/${VERSION}-incubating/source/guacamole-server-${VERSION}-incubating.tar.gz
+if [ ! -f ./guacamole-server-${VERSION}-incubating.tar.gz ]; then
+    echo "Failed to download guacamole-server-${VERSION}-incubating.tar.gz"
+    echo "${SERVER}/incubator/guacamole/${VERSION}-incubating/source/guacamole-server-${VERSION}-incubating.tar.gz"
+    exit
+fi
+
+# Download Guacamole Client
 wget ${SERVER}/incubator/guacamole/${VERSION}-incubating/binary/guacamole-${VERSION}-incubating.war
+if [ ! -f ./guacamole-${VERSION}-incubating.war ]; then
+    echo "Failed to download guacamole-${VERSION}-incubating.war"
+    echo "${SERVER}/incubator/guacamole/${VERSION}-incubating/binary/guacamole-${VERSION}-incubating.war"
+    exit
+fi
+
+# Download Guacamole authentication extensions
 wget ${SERVER}/incubator/guacamole/${VERSION}-incubating/binary/guacamole-auth-jdbc-${VERSION}-incubating.tar.gz
+if [ ! -f ./guacamole-auth-jdbc-${VERSION}-incubating.tar.gz ]; then
+    echo "Failed to download guacamole-auth-jdbc-${VERSION}-incubating.tar.gz"
+    echo "${SERVER}/incubator/guacamole/${VERSION}-incubating/binary/guacamole-auth-jdbc-${VERSION}-incubating.tar.gz"
+    exit
+fi
+
+# Download MySQL Connector-J
 wget https://dev.mysql.com/get/Downloads/Connector-J/mysql-connector-java-${MCJVERSION}.tar.gz
+if [ ! -f ./mysql-connector-java-${MCJVERSION}.tar.gz ]; then
+    echo "Failed to download guacamole-server-${VERSION}-incubating.tar.gz"
+    eco "https://dev.mysql.com/get/Downloads/Connector-J/mysql-connector-java-${MCJVERSION}.tar.gz"
+    exit
+fi
 
 # Extract Guacamole files
 tar -xzf guacamole-server-${VERSION}-incubating.tar.gz
