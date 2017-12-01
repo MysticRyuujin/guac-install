@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # Version Numbers of Guacamole and MySQL Connector/J to download
-VERSION="0.9.13"
-MCJVERSION="5.1.44"
+VERSION="0.9.14"
+MCJVERSION="5.1.45"
 
 # I'm assuming tomcat7, you can change it here...
 TOMCAT="tomcat7"
