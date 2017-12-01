@@ -38,6 +38,11 @@ SERVER="http://apache.org/dyn/closer.cgi?action=download&filename=guacamole/${VE
 
 # Download Guacamole Files
 wget -O guacamole-server-${VERSION}-incubating.tar.gz ${SERVER}/source/guacamole-server-${VERSION}-incubating.tar.gz
+if [ ! -f ./guacamole-server-${VERSION}-incubating.tar.gz ]; then
+    echo "Failed to download guacamole-server-${VERSION}-incubating.tar.gz"
+    echo "${SERVER}/source/guacamole-server-${VERSION}-incubating.tar.gz"
+    exit
+fi
 
 # Extract Guacamole Files
 tar -xzf guacamole-server-${VERSION}-incubating.tar.gz
