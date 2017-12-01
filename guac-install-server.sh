@@ -34,10 +34,10 @@ then
 fi
 
 # Set SERVER to be the preferred download server from the Apache CDN
-SERVER=$(curl -s 'https://www.apache.org/dyn/closer.cgi?as_json=1' | jq --raw-output '.preferred|rtrimstr("/")')
+SERVER="http://apache.org/dyn/closer.cgi?action=download&filename=guacamole/${VERSION}-incubating"
 
 # Download Guacamole Files
-wget ${SERVER}/incubator/guacamole/${VERSION}-incubating/source/guacamole-server-${VERSION}-incubating.tar.gz
+wget -O guacamole-server-${VERSION}-incubating.tar.gz ${SERVER}/source/guacamole-server-${VERSION}-incubating.tar.gz
 
 # Extract Guacamole Files
 tar -xzf guacamole-server-${VERSION}-incubating.tar.gz
