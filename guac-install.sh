@@ -80,34 +80,34 @@ echo "# GUACAMOLE ENV VARIABLE" >> /etc/default/${TOMCAT}
 echo "GUACAMOLE_HOME=/etc/guacamole" >> /etc/default/${TOMCAT}
 
 # Set SERVER to be the preferred download server from the Apache CDN
-SERVER=$(curl -s 'https://www.apache.org/dyn/closer.cgi?as_json=1' | jq --raw-output '.preferred|rtrimstr("/")')
+SERVER="http://apache.org/dyn/closer.cgi?action=download&filename=guacamole/${VERSION}-incubating"
 
 # Download Guacamole Server
-wget ${SERVER}/incubator/guacamole/${VERSION}-incubating/source/guacamole-server-${VERSION}-incubating.tar.gz
+wget -O guacamole-server-${VERSION}-incubating.tar.gz ${SERVER}/source/guacamole-server-${VERSION}-incubating.tar.gz
 if [ ! -f ./guacamole-server-${VERSION}-incubating.tar.gz ]; then
     echo "Failed to download guacamole-server-${VERSION}-incubating.tar.gz"
-    echo "${SERVER}/incubator/guacamole/${VERSION}-incubating/source/guacamole-server-${VERSION}-incubating.tar.gz"
+    echo "${SERVER}/source/guacamole-server-${VERSION}-incubating.tar.gz"
     exit
 fi
 
 # Download Guacamole Client
-wget ${SERVER}/incubator/guacamole/${VERSION}-incubating/binary/guacamole-${VERSION}-incubating.war
+wget -O guacamole-${VERSION}-incubating.war ${SERVER}/binary/guacamole-${VERSION}-incubating.war
 if [ ! -f ./guacamole-${VERSION}-incubating.war ]; then
     echo "Failed to download guacamole-${VERSION}-incubating.war"
-    echo "${SERVER}/incubator/guacamole/${VERSION}-incubating/binary/guacamole-${VERSION}-incubating.war"
+    echo "${SERVER}/binary/guacamole-${VERSION}-incubating.war"
     exit
 fi
 
 # Download Guacamole authentication extensions
-wget ${SERVER}/incubator/guacamole/${VERSION}-incubating/binary/guacamole-auth-jdbc-${VERSION}-incubating.tar.gz
+wget -O guacamole-auth-jdbc-${VERSION}-incubating.tar.gz ${SERVER}/binary/guacamole-auth-jdbc-${VERSION}-incubating.tar.gz
 if [ ! -f ./guacamole-auth-jdbc-${VERSION}-incubating.tar.gz ]; then
     echo "Failed to download guacamole-auth-jdbc-${VERSION}-incubating.tar.gz"
-    echo "${SERVER}/incubator/guacamole/${VERSION}-incubating/binary/guacamole-auth-jdbc-${VERSION}-incubating.tar.gz"
+    echo "${SERVER}/binary/guacamole-auth-jdbc-${VERSION}-incubating.tar.gz"
     exit
 fi
 
 # Download MySQL Connector-J
-wget https://dev.mysql.com/get/Downloads/Connector-J/mysql-connector-java-${MCJVERSION}.tar.gz
+wget -O mysql-connector-java-${MCJVERSION}.tar.gz https://dev.mysql.com/get/Downloads/Connector-J/mysql-connector-java-${MCJVERSION}.tar.gz
 if [ ! -f ./mysql-connector-java-${MCJVERSION}.tar.gz ]; then
     echo "Failed to download guacamole-server-${VERSION}-incubating.tar.gz"
     echo "https://dev.mysql.com/get/Downloads/Connector-J/mysql-connector-java-${MCJVERSION}.tar.gz"
