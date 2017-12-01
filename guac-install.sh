@@ -83,7 +83,7 @@ echo "GUACAMOLE_HOME=/etc/guacamole" >> /etc/default/${TOMCAT}
 SERVER=$(curl -s 'https://www.apache.org/dyn/closer.cgi?as_json=1' | jq --raw-output '.preferred|rtrimstr("/")')
 
 # Download Guacamole Server
-wget ${SERVER}/incubator/guacamole/${VERSION}-incubating/source/guacamole-server-${VERSION}-incubating.tar.gz
+wget ${SERVER}/guacamole/${VERSION}-incubating/source/guacamole-server-${VERSION}-incubating.tar.gz
 if [ ! -f ./guacamole-server-${VERSION}-incubating.tar.gz ]; then
     echo "Failed to download guacamole-server-${VERSION}-incubating.tar.gz"
     echo "${SERVER}/incubator/guacamole/${VERSION}-incubating/source/guacamole-server-${VERSION}-incubating.tar.gz"
@@ -91,7 +91,7 @@ if [ ! -f ./guacamole-server-${VERSION}-incubating.tar.gz ]; then
 fi
 
 # Download Guacamole Client
-wget ${SERVER}/incubator/guacamole/${VERSION}-incubating/binary/guacamole-${VERSION}-incubating.war
+wget ${SERVER}/guacamole/${VERSION}-incubating/binary/guacamole-${VERSION}-incubating.war
 if [ ! -f ./guacamole-${VERSION}-incubating.war ]; then
     echo "Failed to download guacamole-${VERSION}-incubating.war"
     echo "${SERVER}/incubator/guacamole/${VERSION}-incubating/binary/guacamole-${VERSION}-incubating.war"
@@ -99,7 +99,7 @@ if [ ! -f ./guacamole-${VERSION}-incubating.war ]; then
 fi
 
 # Download Guacamole authentication extensions
-wget ${SERVER}/incubator/guacamole/${VERSION}-incubating/binary/guacamole-auth-jdbc-${VERSION}-incubating.tar.gz
+wget ${SERVER}/guacamole/${VERSION}-incubating/binary/guacamole-auth-jdbc-${VERSION}-incubating.tar.gz
 if [ ! -f ./guacamole-auth-jdbc-${VERSION}-incubating.tar.gz ]; then
     echo "Failed to download guacamole-auth-jdbc-${VERSION}-incubating.tar.gz"
     echo "${SERVER}/incubator/guacamole/${VERSION}-incubating/binary/guacamole-auth-jdbc-${VERSION}-incubating.tar.gz"
