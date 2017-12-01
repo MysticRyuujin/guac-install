@@ -10,13 +10,13 @@ echo
 
 #Install Stuff
 apt update
-apt -y install docker.io mysql-client wget jq curl
+apt -y install docker.io mysql-client wget
 
 # Get perfered download server
-SERVER=$(curl -s 'https://www.apache.org/dyn/closer.cgi?as_json=1' | jq --raw-output '.preferred|rtrimstr("/")')
+SERVER="http://apache.org/dyn/closer.cgi?action=download&filename=guacamole/${VERSION}-incubating"
 
 # Download the Guacamole auth files for MySQL
-wget ${SERVER}/incubator/guacamole/${VERSION}-incubating/binary/guacamole-auth-jdbc-${VERSION}-incubating.tar.gz
+wget -O guacamole-auth-jdbc-${VERSION}-incubating.tar.gz ${SERVER}/binary/guacamole-auth-jdbc-${VERSION}-incubating.tar.gz
 tar -xzf guacamole-auth-jdbc-${VERSION}-incubating.tar.gz
 
 # Start MySQL
