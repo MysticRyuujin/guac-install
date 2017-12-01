@@ -80,7 +80,7 @@ echo "# GUACAMOLE ENV VARIABLE" >> /etc/default/${TOMCAT}
 echo "GUACAMOLE_HOME=/etc/guacamole" >> /etc/default/${TOMCAT}
 
 # Set SERVER to be the preferred download server from the Apache CDN
-SERVER=$(curl -s 'https://www.apache.org/dyn/closer.cgi?as_json=1' | jq --raw-output '.preferred|rtrimstr("/")')
+SERVER=$(curl -s 'https://www.apache.org/dyn/closer.cgi?' | jq --raw-output '.preferred|rtrimstr("/")')
 
 # Download Guacamole Server
 wget ${SERVER}/incubator/guacamole/${VERSION}-incubating/source/guacamole-server-${VERSION}-incubating.tar.gz
