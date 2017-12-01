@@ -80,10 +80,10 @@ echo "# GUACAMOLE ENV VARIABLE" >> /etc/default/${TOMCAT}
 echo "GUACAMOLE_HOME=/etc/guacamole" >> /etc/default/${TOMCAT}
 
 # Set SERVER to be the preferred download server from the Apache CDN
-SERVER=$(curl -s 'https://www.apache.org/dyn/closer.cgi?' | jq --raw-output '.preferred|rtrimstr("/")')
+SERVER=$(curl -s 'https://www.apache.org/dyn/closer.cgi?action=download&filename=guacamole' | jq --raw-output '.preferred|rtrimstr("/")')
 
 # Download Guacamole Server
-wget ${SERVER}/incubator/guacamole/${VERSION}-incubating/source/guacamole-server-${VERSION}-incubating.tar.gz
+wget ${SERVER}${VERSION}-incubating/source/guacamole-server-${VERSION}-incubating.tar.gz
 if [ ! -f ./guacamole-server-${VERSION}-incubating.tar.gz ]; then
     echo "Failed to download guacamole-server-${VERSION}-incubating.tar.gz"
     echo "${SERVER}/incubator/guacamole/${VERSION}-incubating/source/guacamole-server-${VERSION}-incubating.tar.gz"
@@ -91,7 +91,7 @@ if [ ! -f ./guacamole-server-${VERSION}-incubating.tar.gz ]; then
 fi
 
 # Download Guacamole Client
-wget ${SERVER}/incubator/guacamole/${VERSION}-incubating/binary/guacamole-${VERSION}-incubating.war
+wget ${SERVER}${VERSION}-incubating/binary/guacamole-${VERSION}-incubating.war
 if [ ! -f ./guacamole-${VERSION}-incubating.war ]; then
     echo "Failed to download guacamole-${VERSION}-incubating.war"
     echo "${SERVER}/incubator/guacamole/${VERSION}-incubating/binary/guacamole-${VERSION}-incubating.war"
