@@ -7,13 +7,45 @@ MCJVERSION="5.1.44"
 # I'm assuming tomcat7, you can change it here...
 TOMCAT="tomcat7"
 
-SERVER=$(curl -s 'https://www.apache.org/dyn/closer.cgi?as_json=1' | jq --raw-output '.preferred|rtrimstr("/")')
+# Set SERVER to be the preferred download server from the Apache CDN
+SERVER="http://apache.org/dyn/closer.cgi?action=download&filename=guacamole/${VERSION}-incubating"
 
 # Stop tomcat
 service ${TOMCAT} stop
 
-# Download and install Guacamole server
-wget ${SERVER}/incubator/guacamole/${VERSION}-incubating/source/guacamole-server-${VERSION}-incubating.tar.gz
+# Download Guacamole server
+wget -O guacamole-server-${VERSION}-incubating.tar.gz ${SERVER}/source/guacamole-server-${VERSION}-incubating.tar.gz
+if [ ! -f ./guacamole-server-${VERSION}-incubating.tar.gz ]; then
+    echo "Failed to download guacamole-server-${VERSION}-incubating.tar.gz"
+    echo "${SERVER}/source/guacamole-server-${VERSION}-incubating.tar.gz"
+    exit
+fi
+
+# Download Guacamole client
+wget -O guacamole-${VERSION}-incubating.war ${SERVER}/binary/guacamole-${VERSION}-incubating.war
+if [ ! -f ./guacamole-${VERSION}-incubating.war ]; then
+    echo "Failed to download guacamole-${VERSION}-incubating.war"
+    echo "${SERVER}/binary/guacamole-${VERSION}-incubating.war"
+    exit
+fi
+
+# Download SQL components
+wget -O guacamole-auth-jdbc-${VERSION}-incubating.tar.gz ${SERVER}/binary/guacamole-auth-jdbc-${VERSION}-incubating.tar.gz
+if [ ! -f ./guacamole-auth-jdbc-${VERSION}-incubating.tar.gz ]; then
+    echo "Failed to download guacamole-auth-jdbc-${VERSION}-incubating.tar.gz"
+    echo "${SERVER}/binary/guacamole-auth-jdbc-${VERSION}-incubating.tar.gz"
+    exit
+fi
+
+# Download the MySQL Connector/J
+wget -O mysql-connector-java-${MCJVERSION}.tar.gz https://dev.mysql.com/get/Downloads/Connector-J/mysql-connector-java-${MCJVERSION}.tar.gz
+if [ ! -f ./mysql-connector-java-${MCJVERSION}.tar.gz ]; then
+    echo "Failed to download guacamole-server-${VERSION}-incubating.tar.gz"
+    echo "https://dev.mysql.com/get/Downloads/Connector-J/mysql-connector-java-${MCJVERSION}.tar.gz"
+    exit
+fi
+
+# Upgrade Guacamole Server
 tar -xzf guacamole-server-${VERSION}-incubating.tar.gz
 cd guacamole-server-${VERSION}-incubating
 ./configure --with-init-dir=/etc/init.d
@@ -23,17 +55,12 @@ ldconfig
 systemctl enable guacd
 cd ..
 
-# Download and replace Guacamole client
-wget ${SERVER}/incubator/guacamole/${VERSION}-incubating/binary/guacamole-${VERSION}-incubating.war
+# Upgrade Guacamole Client
 mv guacamole-${VERSION}-incubating.war /etc/guacamole/guacamole.war
 
-# Download and upgrade SQL components
-wget ${SERVER}/incubator/guacamole/${VERSION}-incubating/binary/guacamole-auth-jdbc-${VERSION}-incubating.tar.gz
+# Upgrade SQL Components
 tar -xzf guacamole-auth-jdbc-${VERSION}-incubating.tar.gz
 cp guacamole-auth-jdbc-${VERSION}-incubating/mysql/guacamole-auth-jdbc-mysql-${VERSION}-incubating.jar /etc/guacamole/extensions/
-
-# Upgrade the MySQL Connector/J
-wget https://dev.mysql.com/get/Downloads/Connector-J/mysql-connector-java-${MCJVERSION}.tar.gz
 tar -xzf mysql-connector-java-${MCJVERSION}.tar.gz
 cp mysql-connector-java-${MCJVERSION}/mysql-connector-java-${MCJVERSION}-bin.jar /etc/guacamole/lib/
 rm -rf mysql-connector-java-${MCJVERSION}*
