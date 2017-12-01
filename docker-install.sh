@@ -1,7 +1,7 @@
 #!/bin/bash
 # WORKING ON UBUNTU 16.04 LTS
 
-VERSION="0.9.13"
+VERSION="0.9.14"
 
 # Get MySQL root password and Guacamole User password
 echo 
