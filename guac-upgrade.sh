@@ -1,11 +1,26 @@
 #!/bin/bash
 
+# Get MySQL root password
+echo 
+while true
+do
+    read -s -p "Enter MySQL ROOT Password: " mysqlrootpassword
+    export MYSQL_PWD=${mysqlrootpassword}
+    echo
+    mysql -u root guacamole_db -e"quit" && break
+    echo
+done
+echo
+
 # Version Numbers of Guacamole and MySQL Connector/J to download
 VERSION="0.9.14"
 MCJVERSION="5.1.45"
 
-# I'm assuming tomcat7, you can change it here...
-TOMCAT="tomcat7"
+# Get Tomcat Version
+TOMCAT=$(ls /etc/ | grep tomcat)
+
+# Get Current Guacamole Version
+OLDVERSION=$(grep -oP 'Guacamole.API_VERSION = "\K[0-9\.]+' /var/lib/${TOMCAT}/webapps/guacamole/guacamole-common-js/modules/Version.js)
 
 # Set SERVER to be the preferred download server from the Apache CDN
 SERVER="http://apache.org/dyn/closer.cgi?action=download&filename=guacamole/${VERSION}-incubating"
@@ -65,14 +80,22 @@ tar -xzf mysql-connector-java-${MCJVERSION}.tar.gz
 cp mysql-connector-java-${MCJVERSION}/mysql-connector-java-${MCJVERSION}-bin.jar /etc/guacamole/lib/
 rm -rf mysql-connector-java-${MCJVERSION}*
 
-# Check if there is an schema upgrade file, if there is run it (will prompt for password)
-if [ -f "guacamole-auth-jdbc-${VERSION}-incubating/mysql/schema/upgrade/upgrade-pre-${VERSION}.sql" ]
-then
-    mysql -u root -p guacamole_db < guacamole-auth-jdbc-${VERSION}-incubating/mysql/schema/upgrade/upgrade-pre-${VERSION}.sql
-fi
+# Get list of SQL Upgrade Files
+UPGRADEFILES=($(ls -1 guacamole-auth-jdbc-${VERSION}-incubating/mysql/schema/upgrade/ | sort -V))
+
+# Compare SQL Upgrage Files against old version, apply upgrades as needed
+for FILE in ${UPGRADEFILES[@]}
+do
+    FILEVERSION=$(echo ${FILE} | grep -oP 'upgrade-pre-\K[0-9\.]+(?=\.)')
+    if [[ $(echo -e "${FILEVERSION}\n${OLDVERSION}" | sort -V | head -n1) == ${OLDVERSION} && ${FILEVERSION} != ${OLDVERSION} ]]
+    then
+        mysql -u root guacamole_db < guacamole-auth-jdbc-${VERSION}-incubating/mysql/schema/upgrade/${FILE}
+    fi
+done
 
 # Start tomcat
 service ${TOMCAT} start
 
 # Cleanup
 rm -rf guacamole*
+unset MYSQL_PWD
