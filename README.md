@@ -1,5 +1,5 @@
 # guac-install
-Script for installing Guacamole 0.9.13 on Ubuntu 16.04 with MySQL. Should also work on pure Debian. Probably works on 16.10?
+Script for installing Guacamole 0.9.14 on Ubuntu 16.04 with MySQL. Should also work on pure Debian. Probably works on 16.10?
 
 Run script, enter MySQL Root Password and Guacamole User password. Guacamole User is used to connect to the Guacamole Database.
 
@@ -23,3 +23,20 @@ Run it as root:
 
 Once installation is done you can access guacamole by browsing to: http://<host_or_ip>:8080/guacamole/
 The default credentials are guacadmin as both username and password. Please change them or disable guacadmin after install!
+
+# guac-upgrade
+Script for upgrading currently installed Guacamole instance (previously installed via this script/guide)
+
+How to Run:
+
+Download file directly from here:
+
+<code>wget https://raw.githubusercontent.com/MysticRyuujin/guac-install/master/guac-upgrade.sh</code>
+
+Make it executable:
+
+<code>chmod +x guac-upgrade.sh</code>
+
+Run it as root:
+
+<code>./guac-upgrade.sh</code>
