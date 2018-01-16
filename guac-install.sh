@@ -69,6 +69,9 @@ else
     TOMCAT="tomcat7"
 fi
 
+# Uncomment to manually force a tomcat version
+#TOMCAT=""
+
 # Install features
 apt -y install build-essential libcairo2-dev ${JPEGTURBO} ${LIBPNG} libossp-uuid-dev libavcodec-dev libavutil-dev \
 libswscale-dev libfreerdp-dev libpango1.0-dev libssh2-1-dev libtelnet-dev libvncserver-dev libpulse-dev libssl-dev \
