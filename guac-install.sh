@@ -74,11 +74,6 @@ if [ $? != 0 ]; then
     exit
 fi
 
-# Add GUACAMOLE_HOME to $TOMCAT ENV
-echo "" >> /etc/default/${TOMCAT}
-echo "# GUACAMOLE ENV VARIABLE" >> /etc/default/${TOMCAT}
-echo "GUACAMOLE_HOME=/etc/guacamole" >> /etc/default/${TOMCAT}
-
 # Set SERVER to be the preferred download server from the Apache CDN
 SERVER="http://apache.org/dyn/closer.cgi?action=download&filename=guacamole/${VERSION}-incubating"
 
