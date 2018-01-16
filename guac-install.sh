@@ -7,16 +7,6 @@ MCJVERSION="5.1.45"
 # Update apt so we can search apt-cache for newest tomcat version supported
 apt update
 
-# tomcat8 seems to be broken, tomcat7 and tomcat6 should work
-if [ $(apt-cache search "^tomcat7$" | wc -l) -gt 0 ]; then
-    TOMCAT="tomcat7"
-else
-    TOMCAT="tomcat6"
-fi
-
-# If you want to force a specific tomcat install and not go with the newest just set it here and uncomment:
-#TOMCAT=""
-
 # Get MySQL root password and Guacamole User password
 echo 
 while true
@@ -45,22 +35,34 @@ echo
 debconf-set-selections <<< "mysql-server mysql-server/root_password password $mysqlrootpassword"
 debconf-set-selections <<< "mysql-server mysql-server/root_password_again password $mysqlrootpassword"
 
-# Ubuntu and Debian have different names of the libjpeg-turbo library for some reason...
-source /etc/lsb-release
-
-if [ $DISTRIB_ID == "Ubuntu" ]
+# Ubuntu and Debian have different package names as well as different
+# Tomcat8 versions. Tomcat 8.0.x is End of Life but Tomcat7 is not
+# If a distro version contains Tomcat 8.5.x use it, otherwise 7.x
+source /etc/os-release
+if [[ "${NAME}" == "Ubuntu" ]]
 then
     JPEGTURBO="libjpeg-turbo8-dev"
-else
+    if [[ "${VERSION_ID}" == "16.04" ]]
+    then
+        LIBPNG="libpng12-dev"
+    else
+        LIBPNG="libpng-dev"
+    fi
+elif [[ "${NAME}" == *"Debian"* ]]
+then
     JPEGTURBO="libjpeg62-turbo-dev"
+    LIBPNG="libpng12-dev"
+else
+    echo "Unsupported Distro - Ubuntu or Debian Only"
+    exit
 fi
 
-# Ubuntu 16.10 has a different name for libpng12-dev for some reason...
-if [ $DISTRIB_RELEASE == "16.10" ]
+# If Tomcat 8.5.x or newer is available install it, otherwise install Tomcat 7
+if [[ $(apt-cache show tomcat8 | egrep "Version: 8.[5-9]" | wc -l) -gt 0 ]]
 then
-    LIBPNG="libpng-dev"
+    TOMCAT="tomcat8"
 else
-    LIBPNG="libpng12-dev"
+    TOMCAT="tomcat7"
 fi
 
 # Install features
