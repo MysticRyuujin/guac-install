@@ -35,9 +35,8 @@ echo
 debconf-set-selections <<< "mysql-server mysql-server/root_password password $mysqlrootpassword"
 debconf-set-selections <<< "mysql-server mysql-server/root_password_again password $mysqlrootpassword"
 
-# Ubuntu and Debian have different package names as well as different
-# Tomcat8 versions. Tomcat 8.0.x is End of Life but Tomcat7 is not
-# If a distro version contains Tomcat 8.5.x use it, otherwise 7.x
+# Ubuntu and Debian have different package names for libjpeg
+# Ubuntu and Debian versions have differnet package names for libpng-dev
 source /etc/os-release
 if [[ "${NAME}" == "Ubuntu" ]]
 then
@@ -51,12 +50,17 @@ then
 elif [[ "${NAME}" == *"Debian"* ]]
 then
     JPEGTURBO="libjpeg62-turbo-dev"
-    LIBPNG="libpng12-dev"
+    if [[ "${PRETTY_NAME}" == *"stretch"* ]]
+    then
+        LIBPNG="libpng-dev"
+    else
+        LIBPNG="libpng12-dev"
 else
     echo "Unsupported Distro - Ubuntu or Debian Only"
     exit
 fi
 
+# Tomcat 8.0.x is End of Life, however Tomcat 7.x is not...
 # If Tomcat 8.5.x or newer is available install it, otherwise install Tomcat 7
 if [[ $(apt-cache show tomcat8 | egrep "Version: 8.[5-9]" | wc -l) -gt 0 ]]
 then
