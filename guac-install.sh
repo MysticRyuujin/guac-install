@@ -141,6 +141,8 @@ ln -s /etc/guacamole/guacamole.war /var/lib/${TOMCAT}/webapps/
 ln -s /usr/local/lib/freerdp/guac*.so /usr/lib/${BUILD_FOLDER}/freerdp/
 cp mysql-connector-java-${MCJVERSION}/mysql-connector-java-${MCJVERSION}-bin.jar /etc/guacamole/lib/
 cp guacamole-auth-jdbc-${VERSION}-incubating/mysql/guacamole-auth-jdbc-mysql-${VERSION}-incubating.jar /etc/guacamole/extensions/
+rm -rf /usr/share/${TOMCAT}/.guacamole
+ln -s /etc/guacamole /usr/share/${TOMCAT}/.guacamole
 
 # Configure guacamole.properties
 echo "mysql-hostname: localhost" >> /etc/guacamole/guacamole.properties
