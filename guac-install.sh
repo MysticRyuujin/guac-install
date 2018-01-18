@@ -152,8 +152,6 @@ echo "mysql-port: 3306" >> /etc/guacamole/guacamole.properties
 echo "mysql-database: guacamole_db" >> /etc/guacamole/guacamole.properties
 echo "mysql-username: guacamole_user" >> /etc/guacamole/guacamole.properties
 echo "mysql-password: $guacdbuserpassword" >> /etc/guacamole/guacamole.properties
-rm -rf /usr/share/${TOMCAT}/.guacamole
-ln -s /etc/guacamole /usr/share/${TOMCAT}/.guacamole
 
 # restart tomcat
 service ${TOMCAT} restart
