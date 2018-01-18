@@ -5,8 +5,6 @@ Run script, enter MySQL Root Password and Guacamole User password. Guacamole Use
 
 The script attempts to install tomcat8 if the available version is 8.5.x or newer, if tomcat8 is only 8.0.x it will fall back to tomcat7. If you want to manually specify a tomcat version there's a commented out line you can modify at line #73. Have at it.
 
-NOTE: It seems like a lot of people have issues with Tomcat8 for some reason so I removed it from the script. If you're using Tomcat8 and it's working yay, you can keep using it by forcing it via the commented out line.
-
 How to Run:
 
 Download file directly from here:
@@ -26,6 +24,8 @@ The default credentials are guacadmin as both username and password. Please chan
 
 # guac-upgrade
 Script for upgrading currently installed Guacamole instance (previously installed via this script/guide)
+
+If looks for the tomcat folder in /etc/ (E.G. `/etc/tomcat7` or `/etc/tomcat8`) hopefully that works to identify the correct tomcat version/path :smile: I'm open to suggestions/pull requests for a cleaner method.
 
 How to Run:
 
