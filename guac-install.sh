@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Version numbers of Guacamole and MySQL Connector/J to download
-VERSION="0.9.14"
+GUACVERSION="0.9.14"
 MCJVERSION="5.1.45"
 
 # Update apt so we can search apt-cache for newest tomcat version supported
@@ -86,6 +86,9 @@ fi
 
 # Set SERVER to be the preferred download server from the Apache CDN
 SERVER="http://apache.org/dyn/closer.cgi?action=download&filename=guacamole/${VERSION}"
+
+# Quick Fix SERVER
+SERVER=$GUACSERVER
 
 # Download Guacamole Server
 wget -O guacamole-server-${VERSION}.tar.gz ${SERVER}/source/guacamole-server-${VERSION}.tar.gz
