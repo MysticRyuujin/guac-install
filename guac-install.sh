@@ -88,7 +88,7 @@ fi
 SERVER="http://apache.org/dyn/closer.cgi?action=download&filename=guacamole/${VERSION}"
 
 # Quick Fix SERVER
-SERVER=$GUACVERSION
+VERSION=$GUACVERSION
 
 # Download Guacamole Server
 wget -O guacamole-server-${VERSION}.tar.gz ${SERVER}/source/guacamole-server-${VERSION}.tar.gz
