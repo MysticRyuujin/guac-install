@@ -55,6 +55,7 @@ then
         LIBPNG="libpng-dev"
     else
         LIBPNG="libpng12-dev"
+    fi
 else
     echo "Unsupported Distro - Ubuntu or Debian Only"
     exit
