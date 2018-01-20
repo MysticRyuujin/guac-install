@@ -84,43 +84,43 @@ if [ $? != 0 ]; then
 fi
 
 # Set SERVER to be the preferred download server from the Apache CDN
-SERVER="http://apache.org/dyn/closer.cgi?action=download&filename=guacamole/${VERSION}-incubating"
+SERVER="http://apache.org/dyn/closer.cgi?action=download&filename=guacamole/${VERSION}"
 
 # Download Guacamole Server
-wget -O guacamole-server-${VERSION}-incubating.tar.gz ${SERVER}/source/guacamole-server-${VERSION}-incubating.tar.gz
-if [ ! -f ./guacamole-server-${VERSION}-incubating.tar.gz ]; then
-    echo "Failed to download guacamole-server-${VERSION}-incubating.tar.gz"
-    echo "${SERVER}/source/guacamole-server-${VERSION}-incubating.tar.gz"
+wget -O guacamole-server-${VERSION}.tar.gz ${SERVER}/source/guacamole-server-${VERSION}.tar.gz
+if [ ! -f ./guacamole-server-${VERSION}.tar.gz ]; then
+    echo "Failed to download guacamole-server-${VERSION}.tar.gz"
+    echo "${SERVER}/source/guacamole-server-${VERSION}.tar.gz"
     exit
 fi
 
 # Download Guacamole Client
-wget -O guacamole-${VERSION}-incubating.war ${SERVER}/binary/guacamole-${VERSION}-incubating.war
-if [ ! -f ./guacamole-${VERSION}-incubating.war ]; then
-    echo "Failed to download guacamole-${VERSION}-incubating.war"
-    echo "${SERVER}/binary/guacamole-${VERSION}-incubating.war"
+wget -O guacamole-${VERSION}.war ${SERVER}/binary/guacamole-${VERSION}.war
+if [ ! -f ./guacamole-${VERSION}.war ]; then
+    echo "Failed to download guacamole-${VERSION}.war"
+    echo "${SERVER}/binary/guacamole-${VERSION}.war"
     exit
 fi
 
 # Download Guacamole authentication extensions
-wget -O guacamole-auth-jdbc-${VERSION}-incubating.tar.gz ${SERVER}/binary/guacamole-auth-jdbc-${VERSION}-incubating.tar.gz
-if [ ! -f ./guacamole-auth-jdbc-${VERSION}-incubating.tar.gz ]; then
-    echo "Failed to download guacamole-auth-jdbc-${VERSION}-incubating.tar.gz"
-    echo "${SERVER}/binary/guacamole-auth-jdbc-${VERSION}-incubating.tar.gz"
+wget -O guacamole-auth-jdbc-${VERSION}.tar.gz ${SERVER}/binary/guacamole-auth-jdbc-${VERSION}.tar.gz
+if [ ! -f ./guacamole-auth-jdbc-${VERSION}.tar.gz ]; then
+    echo "Failed to download guacamole-auth-jdbc-${VERSION}.tar.gz"
+    echo "${SERVER}/binary/guacamole-auth-jdbc-${VERSION}.tar.gz"
     exit
 fi
 
 # Download MySQL Connector-J
 wget -O mysql-connector-java-${MCJVERSION}.tar.gz https://dev.mysql.com/get/Downloads/Connector-J/mysql-connector-java-${MCJVERSION}.tar.gz
 if [ ! -f ./mysql-connector-java-${MCJVERSION}.tar.gz ]; then
-    echo "Failed to download guacamole-server-${VERSION}-incubating.tar.gz"
+    echo "Failed to download mysql-connector-java-${MCJVERSION}.tar.gz"
     echo "https://dev.mysql.com/get/Downloads/Connector-J/mysql-connector-java-${MCJVERSION}.tar.gz"
     exit
 fi
 
 # Extract Guacamole files
-tar -xzf guacamole-server-${VERSION}-incubating.tar.gz
-tar -xzf guacamole-auth-jdbc-${VERSION}-incubating.tar.gz
+tar -xzf guacamole-server-${VERSION}.tar.gz
+tar -xzf guacamole-auth-jdbc-${VERSION}.tar.gz
 tar -xzf mysql-connector-java-${MCJVERSION}.tar.gz
 
 # Make directories
@@ -128,7 +128,7 @@ mkdir -p /etc/guacamole/lib
 mkdir -p /etc/guacamole/extensions
 
 # Install guacd
-cd guacamole-server-${VERSION}-incubating
+cd guacamole-server-${VERSION}
 ./configure --with-init-dir=/etc/init.d
 make
 make install
@@ -140,11 +140,11 @@ cd ..
 BUILD_FOLDER=$(dpkg-architecture -qDEB_BUILD_GNU_TYPE)
 
 # Move files to correct locations
-mv guacamole-${VERSION}-incubating.war /etc/guacamole/guacamole.war
+mv guacamole-${VERSION}.war /etc/guacamole/guacamole.war
 ln -s /etc/guacamole/guacamole.war /var/lib/${TOMCAT}/webapps/
 ln -s /usr/local/lib/freerdp/guac*.so /usr/lib/${BUILD_FOLDER}/freerdp/
 cp mysql-connector-java-${MCJVERSION}/mysql-connector-java-${MCJVERSION}-bin.jar /etc/guacamole/lib/
-cp guacamole-auth-jdbc-${VERSION}-incubating/mysql/guacamole-auth-jdbc-mysql-${VERSION}-incubating.jar /etc/guacamole/extensions/
+cp guacamole-auth-jdbc-${VERSION}/mysql/guacamole-auth-jdbc-mysql-${VERSION}.jar /etc/guacamole/extensions/
 
 # Configure guacamole.properties
 echo "mysql-hostname: localhost" >> /etc/guacamole/guacamole.properties
@@ -169,7 +169,7 @@ flush privileges;"
 echo $SQLCODE | mysql -u root -p$mysqlrootpassword
 
 # Add Guacamole schema to newly created database
-cat guacamole-auth-jdbc-${VERSION}-incubating/mysql/schema/*.sql | mysql -u root -p$mysqlrootpassword guacamole_db
+cat guacamole-auth-jdbc-${VERSION}/mysql/schema/*.sql | mysql -u root -p$mysqlrootpassword guacamole_db
 
 # Cleanup
 rm -rf guacamole-*
