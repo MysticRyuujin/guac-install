@@ -1,21 +1,11 @@
 #!/bin/bash
 
 # Version numbers of Guacamole and MySQL Connector/J to download
-VERSION="0.9.13"
-MCJVERSION="5.1.44"
+VERSION="0.9.14"
+MCJVERSION="5.1.45"
 
 # Update apt so we can search apt-cache for newest tomcat version supported
 apt update
-
-# tomcat8 seems to be broken, tomcat7 and tomcat6 should work
-if [ $(apt-cache search "^tomcat7$" | wc -l) -gt 0 ]; then
-    TOMCAT="tomcat7"
-else
-    TOMCAT="tomcat6"
-fi
-
-# If you want to force a specific tomcat install and not go with the newest just set it here and uncomment:
-#TOMCAT=""
 
 # Get MySQL root password and Guacamole User password
 echo 
@@ -45,23 +35,42 @@ echo
 debconf-set-selections <<< "mysql-server mysql-server/root_password password $mysqlrootpassword"
 debconf-set-selections <<< "mysql-server mysql-server/root_password_again password $mysqlrootpassword"
 
-# Ubuntu and Debian have different names of the libjpeg-turbo library for some reason...
-source /etc/lsb-release
-
-if [ $DISTRIB_ID == "Ubuntu" ]
+# Ubuntu and Debian have different package names for libjpeg
+# Ubuntu and Debian versions have differnet package names for libpng-dev
+source /etc/os-release
+if [[ "${NAME}" == "Ubuntu" ]]
 then
     JPEGTURBO="libjpeg-turbo8-dev"
-else
+    if [[ "${VERSION_ID}" == "16.04" ]]
+    then
+        LIBPNG="libpng12-dev"
+    else
+        LIBPNG="libpng-dev"
+    fi
+elif [[ "${NAME}" == *"Debian"* ]]
+then
     JPEGTURBO="libjpeg62-turbo-dev"
+    if [[ "${PRETTY_NAME}" == *"stretch"* ]]
+    then
+        LIBPNG="libpng-dev"
+    else
+        LIBPNG="libpng12-dev"
+else
+    echo "Unsupported Distro - Ubuntu or Debian Only"
+    exit
 fi
 
-# Ubuntu 16.10 has a different name for libpng12-dev for some reason...
-if [ $DISTRIB_RELEASE == "16.10" ]
+# Tomcat 8.0.x is End of Life, however Tomcat 7.x is not...
+# If Tomcat 8.5.x or newer is available install it, otherwise install Tomcat 7
+if [[ $(apt-cache show tomcat8 | egrep "Version: 8.[5-9]" | wc -l) -gt 0 ]]
 then
-    LIBPNG="libpng-dev"
+    TOMCAT="tomcat8"
 else
-    LIBPNG="libpng12-dev"
+    TOMCAT="tomcat7"
 fi
+
+# Uncomment to manually force a tomcat version
+#TOMCAT=""
 
 # Install features
 apt -y install build-essential libcairo2-dev ${JPEGTURBO} ${LIBPNG} libossp-uuid-dev libavcodec-dev libavutil-dev \
@@ -74,49 +83,44 @@ if [ $? != 0 ]; then
     exit
 fi
 
-# Add GUACAMOLE_HOME to $TOMCAT ENV
-echo "" >> /etc/default/${TOMCAT}
-echo "# GUACAMOLE ENV VARIABLE" >> /etc/default/${TOMCAT}
-echo "GUACAMOLE_HOME=/etc/guacamole" >> /etc/default/${TOMCAT}
-
 # Set SERVER to be the preferred download server from the Apache CDN
-SERVER="http://apache.org/dyn/closer.cgi?action=download&filename=guacamole/${VERSION}-incubating"
+SERVER="http://apache.org/dyn/closer.cgi?action=download&filename=guacamole/${VERSION}"
 
 # Download Guacamole Server
-wget -O guacamole-server-${VERSION}-incubating.tar.gz ${SERVER}/source/guacamole-server-${VERSION}-incubating.tar.gz
-if [ ! -f ./guacamole-server-${VERSION}-incubating.tar.gz ]; then
-    echo "Failed to download guacamole-server-${VERSION}-incubating.tar.gz"
-    echo "${SERVER}/source/guacamole-server-${VERSION}-incubating.tar.gz"
+wget -O guacamole-server-${VERSION}.tar.gz ${SERVER}/source/guacamole-server-${VERSION}.tar.gz
+if [ ! -f ./guacamole-server-${VERSION}.tar.gz ]; then
+    echo "Failed to download guacamole-server-${VERSION}.tar.gz"
+    echo "${SERVER}/source/guacamole-server-${VERSION}.tar.gz"
     exit
 fi
 
 # Download Guacamole Client
-wget -O guacamole-${VERSION}-incubating.war ${SERVER}/binary/guacamole-${VERSION}-incubating.war
-if [ ! -f ./guacamole-${VERSION}-incubating.war ]; then
-    echo "Failed to download guacamole-${VERSION}-incubating.war"
-    echo "${SERVER}/binary/guacamole-${VERSION}-incubating.war"
+wget -O guacamole-${VERSION}.war ${SERVER}/binary/guacamole-${VERSION}.war
+if [ ! -f ./guacamole-${VERSION}.war ]; then
+    echo "Failed to download guacamole-${VERSION}.war"
+    echo "${SERVER}/binary/guacamole-${VERSION}.war"
     exit
 fi
 
 # Download Guacamole authentication extensions
-wget -O guacamole-auth-jdbc-${VERSION}-incubating.tar.gz ${SERVER}/binary/guacamole-auth-jdbc-${VERSION}-incubating.tar.gz
-if [ ! -f ./guacamole-auth-jdbc-${VERSION}-incubating.tar.gz ]; then
-    echo "Failed to download guacamole-auth-jdbc-${VERSION}-incubating.tar.gz"
-    echo "${SERVER}/binary/guacamole-auth-jdbc-${VERSION}-incubating.tar.gz"
+wget -O guacamole-auth-jdbc-${VERSION}.tar.gz ${SERVER}/binary/guacamole-auth-jdbc-${VERSION}.tar.gz
+if [ ! -f ./guacamole-auth-jdbc-${VERSION}.tar.gz ]; then
+    echo "Failed to download guacamole-auth-jdbc-${VERSION}.tar.gz"
+    echo "${SERVER}/binary/guacamole-auth-jdbc-${VERSION}.tar.gz"
     exit
 fi
 
 # Download MySQL Connector-J
 wget -O mysql-connector-java-${MCJVERSION}.tar.gz https://dev.mysql.com/get/Downloads/Connector-J/mysql-connector-java-${MCJVERSION}.tar.gz
 if [ ! -f ./mysql-connector-java-${MCJVERSION}.tar.gz ]; then
-    echo "Failed to download guacamole-server-${VERSION}-incubating.tar.gz"
+    echo "Failed to download mysql-connector-java-${MCJVERSION}.tar.gz"
     echo "https://dev.mysql.com/get/Downloads/Connector-J/mysql-connector-java-${MCJVERSION}.tar.gz"
     exit
 fi
 
 # Extract Guacamole files
-tar -xzf guacamole-server-${VERSION}-incubating.tar.gz
-tar -xzf guacamole-auth-jdbc-${VERSION}-incubating.tar.gz
+tar -xzf guacamole-server-${VERSION}.tar.gz
+tar -xzf guacamole-auth-jdbc-${VERSION}.tar.gz
 tar -xzf mysql-connector-java-${MCJVERSION}.tar.gz
 
 # Make directories
@@ -124,7 +128,7 @@ mkdir -p /etc/guacamole/lib
 mkdir -p /etc/guacamole/extensions
 
 # Install guacd
-cd guacamole-server-${VERSION}-incubating
+cd guacamole-server-${VERSION}
 ./configure --with-init-dir=/etc/init.d
 make
 make install
@@ -136,11 +140,11 @@ cd ..
 BUILD_FOLDER=$(dpkg-architecture -qDEB_BUILD_GNU_TYPE)
 
 # Move files to correct locations
-mv guacamole-${VERSION}-incubating.war /etc/guacamole/guacamole.war
+mv guacamole-${VERSION}.war /etc/guacamole/guacamole.war
 ln -s /etc/guacamole/guacamole.war /var/lib/${TOMCAT}/webapps/
 ln -s /usr/local/lib/freerdp/guac*.so /usr/lib/${BUILD_FOLDER}/freerdp/
 cp mysql-connector-java-${MCJVERSION}/mysql-connector-java-${MCJVERSION}-bin.jar /etc/guacamole/lib/
-cp guacamole-auth-jdbc-${VERSION}-incubating/mysql/guacamole-auth-jdbc-mysql-${VERSION}-incubating.jar /etc/guacamole/extensions/
+cp guacamole-auth-jdbc-${VERSION}/mysql/guacamole-auth-jdbc-mysql-${VERSION}.jar /etc/guacamole/extensions/
 
 # Configure guacamole.properties
 echo "mysql-hostname: localhost" >> /etc/guacamole/guacamole.properties
@@ -148,8 +152,6 @@ echo "mysql-port: 3306" >> /etc/guacamole/guacamole.properties
 echo "mysql-database: guacamole_db" >> /etc/guacamole/guacamole.properties
 echo "mysql-username: guacamole_user" >> /etc/guacamole/guacamole.properties
 echo "mysql-password: $guacdbuserpassword" >> /etc/guacamole/guacamole.properties
-rm -rf /usr/share/${TOMCAT}/.guacamole
-ln -s /etc/guacamole /usr/share/${TOMCAT}/.guacamole
 
 # restart tomcat
 service ${TOMCAT} restart
@@ -167,7 +169,7 @@ flush privileges;"
 echo $SQLCODE | mysql -u root -p$mysqlrootpassword
 
 # Add Guacamole schema to newly created database
-cat guacamole-auth-jdbc-${VERSION}-incubating/mysql/schema/*.sql | mysql -u root -p$mysqlrootpassword guacamole_db
+cat guacamole-auth-jdbc-${VERSION}/mysql/schema/*.sql | mysql -u root -p$mysqlrootpassword guacamole_db
 
 # Cleanup
 rm -rf guacamole-*

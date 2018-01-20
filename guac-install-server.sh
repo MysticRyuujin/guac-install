@@ -1,6 +1,6 @@
 #!/bin/bash
 
-VERSION="0.9.13"
+VERSION="0.9.14"
 
 # Ubuntu and Debian have different names of the libjpeg-turbo library for some reason...
 source /etc/lsb-release
