@@ -172,6 +172,9 @@ echo $SQLCODE | mysql -u root -p$mysqlrootpassword
 # Add Guacamole schema to newly created database
 cat guacamole-auth-jdbc-${GUACVERSION}/mysql/schema/*.sql | mysql -u root -p$mysqlrootpassword guacamole_db
 
+# Ensure guacd is started
+service guacd start
+
 # Cleanup
 rm -rf guacamole-*
 rm -rf mysql-connector-java-${MCJVERSION}*
