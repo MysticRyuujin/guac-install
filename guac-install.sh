@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Version numbers of Guacamole and MySQL Connector/J to download
-	
+GUACVERSION="0.9.14"
 MCJVERSION="5.1.45"
 
 # Update apt so we can search apt-cache for newest tomcat version supported
