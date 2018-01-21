@@ -99,6 +99,7 @@ done
 
 # Start tomcat
 service ${TOMCAT} start
+service guacd start
 
 # Cleanup
 rm -rf guacamole*
