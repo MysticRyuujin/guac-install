@@ -92,6 +92,7 @@ do
     FILEVERSION=$(echo ${FILE} | grep -oP 'upgrade-pre-\K[0-9\.]+(?=\.)')
     if [[ $(echo -e "${FILEVERSION}\n${OLDVERSION}" | sort -V | head -n1) == ${OLDVERSION} && ${FILEVERSION} != ${OLDVERSION} ]]
     then
+        echo "Patching ${DATABASE} with ${FILE}"
         mysql -u root ${DATABASE} < guacamole-auth-jdbc-${GUACVERSION}/mysql/schema/upgrade/${FILE}
     fi
 done
