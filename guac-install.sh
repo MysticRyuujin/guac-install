@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Version numbers of Guacamole and MySQL Connector/J to download
-GUACVERSION="0.9.14"
+	
 MCJVERSION="5.1.45"
 
 # Update apt so we can search apt-cache for newest tomcat version supported
@@ -79,7 +79,7 @@ libswscale-dev libfreerdp-dev libpango1.0-dev libssh2-1-dev libtelnet-dev libvnc
 libvorbis-dev libwebp-dev mysql-server mysql-client mysql-common mysql-utilities ${TOMCAT} freerdp ghostscript wget dpkg-dev
 
 # If apt fails to run completely the rest of this isn't going to work...
-if [ $? != 0 ]; then
+if [ $? -ne 0 ]; then
     echo "apt failed to install all required dependencies"
     exit
 fi
@@ -89,7 +89,7 @@ SERVER="http://apache.org/dyn/closer.cgi?action=download&filename=guacamole/${GU
 
 # Download Guacamole Server
 wget -O guacamole-server-${GUACVERSION}.tar.gz ${SERVER}/source/guacamole-server-${GUACVERSION}.tar.gz
-if [ ! -f ./guacamole-server-${GUACVERSION}.tar.gz ]; then
+if [ $? -ne 0 ]; then
     echo "Failed to download guacamole-server-${GUACVERSION}.tar.gz"
     echo "${SERVER}/source/guacamole-server-${GUACVERSION}.tar.gz"
     exit
@@ -97,7 +97,7 @@ fi
 
 # Download Guacamole Client
 wget -O guacamole-${GUACVERSION}.war ${SERVER}/binary/guacamole-${GUACVERSION}.war
-if [ ! -f ./guacamole-${GUACVERSION}.war ]; then
+if [ $? -ne 0 ]; then
     echo "Failed to download guacamole-${GUACVERSION}.war"
     echo "${SERVER}/binary/guacamole-${GUACVERSION}.war"
     exit
@@ -105,7 +105,7 @@ fi
 
 # Download Guacamole authentication extensions
 wget -O guacamole-auth-jdbc-${GUACVERSION}.tar.gz ${SERVER}/binary/guacamole-auth-jdbc-${GUACVERSION}.tar.gz
-if [ ! -f ./guacamole-auth-jdbc-${GUACVERSION}.tar.gz ]; then
+if [ $? -ne 0 ]; then
     echo "Failed to download guacamole-auth-jdbc-${GUACVERSION}.tar.gz"
     echo "${SERVER}/binary/guacamole-auth-jdbc-${GUACVERSION}.tar.gz"
     exit
@@ -113,7 +113,7 @@ fi
 
 # Download MySQL Connector-J
 wget -O mysql-connector-java-${MCJVERSION}.tar.gz https://dev.mysql.com/get/Downloads/Connector-J/mysql-connector-java-${MCJVERSION}.tar.gz
-if [ ! -f ./mysql-connector-java-${MCJVERSION}.tar.gz ]; then
+if [ $? -ne 0 ]; then
     echo "Failed to download mysql-connector-java-${MCJVERSION}.tar.gz"
     echo "https://dev.mysql.com/get/Downloads/Connector-J/mysql-connector-java-${MCJVERSION}.tar.gz"
     exit
