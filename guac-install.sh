@@ -2,7 +2,6 @@
 
 # Version numbers of Guacamole and MySQL Connector/J to download
 GUACVERSION="0.9.14"
-MCJVERSION="5.1.45"
 
 # Update apt so we can search apt-cache for newest tomcat version supported
 apt update
@@ -76,7 +75,8 @@ fi
 # Install features
 apt -y install build-essential libcairo2-dev ${JPEGTURBO} ${LIBPNG} libossp-uuid-dev libavcodec-dev libavutil-dev \
 libswscale-dev libfreerdp-dev libpango1.0-dev libssh2-1-dev libtelnet-dev libvncserver-dev libpulse-dev libssl-dev \
-libvorbis-dev libwebp-dev mysql-server mysql-client mysql-common mysql-utilities ${TOMCAT} freerdp-x11 ghostscript wget dpkg-dev
+libvorbis-dev libwebp-dev mysql-server mysql-client mysql-common mysql-utilities libmysql-java ${TOMCAT} freerdp-x11 \
+ghostscript wget dpkg-dev
 
 # If apt fails to run completely the rest of this isn't going to work...
 if [ $? -ne 0 ]; then
@@ -111,18 +111,9 @@ if [ $? -ne 0 ]; then
     exit
 fi
 
-# Download MySQL Connector-J
-wget -O mysql-connector-java-${MCJVERSION}.tar.gz https://dev.mysql.com/get/Downloads/Connector-J/mysql-connector-java-${MCJVERSION}.tar.gz
-if [ $? -ne 0 ]; then
-    echo "Failed to download mysql-connector-java-${MCJVERSION}.tar.gz"
-    echo "https://dev.mysql.com/get/Downloads/Connector-J/mysql-connector-java-${MCJVERSION}.tar.gz"
-    exit
-fi
-
 # Extract Guacamole files
 tar -xzf guacamole-server-${GUACVERSION}.tar.gz
 tar -xzf guacamole-auth-jdbc-${GUACVERSION}.tar.gz
-tar -xzf mysql-connector-java-${MCJVERSION}.tar.gz
 
 # Make directories
 mkdir -p /etc/guacamole/lib
@@ -144,7 +135,7 @@ BUILD_FOLDER=$(dpkg-architecture -qDEB_BUILD_GNU_TYPE)
 mv guacamole-${GUACVERSION}.war /etc/guacamole/guacamole.war
 ln -s /etc/guacamole/guacamole.war /var/lib/${TOMCAT}/webapps/
 ln -s /usr/local/lib/freerdp/guac*.so /usr/lib/${BUILD_FOLDER}/freerdp/
-cp mysql-connector-java-${MCJVERSION}/mysql-connector-java-${MCJVERSION}-bin.jar /etc/guacamole/lib/
+ln -s /usr/share/java/mysql-connector-java.jar /etc/guacamole/lib/
 cp guacamole-auth-jdbc-${GUACVERSION}/mysql/guacamole-auth-jdbc-mysql-${GUACVERSION}.jar /etc/guacamole/extensions/
 
 # Configure guacamole.properties
@@ -177,6 +168,5 @@ service guacd start
 
 # Cleanup
 rm -rf guacamole-*
-rm -rf mysql-connector-java-${MCJVERSION}*
 
 echo -e "Installation Complete\nhttp://localhost:8080/guacamole/\nDefault login guacadmin:guacadmin\nBe sure to change the password."
