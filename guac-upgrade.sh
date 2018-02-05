@@ -17,7 +17,6 @@ echo
 
 # Version Numbers of Guacamole and MySQL Connector/J to download
 GUACVERSION="0.9.14"
-MCJVERSION="5.1.45"
 
 # Get Tomcat Version
 TOMCAT=$(ls /etc/ | grep tomcat)
@@ -55,14 +54,6 @@ if [ $? -ne 0 ]; then
     exit
 fi
 
-# Download the MySQL Connector/J
-wget -O mysql-connector-java-${MCJVERSION}.tar.gz https://dev.mysql.com/get/Downloads/Connector-J/mysql-connector-java-${MCJVERSION}.tar.gz
-if [ $? -ne 0 ]; then
-    echo "Failed to download mysql-connector-java-${MCJVERSION}.tar.gz"
-    echo "https://dev.mysql.com/get/Downloads/Connector-J/mysql-connector-java-${MCJVERSION}.tar.gz"
-    exit
-fi
-
 # Upgrade Guacamole Server
 tar -xzf guacamole-server-${GUACVERSION}.tar.gz
 cd guacamole-server-${GUACVERSION}
@@ -79,9 +70,6 @@ mv guacamole-${GUACVERSION}.war /etc/guacamole/guacamole.war
 # Upgrade SQL Components
 tar -xzf guacamole-auth-jdbc-${GUACVERSION}.tar.gz
 cp guacamole-auth-jdbc-${GUACVERSION}/mysql/guacamole-auth-jdbc-mysql-${GUACVERSION}.jar /etc/guacamole/extensions/
-tar -xzf mysql-connector-java-${MCJVERSION}.tar.gz
-cp mysql-connector-java-${MCJVERSION}/mysql-connector-java-${MCJVERSION}-bin.jar /etc/guacamole/lib/
-rm -rf mysql-connector-java-${MCJVERSION}*
 
 # Get list of SQL Upgrade Files
 UPGRADEFILES=($(ls -1 guacamole-auth-jdbc-${GUACVERSION}/mysql/schema/upgrade/ | sort -V))
