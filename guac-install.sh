@@ -111,18 +111,9 @@ if [ $? -ne 0 ]; then
     exit
 fi
 
-# Download MySQL Connector-J
-wget -O mysql-connector-java-${MCJVERSION}.tar.gz https://dev.mysql.com/get/Downloads/Connector-J/mysql-connector-java-${MCJVERSION}.tar.gz
-if [ $? -ne 0 ]; then
-    echo "Failed to download mysql-connector-java-${MCJVERSION}.tar.gz"
-    echo "https://dev.mysql.com/get/Downloads/Connector-J/mysql-connector-java-${MCJVERSION}.tar.gz"
-    exit
-fi
-
 # Extract Guacamole files
 tar -xzf guacamole-server-${GUACVERSION}.tar.gz
 tar -xzf guacamole-auth-jdbc-${GUACVERSION}.tar.gz
-tar -xzf mysql-connector-java-${MCJVERSION}.tar.gz
 
 # Make directories
 mkdir -p /etc/guacamole/lib
@@ -177,6 +168,5 @@ service guacd start
 
 # Cleanup
 rm -rf guacamole-*
-rm -rf mysql-connector-java-${MCJVERSION}*
 
 echo -e "Installation Complete\nhttp://localhost:8080/guacamole/\nDefault login guacadmin:guacadmin\nBe sure to change the password."
