@@ -15,7 +15,7 @@ do
 done
 echo
 
-# Version Numbers of Guacamole and MySQL Connector/J to download
+# Version Numbers of Guacamole to download
 GUACVERSION="0.9.14"
 
 # Get Tomcat Version
