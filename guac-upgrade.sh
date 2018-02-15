@@ -2,6 +2,7 @@
 
 # Try to get database from /etc/guacamole/guacamole.properties
 DATABASE=$(grep -oP 'mysql-database:\K.*' /etc/guacamole/guacamole.properties | awk '{print $1}')
+MYSQL_SERVER=$(grep -oP ‘mysql-hostname:\K.*’ /etc/guacamole/guacamole.properties | awk ‘{print $1}’)
 
 # Get MySQL root password
 echo
@@ -10,7 +11,7 @@ do
     read -s -p "Enter MySQL ROOT Password: " mysqlrootpassword
     export MYSQL_PWD=${mysqlrootpassword}
     echo
-    mysql -u root ${DATABASE} -e"quit" && break
+    mysql -u root -h ${MYSQL_SERVER} ${DATABASE} -e"quit" && break
     echo
 done
 echo
@@ -81,7 +82,7 @@ do
     if [[ $(echo -e "${FILEVERSION}\n${OLDVERSION}" | sort -V | head -n1) == ${OLDVERSION} && ${FILEVERSION} != ${OLDVERSION} ]]
     then
         echo "Patching ${DATABASE} with ${FILE}"
-        mysql -u root ${DATABASE} < guacamole-auth-jdbc-${GUACVERSION}/mysql/schema/upgrade/${FILE}
+        mysql -u root -h ${MYSQL_SERVER} ${DATABASE} < guacamole-auth-jdbc-${GUACVERSION}/mysql/schema/upgrade/${FILE}
     fi
 done
 
