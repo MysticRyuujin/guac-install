@@ -2,7 +2,7 @@
 
 # Try to get database from /etc/guacamole/guacamole.properties
 DATABASE=$(grep -oP 'mysql-database:\K.*' /etc/guacamole/guacamole.properties | awk '{print $1}')
-MYSQL_SERVER=$(grep -oP ‘mysql-hostname:\K.*’ /etc/guacamole/guacamole.properties | awk ‘{print $1}’)
+MYSQL_SERVER=$(grep -oP 'mysql-hostname:\K.*' /etc/guacamole/guacamole.properties | awk '{print $1}')
 
 # Get MySQL root password
 echo
