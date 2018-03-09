@@ -6,30 +6,50 @@ GUACVERSION="0.9.14"
 # Update apt so we can search apt-cache for newest tomcat version supported
 apt update
 
+# Get script arguments for non-interactive mode
+while [ "$1" != "" ]; do
+    case $1 in
+        -m | --mysqlpwd )
+            shift
+            mysqlpwd="$1"
+            ;;
+        -g | --guacpwd )
+            shift
+            guacpwd="$1"
+            ;;
+    esac
+    shift
+done
+
 # Get MySQL root password and Guacamole User password
-echo 
-while true
-do
-    read -s -p "Enter a MySQL ROOT Password: " mysqlrootpassword
+if [ -n "$mysqlpwd" ] && [ -n "$guacpwd" ]; then
+        mysqlrootpassword=$mysqlpwd
+        guacdbuserpassword=$guacpwd
+else
+    echo 
+    while true
+    do
+        read -s -p "Enter a MySQL ROOT Password: " mysqlrootpassword
+        echo
+        read -s -p "Confirm MySQL ROOT Password: " password2
+        echo
+        [ "$mysqlrootpassword" = "$password2" ] && break
+        echo "Passwords don't match. Please try again."
+        echo
+    done
     echo
-    read -s -p "Confirm MySQL ROOT Password: " password2
+    while true
+    do
+        read -s -p "Enter a Guacamole User Database Password: " guacdbuserpassword
+        echo
+        read -s -p "Confirm Guacamole User Database Password: " password2
+        echo
+        [ "$guacdbuserpassword" = "$password2" ] && break
+        echo "Passwords don't match. Please try again."
+        echo
+    done
     echo
-    [ "$mysqlrootpassword" = "$password2" ] && break
-    echo "Passwords don't match. Please try again."
-    echo
-done
-echo
-while true
-do
-    read -s -p "Enter a Guacamole User Database Password: " guacdbuserpassword
-    echo
-    read -s -p "Confirm Guacamole User Database Password: " password2
-    echo
-    [ "$guacdbuserpassword" = "$password2" ] && break
-    echo "Passwords don't match. Please try again."
-    echo
-done
-echo
+fi
 
 debconf-set-selections <<< "mysql-server mysql-server/root_password password $mysqlrootpassword"
 debconf-set-selections <<< "mysql-server mysql-server/root_password_again password $mysqlrootpassword"
