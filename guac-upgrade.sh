@@ -1,23 +1,40 @@
 #!/bin/bash
 
+# Version Numbers of Guacamole to download
+GUACVERSION="0.9.14"
+
 # Try to get database from /etc/guacamole/guacamole.properties
 DATABASE=$(grep -oP 'mysql-database:\K.*' /etc/guacamole/guacamole.properties | awk '{print $1}')
 MYSQL_SERVER=$(grep -oP 'mysql-hostname:\K.*' /etc/guacamole/guacamole.properties | awk '{print $1}')
 
-# Get MySQL root password
-echo
-while true
-do
-    read -s -p "Enter MySQL ROOT Password: " mysqlrootpassword
-    export MYSQL_PWD=${mysqlrootpassword}
-    echo
-    mysql -u root -h ${MYSQL_SERVER} ${DATABASE} -e"quit" && break
-    echo
+# Get script arguments for non-interactive mode
+while [ "$1" != "" ]; do
+    case $1 in
+        -m | --mysqlpwd )
+            shift
+            mysqlpwd="$1"
+            ;;
+    esac
+    shift
 done
-echo
 
-# Version Numbers of Guacamole to download
-GUACVERSION="0.9.14"
+# Get MySQL root password
+if [ -n "$mysqlpwd" ]; then
+        mysqlrootpassword=$mysqlpwd
+        export MYSQL_PWD=${mysqlrootpassword}
+        mysql -u root -h ${MYSQL_SERVER} ${DATABASE} -e"quit" || exit
+else
+    echo
+    while true
+    do
+        read -s -p "Enter MySQL ROOT Password: " mysqlrootpassword
+        export MYSQL_PWD=${mysqlrootpassword}
+        echo
+        mysql -u root -h ${MYSQL_SERVER} ${DATABASE} -e"quit" && break
+        echo
+    done
+    echo
+fi
 
 # Get Tomcat Version
 TOMCAT=$(ls /etc/ | grep tomcat)
