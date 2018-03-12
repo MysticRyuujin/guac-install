@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Version number of Guacamole to install
+# Version numbers of Guacamole and MySQL Connector/J to download
 GUACVERSION="0.9.14"
 
 # Update apt so we can search apt-cache for newest tomcat version supported
@@ -107,12 +107,7 @@ fi
 # Hack for gcc7
 if [[ $(gcc --version | head -n1 | grep -oP '\)\K.*' | awk '{print $1}' | grep "^7" | wc -l) -gt 0 ]]
 then
-    apt-get -y install gcc-6
-    if [ $? -ne 0 ]
-    then
-        echo "apt-get failed to install gcc-6"
-        exit
-    fi
+    
 fi
 
 # Set SERVER to be the preferred download server from the Apache CDN
@@ -150,11 +145,27 @@ tar -xzf guacamole-auth-jdbc-${GUACVERSION}.tar.gz
 mkdir -p /etc/guacamole/lib
 mkdir -p /etc/guacamole/extensions
 
-# Install guacd # Hack for gcc7 #
+# Install guacd
 cd guacamole-server-${GUACVERSION}
-CC="gcc-6" ./configure --with-init-dir=/etc/init.d
-CC="gcc-6" make
-CC="gcc-6" make install
+
+# Hack for gcc7
+if [[ $(gcc --version | head -n1 | grep -oP '\)\K.*' | awk '{print $1}' | grep "^7" | wc -l) -gt 0 ]]
+then
+    apt-get -y install gcc-6
+    if [ $? -ne 0 ]
+    then
+        echo "apt-get failed to install gcc-6"
+        exit
+    fi
+    CC="gcc-6" ./configure --with-init-dir=/etc/init.d
+    CC="gcc-6" make
+    CC="gcc-6" make install
+else
+    ./configure --with-init-dir=/etc/init.d
+    make
+    make install
+fi
+
 ldconfig
 systemctl enable guacd
 cd ..
