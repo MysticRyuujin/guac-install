@@ -72,18 +72,28 @@ if [ $? -ne 0 ]; then
     exit
 fi
 
-# Hack for gcc7
-if [[ $(gcc --version | head -n1 | grep -oP '\)\K.*' | awk '{print $1}' | grep "^7" | wc -l) -gt 0 ]]
-then
-    apt-get -y install gcc-6
-fi
-
 # Upgrade Guacamole Server
 tar -xzf guacamole-server-${GUACVERSION}.tar.gz
 cd guacamole-server-${GUACVERSION}
-CC="gcc-6" ./configure --with-init-dir=/etc/init.d
-CC="gcc-6" make
-CC="gcc-6" make install
+
+# Hack for gcc-7
+if [[ $(gcc --version | head -n1 | grep -oP '\)\K.*' | awk '{print $1}' | grep "^7" | wc -l) -gt 0 ]]
+then
+    apt-get -y install gcc-6
+    if [ $? -ne 0 ]
+    then
+        echo "apt-get failed to install gcc-6"
+        exit
+    fi
+    CC="gcc-6" ./configure --with-init-dir=/etc/init.d
+    CC="gcc-6" make
+    CC="gcc-6" make install
+else
+    ./configure --with-init-dir=/etc/init.d
+    make
+    make install
+fi
+
 ldconfig
 systemctl enable guacd
 cd ..
