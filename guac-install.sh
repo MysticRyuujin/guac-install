@@ -104,12 +104,6 @@ if [ $? -ne 0 ]; then
     exit
 fi
 
-# Hack for gcc7
-if [[ $(gcc --version | head -n1 | grep -oP '\)\K.*' | awk '{print $1}' | grep "^7" | wc -l) -gt 0 ]]
-then
-    
-fi
-
 # Set SERVER to be the preferred download server from the Apache CDN
 SERVER="http://apache.org/dyn/closer.cgi?action=download&filename=guacamole/${GUACVERSION}"
 
