@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Version Numbers of Guacamole to download
+# Version number of Guacamole to install
 GUACVERSION="0.9.14"
 
 # Try to get database from /etc/guacamole/guacamole.properties
