@@ -1,5 +1,6 @@
 #!/bin/bash
 
+# Version number of Guacamole to install
 GUACVERSION="0.9.14"
 
 # Ubuntu and Debian have different names of the libjpeg-turbo library for some reason...

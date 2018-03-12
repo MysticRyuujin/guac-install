@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Version numbers of Guacamole and MySQL Connector/J to download
+# Version number of Guacamole to install
 GUACVERSION="0.9.14"
 
 # Get script arguments for non-interactive mode
