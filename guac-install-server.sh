@@ -1,23 +1,30 @@
 #!/bin/bash
 
-VERSION="0.9.14"
+GUACVERSION="0.9.14"
 
 # Ubuntu and Debian have different names of the libjpeg-turbo library for some reason...
-source /etc/lsb-release
-
-if [ $DISTRIB_ID == "Ubuntu" ]
+source /etc/os-release
+if [[ "${NAME}" == "Ubuntu" ]]
 then
     JPEGTURBO="libjpeg-turbo8-dev"
-else
-    JPEGTURBO="libjpeg62-turbo-dev"
-fi
-
-# Ubuntu 16.10 has a different name for libpng12-dev for some reason...
-if [ $DISTRIB_RELEASE == "16.10" ]
+    if [[ "${VERSION_ID}" == "16.04" ]]
+    then
+        LIBPNG="libpng12-dev"
+    else
+        LIBPNG="libpng-dev"
+    fi
+elif [[ "${NAME}" == *"Debian"* ]]
 then
-    LIBPNG="libpng-dev"
+    JPEGTURBO="libjpeg62-turbo-dev"
+    if [[ "${PRETTY_NAME}" == *"stretch"* ]]
+    then
+        LIBPNG="libpng-dev"
+    else
+        LIBPNG="libpng12-dev"
+    fi
 else
-    LIBPNG="libpng12-dev"
+    echo "Unsupported Distro - Ubuntu or Debian Only"
+    exit
 fi
 
 # Install Server Features
@@ -33,28 +40,39 @@ then
     exit
 fi
 
-# Set SERVER to be the preferred download server from the Apache CDN
-SERVER="http://apache.org/dyn/closer.cgi?action=download&filename=guacamole/${VERSION}-incubating"
+# Hack for gcc7
+if [[ $(gcc --version | head -n1 | grep -oP '\)\K.*' | awk '{print $1}' | grep "^7" | wc -l) -gt 0 ]]
+then
+    apt-get -y install gcc-6
+    if [ $? -ne 0 ]
+    then
+        echo "apt-get failed to install gcc-6"
+        exit
+    fi
+fi
 
-# Download Guacamole Files
-wget -O guacamole-server-${VERSION}-incubating.tar.gz ${SERVER}/source/guacamole-server-${VERSION}-incubating.tar.gz
-if [ ! -f ./guacamole-server-${VERSION}-incubating.tar.gz ]; then
-    echo "Failed to download guacamole-server-${VERSION}-incubating.tar.gz"
-    echo "${SERVER}/source/guacamole-server-${VERSION}-incubating.tar.gz"
+# Set SERVER to be the preferred download server from the Apache CDN
+SERVER="http://apache.org/dyn/closer.cgi?action=download&filename=guacamole/${GUACVERSION}"
+
+# Download Guacamole Server
+wget -O guacamole-server-${GUACVERSION}.tar.gz ${SERVER}/source/guacamole-server-${GUACVERSION}.tar.gz
+if [ $? -ne 0 ]; then
+    echo "Failed to download guacamole-server-${GUACVERSION}.tar.gz"
+    echo "${SERVER}/source/guacamole-server-${GUACVERSION}.tar.gz"
     exit
 fi
 
 # Extract Guacamole Files
-tar -xzf guacamole-server-${VERSION}-incubating.tar.gz
+tar -xzf guacamole-server-${GUACVERSION}.tar.gz
 
 # Make Directories
 mkdir /etc/guacamole
 
 # Install guacd
-cd guacamole-server-${VERSION}-incubating
-./configure --with-init-dir=/etc/init.d
-make
-make install
+cd guacamole-server-${GUACVERSION}
+CC="gcc-6" ./configure --with-init-dir=/etc/init.d
+CC="gcc-6" make
+CC="gcc-6" make install
 ldconfig
 cd ..
 
