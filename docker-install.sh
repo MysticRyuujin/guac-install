@@ -1,43 +1,69 @@
 #!/bin/bash
-# WORKING ON UBUNTU 16.04 LTS
 
-VERSION="0.9.14"
+# Version numbers of Guacamole and MySQL Connector/J to download
+GUACVERSION="0.9.14"
+
+# Get script arguments for non-interactive mode
+while [ "$1" != "" ]; do
+    case $1 in
+        -m | --mysqlpwd )
+            shift
+            mysqlpwd="$1"
+            ;;
+        -g | --guacpwd )
+            shift
+            guacpwd="$1"
+            ;;
+    esac
+    shift
+done
 
 # Get MySQL root password and Guacamole User password
-echo 
-while true
-do
-    read -s -p "Enter a MySQL ROOT Password: " mysqlrootpassword
+if [ -n "$mysqlpwd" ] && [ -n "$guacpwd" ]; then
+        mysqlrootpassword=$mysqlpwd
+        guacdbuserpassword=$guacpwd
+else
+    echo 
+    while true
+    do
+        read -s -p "Enter a MySQL ROOT Password: " mysqlrootpassword
+        echo
+        read -s -p "Confirm MySQL ROOT Password: " password2
+        echo
+        [ "$mysqlrootpassword" = "$password2" ] && break
+        echo "Passwords don't match. Please try again."
+        echo
+    done
     echo
-    read -s -p "Confirm MySQL ROOT Password: " password2
+    while true
+    do
+        read -s -p "Enter a Guacamole User Database Password: " guacdbuserpassword
+        echo
+        read -s -p "Confirm Guacamole User Database Password: " password2
+        echo
+        [ "$guacdbuserpassword" = "$password2" ] && break
+        echo "Passwords don't match. Please try again."
+        echo
+    done
     echo
-    [ "$mysqlrootpassword" = "$password2" ] && break
-    echo "Passwords don't match. Please try again."
-    echo
-done
-echo
-while true
-do
-    read -s -p "Enter a Guacamole User Database Password: " guacdbuserpassword
-    echo
-    read -s -p "Confirm Guacamole User Database Password: " password2
-    echo
-    [ "$guacdbuserpassword" = "$password2" ] && break
-    echo "Passwords don't match. Please try again."
-    echo
-done
-echo
+fi
 
 #Install Stuff
-apt update
-apt -y install docker.io mysql-client wget
+apt-get update
+apt-get -y install docker.io mysql-client wget
 
-# Get perfered download server
-SERVER="http://apache.org/dyn/closer.cgi?action=download&filename=guacamole/${VERSION}-incubating"
+# Set SERVER to be the preferred download server from the Apache CDN
+SERVER="http://apache.org/dyn/closer.cgi?action=download&filename=guacamole/${GUACVERSION}"
 
-# Download the Guacamole auth files for MySQL
-wget -O guacamole-auth-jdbc-${VERSION}-incubating.tar.gz ${SERVER}/binary/guacamole-auth-jdbc-${VERSION}-incubating.tar.gz
-tar -xzf guacamole-auth-jdbc-${VERSION}-incubating.tar.gz
+# Download Guacamole authentication extensions
+wget -O guacamole-auth-jdbc-${GUACVERSION}.tar.gz ${SERVER}/binary/guacamole-auth-jdbc-${GUACVERSION}.tar.gz
+if [ $? -ne 0 ]; then
+    echo "Failed to download guacamole-auth-jdbc-${GUACVERSION}.tar.gz"
+    echo "${SERVER}/binary/guacamole-auth-jdbc-${GUACVERSION}.tar.gz"
+    exit
+fi
+
+tar -xzf guacamole-auth-jdbc-${GUACVERSION}.tar.gz
 
 # Start MySQL
 docker run --restart=always --detach --name=mysql --env="MYSQL_ROOT_PASSWORD=$mysqlrootpassword" --publish 3306:3306 mysql
@@ -57,9 +83,9 @@ flush privileges;"
 # Execute SQL Code
 echo $SQLCODE | mysql -h 127.0.0.1 -P 3306 -u root -p$mysqlrootpassword
 
-cat guacamole-auth-jdbc-${VERSION}-incubating/mysql/schema/*.sql | mysql -u root -p$mysqlrootpassword -h 127.0.0.1 -P 3306 guacamole_db
+cat guacamole-auth-jdbc-${GUACVERSION}/mysql/schema/*.sql | mysql -u root -p$mysqlrootpassword -h 127.0.0.1 -P 3306 guacamole_db
 
 docker run --restart=always --name guacd -d guacamole/guacd
 docker run --restart=always --name guacamole  --link mysql:mysql --link guacd:guacd -e MYSQL_HOSTNAME=127.0.0.1 -e MYSQL_DATABASE=guacamole_db -e MYSQL_USER=guacamole_user -e MYSQL_PASSWORD=$guacdbuserpassword --detach -p 8080:8080 guacamole/guacamole
 
-rm -rf guacamole-auth-jdbc-${VERSION}-incubating*
+rm -rf guacamole-auth-jdbc-${GUACVERSION}*
