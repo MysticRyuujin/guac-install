@@ -248,7 +248,7 @@ echo "
     ProxyPassReverse ws://localhost:8080/guacamole/websocket-tunnel
 </Location>" > /tmp/guac_config.txt
 
-sed -i '3r guac_config.txt' /etc/apache2/sites-available/default-ssl.conf
+sed -i '3r /tmp/guac_config.txt' /etc/apache2/sites-available/default-ssl.conf
 
 rm /tmp/guac_config.txt
 
