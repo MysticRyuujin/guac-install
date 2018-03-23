@@ -252,4 +252,6 @@ sed -i '3r guac_config.txt' /etc/apache2/sites-available/default-ssl.conf
 
 rm /tmp/guac_config.txt
 
+systemctl restart apache2
+
 echo -e "Installation Complete\nhttps://localhost\nDefault login guacadmin:guacadmin\nBe sure to change the password."
