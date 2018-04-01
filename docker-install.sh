@@ -50,7 +50,7 @@ fi
 
 #Install Stuff
 apt-get update
-apt-get -y install docker.io mysql-client wget
+apt-get -y install docker-ce mysql-client wget
 
 # Set SERVER to be the preferred download server from the Apache CDN
 SERVER="http://apache.org/dyn/closer.cgi?action=download&filename=guacamole/${GUACVERSION}"
