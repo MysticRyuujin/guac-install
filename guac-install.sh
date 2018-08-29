@@ -3,8 +3,19 @@
 # Version number of Guacamole to install
 GUACVERSION="0.9.14"
 
+# Colors to use for output
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+NC='\033[0m' # No Color
+
+LOG="/tmp/guacamole_${GUACVERSION}_build.log"
+DB="guacamole_db"
+
 # Update apt so we can search apt-cache for newest tomcat version supported
-apt-get update
+
+apt-get -qq update
 
 # Get script arguments for non-interactive mode
 while [ "$1" != "" ]; do
@@ -26,7 +37,7 @@ if [ -n "$mysqlpwd" ] && [ -n "$guacpwd" ]; then
         mysqlrootpassword=$mysqlpwd
         guacdbuserpassword=$guacpwd
 else
-    echo 
+    echo
     while true
     do
         read -s -p "Enter a MySQL ROOT Password: " mysqlrootpassword
@@ -91,45 +102,60 @@ fi
 
 # Uncomment to manually force a tomcat version
 #TOMCAT=""
+# remove
 
+#apt-get -y remove ${TOMCAT}
 # Install features
-apt-get -y install build-essential libcairo2-dev ${JPEGTURBO} ${LIBPNG} libossp-uuid-dev libavcodec-dev libavutil-dev \
+
+echo -e "${BLUE}Installing dependencies${NC}"
+
+apt-get -qq -y install build-essential libcairo2-dev ${JPEGTURBO} ${LIBPNG} libossp-uuid-dev libavcodec-dev libavutil-dev \
 libswscale-dev libfreerdp-dev libpango1.0-dev libssh2-1-dev libtelnet-dev libvncserver-dev libpulse-dev libssl-dev \
 libvorbis-dev libwebp-dev mysql-server mysql-client mysql-common mysql-utilities libmysql-java ${TOMCAT} freerdp-x11 \
 ghostscript wget dpkg-dev
+  if [ $? -ne 0 ]; then
+        echo -e "${RED}Failed${NC}"
+        exit 1
+        else
+        echo -e "${GREEN}OK${NC}"
+    fi
 
 # If apt fails to run completely the rest of this isn't going to work...
 if [ $? -ne 0 ]; then
-    echo "apt-get failed to install all required dependencies"
+    echo $-e {FAILED} "apt-get failed to install all required dependencies"
     exit
 fi
 
 # Set SERVER to be the preferred download server from the Apache CDN
 SERVER="http://apache.org/dyn/closer.cgi?action=download&filename=guacamole/${GUACVERSION}"
+ echo -e "${BLUE}Downloaded Files...${NC}"
 
 # Download Guacamole Server
-wget -O guacamole-server-${GUACVERSION}.tar.gz ${SERVER}/source/guacamole-server-${GUACVERSION}.tar.gz
+wget -q --show-progress -O guacamole-server-${GUACVERSION}.tar.gz ${SERVER}/source/guacamole-server-${GUACVERSION}.tar.gz
 if [ $? -ne 0 ]; then
-    echo "Failed to download guacamole-server-${GUACVERSION}.tar.gz"
+    echo "${RED}Failed to download guacamole-server-${GUACVERSION}.tar.gz"
     echo "${SERVER}/source/guacamole-server-${GUACVERSION}.tar.gz"
     exit
 fi
 
 # Download Guacamole Client
-wget -O guacamole-${GUACVERSION}.war ${SERVER}/binary/guacamole-${GUACVERSION}.war
+wget -q --show-progress -O guacamole-${GUACVERSION}.war ${SERVER}/binary/guacamole-${GUACVERSION}.war
 if [ $? -ne 0 ]; then
     echo "Failed to download guacamole-${GUACVERSION}.war"
     echo "${SERVER}/binary/guacamole-${GUACVERSION}.war"
     exit
+    echo -e "${GREEN}Downloaded guacamole-${GUACVERSION}.war${COLOREND}"
 fi
 
 # Download Guacamole authentication extensions
-wget -O guacamole-auth-jdbc-${GUACVERSION}.tar.gz ${SERVER}/binary/guacamole-auth-jdbc-${GUACVERSION}.tar.gz
+wget -q --show-progress -O guacamole-auth-jdbc-${GUACVERSION}.tar.gz ${SERVER}/binary/guacamole-auth-jdbc-${GUACVERSION}.tar.gz
 if [ $? -ne 0 ]; then
     echo "Failed to download guacamole-auth-jdbc-${GUACVERSION}.tar.gz"
     echo "${SERVER}/binary/guacamole-auth-jdbc-${GUACVERSION}.tar.gz"
     exit
 fi
+
+echo -e "${GREEN}Downloading complete.${NC}"
 
 # Extract Guacamole files
 tar -xzf guacamole-server-${GUACVERSION}.tar.gz
@@ -143,23 +169,48 @@ mkdir -p /etc/guacamole/extensions
 cd guacamole-server-${GUACVERSION}
 
 # Hack for gcc7
+
 if [[ $(gcc --version | head -n1 | grep -oP '\)\K.*' | awk '{print $1}' | grep "^7" | wc -l) -gt 0 ]]
 then
-    apt-get -y install gcc-6
-    if [ $? -ne 0 ]
-    then
-        echo "apt-get failed to install gcc-6"
-        exit
+    echo -e "${BLUE}Building Guacamole with GCC6...${NC}"
+    apt-get -qq -y install gcc-6
+    if [ $? -ne 0 ]; then
+        echo -e "${RED}apt-get failed to install gcc-6${NC}"
+        exit 1
+        else
+        echo -e "${GREEN}GCC6 Installed${NC}"
     fi
-    CC="gcc-6" ./configure --with-init-dir=/etc/init.d
-    CC="gcc-6" make
-    CC="gcc-6" make install
-else
-    ./configure --with-init-dir=/etc/init.d
-    make
-    make install
-fi
+    CC="gcc-6"
 
+else
+    echo -e "${BLUE}Building Guacamole with GCC7...${NC}"
+    CC="gcc-7"
+fi
+     echo -e "${BLUE}Configuring...${NC}"
+     ./configure --with-init-dir=/etc/init.d  &>> ${LOG}
+    if [ $? -ne 0 ]; then
+        echo -e "${RED} Failed${NC}"
+        exit 1
+        else
+        echo -e "${GREEN} OK${NC}"
+    fi
+     echo -e "${BLUE}Running Make...${NC}"
+    make &>> ${LOG}
+    if [ $? -ne 0 ]; then
+        echo -e "${RED} Failed${NC}"
+        exit 1
+        else
+        echo -e "${GREEN} OK${NC}"
+    fi
+     echo -e "${BLUE}Running Make Install...${NC}"
+     make install &>> ${LOG}
+     if [ $? -ne 0 ]; then
+        echo -e "${RED} Failed${NC}"
+        exit 1
+        else
+        echo -e "${GREEN}OK${NC}"
+    fi
+    
 ldconfig
 systemctl enable guacd
 cd ..
@@ -177,18 +228,26 @@ cp guacamole-auth-jdbc-${GUACVERSION}/mysql/guacamole-auth-jdbc-mysql-${GUACVERS
 # Configure guacamole.properties
 echo "mysql-hostname: localhost" >> /etc/guacamole/guacamole.properties
 echo "mysql-port: 3306" >> /etc/guacamole/guacamole.properties
-echo "mysql-database: guacamole_db" >> /etc/guacamole/guacamole.properties
+echo "mysql-database: ${DB}" >> /etc/guacamole/guacamole.properties
 echo "mysql-username: guacamole_user" >> /etc/guacamole/guacamole.properties
 echo "mysql-password: $guacdbuserpassword" >> /etc/guacamole/guacamole.properties
 
 # restart tomcat
+echo -e "Restarting tomcat..."
+
 service ${TOMCAT} restart
+if [ $? -ne 0 ]; then
+        echo -e "${RED}Failed${NC}"
+        exit 1
+        else
+        echo -e "${GREEN}OK${NC}"
+    fi
 
 # Create guacamole_db and grant guacamole_user permissions to it
 
 # SQL code
 SQLCODE="
-create database guacamole_db;
+create database ${DB};
 create user 'guacamole_user'@'localhost' identified by \"$guacdbuserpassword\";
 GRANT SELECT,INSERT,UPDATE,DELETE ON guacamole_db.* TO 'guacamole_user'@'localhost';
 flush privileges;"
@@ -197,12 +256,29 @@ flush privileges;"
 echo $SQLCODE | mysql -u root -p$mysqlrootpassword
 
 # Add Guacamole schema to newly created database
-cat guacamole-auth-jdbc-${GUACVERSION}/mysql/schema/*.sql | mysql -u root -p$mysqlrootpassword guacamole_db
+echo -e "Adding db tables..."
+
+cat guacamole-auth-jdbc-${GUACVERSION}/mysql/schema/*.sql | mysql -u root -p$mysqlrootpassword ${DB}
+if [ $? -ne 0 ]; then
+        echo -e "${RED}Failed${NC}"
+        exit 1
+        else
+        echo -e "${GREEN}OK${NC}"
+    fi
 
 # Ensure guacd is started
 service guacd start
 
 # Cleanup
+echo -e "Cleanup install files..."
+
 rm -rf guacamole-*
+if [ $? -ne 0 ]; then
+        echo -e "${RED}Failed${NC}"
+        exit 1
+        else
+        echo -e "${GREEN}OK${NC}"
+    fi
 
 echo -e "Installation Complete\nhttp://localhost:8080/guacamole/\nDefault login guacadmin:guacadmin\nBe sure to change the password."
+
