@@ -7,7 +7,7 @@ Run script, enter MySQL Root Password and Guacamole User password. Guacamole Use
 
 The script attempts to install tomcat8 if the available version is 8.5.x or newer, if tomcat8 is only 8.0.x it will fall back to tomcat7. If you want to manually specify a tomcat version there's a commented out line you can modify at line #73. Have at it.
 
-If you're looking to also have NGINX / Let's Encrypto / HTTPS click [HERE](https://github.com/bigredthelogger/guacamole)
+If you're looking to also have NGINX / Let's Encrypt / HTTPS click [HERE](https://github.com/bigredthelogger/guacamole)
 
 ## How to Run:
 
