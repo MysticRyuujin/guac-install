@@ -13,7 +13,10 @@ RED='\033[0;31m'
 GREEN='\033[0;32m'
 NC='\033[0m' # No Color
 
+# Log Location
 LOG="/tmp/guacamole_${GUACVERSION}_build.log"
+
+# Database Name
 DB="guacamole_db"
 
 # Update apt so we can search apt-cache for newest tomcat version supported
@@ -91,7 +94,7 @@ then
     fi
 else
     echo "Unsupported Distro - Ubuntu or Debian Only"
-    exit
+    exit 1
 fi
 
 # Tomcat 8.0.x is End of Life, however Tomcat 7.x is not...
@@ -105,11 +108,8 @@ fi
 
 # Uncomment to manually force a tomcat version
 #TOMCAT=""
-# remove
 
-#apt-get -y remove ${TOMCAT}
 # Install features
-
 echo -e "${BLUE}Installing dependencies${NC}"
 
 apt-get -qq -y install build-essential libcairo2-dev ${JPEGTURBO} ${LIBPNG} libossp-uuid-dev libavcodec-dev libavutil-dev \
@@ -125,38 +125,40 @@ ghostscript wget dpkg-dev
 
 # If apt fails to run completely the rest of this isn't going to work...
 if [ $? -ne 0 ]; then
-    echo $-e {FAILED} "apt-get failed to install all required dependencies"
-    exit
+    echo -e "${RED}apt-get failed to install all required dependencies${NC}"
+    exit 1
 fi
 
 # Set SERVER to be the preferred download server from the Apache CDN
 SERVER="http://apache.org/dyn/closer.cgi?action=download&filename=guacamole/${GUACVERSION}"
- echo -e "${BLUE}Downloaded Files...${NC}"
+echo -e "${BLUE}Downloaded Files...${NC}"
 
 # Download Guacamole Server
 wget -q --show-progress -O guacamole-server-${GUACVERSION}.tar.gz ${SERVER}/source/guacamole-server-${GUACVERSION}.tar.gz
 if [ $? -ne 0 ]; then
-    echo "${RED}Failed to download guacamole-server-${GUACVERSION}.tar.gz"
-    echo "${SERVER}/source/guacamole-server-${GUACVERSION}.tar.gz"
-    exit
+    echo -e "${RED}Failed to download guacamole-server-${GUACVERSION}.tar.gz"
+    echo -e "${SERVER}/source/guacamole-server-${GUACVERSION}.tar.gz${NC}"
+    exit 1
 fi
+echo -e "${GREEN}Downloaded guacamole-server-${GUACVERSION}.tar.gz${NC}"
 
 # Download Guacamole Client
 wget -q --show-progress -O guacamole-${GUACVERSION}.war ${SERVER}/binary/guacamole-${GUACVERSION}.war
 if [ $? -ne 0 ]; then
-    echo "Failed to download guacamole-${GUACVERSION}.war"
-    echo "${SERVER}/binary/guacamole-${GUACVERSION}.war"
-    exit
-    echo -e "${GREEN}Downloaded guacamole-${GUACVERSION}.war${COLOREND}"
+    echo -e "${RED}Failed to download guacamole-${GUACVERSION}.war"
+    echo -e "${SERVER}/binary/guacamole-${GUACVERSION}.war${NC}"
+    exit 1
 fi
+echo -e "${GREEN}Downloaded guacamole-${GUACVERSION}.war${NC}"
 
 # Download Guacamole authentication extensions
 wget -q --show-progress -O guacamole-auth-jdbc-${GUACVERSION}.tar.gz ${SERVER}/binary/guacamole-auth-jdbc-${GUACVERSION}.tar.gz
 if [ $? -ne 0 ]; then
-    echo "Failed to download guacamole-auth-jdbc-${GUACVERSION}.tar.gz"
-    echo "${SERVER}/binary/guacamole-auth-jdbc-${GUACVERSION}.tar.gz"
-    exit
+    echo -e "${RED}Failed to download guacamole-auth-jdbc-${GUACVERSION}.tar.gz"
+    echo -e "${SERVER}/binary/guacamole-auth-jdbc-${GUACVERSION}.tar.gz"
+    exit 1
 fi
+echo -e "${GREEN}Downloaded guacamole-auth-jdbc-${GUACVERSION}.tar.gz${NC}"
 
 echo -e "${GREEN}Downloading complete.${NC}"
 
@@ -171,8 +173,17 @@ mkdir -p /etc/guacamole/extensions
 # Install guacd
 cd guacamole-server-${GUACVERSION}
 
-# Hack for gcc7
+# Patch for Guacamole Server 0.9.14
+wget -q --show-progress -O ./src/terminal/cd0e48234a079813664052b56c501e854753303a.patch https://github.com/apache/guacamole-server/commit/cd0e48234a079813664052b56c501e854753303a.patch
+if [ $? -ne 0 ]; then
+    echo -e "${RED}Failed to download cd0e48234a079813664052b56c501e854753303a.patch"
+    echo -e "https://github.com/apache/guacamole-server/commit/cd0e48234a079813664052b56c501e854753303a.patch"
+    echo -e "Attempting to proceed without patch...${NC}"
+else
+    patch ./src/terminal/typescript.c ./src/terminal/cd0e48234a079813664052b56c501e854753303a.patch
+fi
 
+# Hack for gcc7
 if [[ $(gcc --version | head -n1 | grep -oP '\)\K.*' | awk '{print $1}' | grep "^7" | wc -l) -gt 0 ]]
 then
     echo -e "${BLUE}Building Guacamole with GCC6...${NC}"
@@ -233,55 +244,53 @@ echo "mysql-hostname: localhost" >> /etc/guacamole/guacamole.properties
 echo "mysql-port: 3306" >> /etc/guacamole/guacamole.properties
 echo "mysql-database: ${DB}" >> /etc/guacamole/guacamole.properties
 echo "mysql-username: guacamole_user" >> /etc/guacamole/guacamole.properties
-echo "mysql-password: $guacdbuserpassword" >> /etc/guacamole/guacamole.properties
+echo "mysql-password: ${guacdbuserpassword}" >> /etc/guacamole/guacamole.properties
 
 # restart tomcat
-echo -e "Restarting tomcat..."
+echo -e "${BLUE}Restarting tomcat...${NC}"
 
 service ${TOMCAT} restart
 if [ $? -ne 0 ]; then
-        echo -e "${RED}Failed${NC}"
-        exit 1
-        else
-        echo -e "${GREEN}OK${NC}"
-    fi
+    echo -e "${RED}Failed${NC}"
+    exit 1
+else
+    echo -e "${GREEN}OK${NC}"
+fi
 
 # Create guacamole_db and grant guacamole_user permissions to it
 
 # SQL code
 SQLCODE="
 create database ${DB};
-create user 'guacamole_user'@'localhost' identified by \"$guacdbuserpassword\";
+create user 'guacamole_user'@'localhost' identified by \"${guacdbuserpassword}\";
 GRANT SELECT,INSERT,UPDATE,DELETE ON guacamole_db.* TO 'guacamole_user'@'localhost';
 flush privileges;"
 
 # Execute SQL code
-echo $SQLCODE | mysql -u root -p$mysqlrootpassword
+echo ${SQLCODE} | mysql -u root -p${mysqlrootpassword}
 
 # Add Guacamole schema to newly created database
 echo -e "Adding db tables..."
-
-cat guacamole-auth-jdbc-${GUACVERSION}/mysql/schema/*.sql | mysql -u root -p$mysqlrootpassword ${DB}
+cat guacamole-auth-jdbc-${GUACVERSION}/mysql/schema/*.sql | mysql -u root -p${mysqlrootpassword} ${DB}
 if [ $? -ne 0 ]; then
-        echo -e "${RED}Failed${NC}"
-        exit 1
-        else
-        echo -e "${GREEN}OK${NC}"
-    fi
+    echo -e "${RED}Failed${NC}"
+    exit 1
+else
+    echo -e "${GREEN}OK${NC}"
+fi
 
 # Ensure guacd is started
 service guacd start
 
 # Cleanup
-echo -e "Cleanup install files..."
+echo -e "${BLUE}Cleanup install files...${NC}"
 
 rm -rf guacamole-*
 if [ $? -ne 0 ]; then
-        echo -e "${RED}Failed${NC}"
-        exit 1
-        else
-        echo -e "${GREEN}OK${NC}"
-    fi
+    echo -e "${RED}Failed${NC}"
+    exit 1
+else
+    echo -e "${GREEN}OK${NC}"
+fi
 
-echo -e "Installation Complete\nhttp://localhost:8080/guacamole/\nDefault login guacadmin:guacadmin\nBe sure to change the password."
-
+echo -e "${BLUE}Installation Complete\nhttp://localhost:8080/guacamole/\nDefault login guacadmin:guacadmin\nBe sure to change the password.${NC}"
