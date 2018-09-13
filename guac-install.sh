@@ -19,10 +19,6 @@ LOG="/tmp/guacamole_${GUACVERSION}_build.log"
 # Database Name
 DB="guacamole_db"
 
-# Update apt so we can search apt-cache for newest tomcat version supported
-
-apt-get -qq update
-
 # Get script arguments for non-interactive mode
 while [ "$1" != "" ]; do
     case $1 in
@@ -73,10 +69,15 @@ debconf-set-selections <<< "mysql-server mysql-server/root_password_again passwo
 
 # Ubuntu and Debian have different package names for libjpeg
 # Ubuntu and Debian versions have differnet package names for libpng-dev
+# Ubuntu 18.04 does not include universe repo by default
 source /etc/os-release
 if [[ "${NAME}" == "Ubuntu" ]]
 then
     JPEGTURBO="libjpeg-turbo8-dev"
+    if [[ "${VERSION_ID}" == "18.04" ]]
+    then
+        sed -i 's/bionic main$/bionic main universe/' /etc/apt/sources.list
+    fi
     if [[ "${VERSION_ID}" == "16.04" ]]
     then
         LIBPNG="libpng12-dev"
@@ -96,6 +97,9 @@ else
     echo "Unsupported Distro - Ubuntu or Debian Only"
     exit 1
 fi
+
+# Update apt so we can search apt-cache for newest tomcat version supported
+apt-get -qq update
 
 # Tomcat 8.0.x is End of Life, however Tomcat 7.x is not...
 # If Tomcat 8.5.x or newer is available install it, otherwise install Tomcat 7
@@ -131,7 +135,7 @@ fi
 
 # Set SERVER to be the preferred download server from the Apache CDN
 SERVER="http://apache.org/dyn/closer.cgi?action=download&filename=guacamole/${GUACVERSION}"
-echo -e "${BLUE}Downloaded Files...${NC}"
+echo -e "${BLUE}Downloading Files...${NC}"
 
 # Download Guacamole Server
 wget -q --show-progress -O guacamole-server-${GUACVERSION}.tar.gz ${SERVER}/source/guacamole-server-${GUACVERSION}.tar.gz
@@ -203,23 +207,23 @@ fi
      echo -e "${BLUE}Configuring...${NC}"
      ./configure --with-init-dir=/etc/init.d  &>> ${LOG}
     if [ $? -ne 0 ]; then
-        echo -e "${RED} Failed${NC}"
+        echo -e "${RED}Failed${NC}"
         exit 1
         else
-        echo -e "${GREEN} OK${NC}"
+        echo -e "${GREEN}OK${NC}"
     fi
      echo -e "${BLUE}Running Make...${NC}"
     make &>> ${LOG}
     if [ $? -ne 0 ]; then
-        echo -e "${RED} Failed${NC}"
+        echo -e "${RED}Failed${NC}"
         exit 1
         else
-        echo -e "${GREEN} OK${NC}"
+        echo -e "${GREEN}OK${NC}"
     fi
      echo -e "${BLUE}Running Make Install...${NC}"
      make install &>> ${LOG}
      if [ $? -ne 0 ]; then
-        echo -e "${RED} Failed${NC}"
+        echo -e "${RED}Failed${NC}"
         exit 1
         else
         echo -e "${GREEN}OK${NC}"
