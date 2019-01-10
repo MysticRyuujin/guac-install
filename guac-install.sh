@@ -4,7 +4,7 @@
 if ! [ $(id -u) = 0 ]; then echo "Please run this script as sudo or root"; exit 1 ; fi
 
 # Version number of Guacamole to install
-GUACVERSION="0.9.14"
+GUACVERSION="1.0.0"
 
 # Colors to use for output
 YELLOW='\033[1;33m'
@@ -177,15 +177,15 @@ mkdir -p /etc/guacamole/extensions
 # Install guacd
 cd guacamole-server-${GUACVERSION}
 
-# Patch for Guacamole Server 0.9.14
-wget -q --show-progress -O ./src/terminal/cd0e48234a079813664052b56c501e854753303a.patch https://github.com/apache/guacamole-server/commit/cd0e48234a079813664052b56c501e854753303a.patch
-if [ $? -ne 0 ]; then
-    echo -e "${RED}Failed to download cd0e48234a079813664052b56c501e854753303a.patch"
-    echo -e "https://github.com/apache/guacamole-server/commit/cd0e48234a079813664052b56c501e854753303a.patch"
-    echo -e "Attempting to proceed without patch...${NC}"
-else
-    patch ./src/terminal/typescript.c ./src/terminal/cd0e48234a079813664052b56c501e854753303a.patch
-fi
+# Patch leftover for Guacamole Server 0.9.14
+#wget -q --show-progress -O ./src/terminal/cd0e48234a079813664052b56c501e854753303a.patch https://github.com/apache/guacamole-server/commit/cd0e48234a079813664052b56c501e854753303a.patch
+#if [ $? -ne 0 ]; then
+#    echo -e "${RED}Failed to download cd0e48234a079813664052b56c501e854753303a.patch"
+#    echo -e "https://github.com/apache/guacamole-server/commit/cd0e48234a079813664052b56c501e854753303a.patch"
+#    echo -e "Attempting to proceed without patch...${NC}"
+#else
+#    patch ./src/terminal/typescript.c ./src/terminal/cd0e48234a079813664052b56c501e854753303a.patch
+#fi
 
 # Hack for gcc7
 if [[ $(gcc --version | head -n1 | grep -oP '\)\K.*' | awk '{print $1}' | grep "^7" | wc -l) -gt 0 ]]
