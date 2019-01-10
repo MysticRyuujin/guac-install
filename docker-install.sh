@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Version number of Guacamole to install
-GUACVERSION="0.9.14"
+GUACVERSION="1.0.0"
 
 # Get script arguments for non-interactive mode
 while [ "$1" != "" ]; do
