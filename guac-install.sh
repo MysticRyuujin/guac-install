@@ -127,12 +127,6 @@ ghostscript wget dpkg-dev
         echo -e "${GREEN}OK${NC}"
     fi
 
-# If apt fails to run completely the rest of this isn't going to work...
-if [ $? -ne 0 ]; then
-    echo -e "${RED}apt-get failed to install all required dependencies${NC}"
-    exit 1
-fi
-
 # Set SERVER to be the preferred download server from the Apache CDN
 SERVER="http://apache.org/dyn/closer.cgi?action=download&filename=guacamole/${GUACVERSION}"
 echo -e "${BLUE}Downloading Files...${NC}"
