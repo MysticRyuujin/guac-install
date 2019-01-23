@@ -103,6 +103,7 @@ apt-get -qq update
 
 # Tomcat 8.0.x is End of Life, however Tomcat 7.x is not...
 # If Tomcat 8.5.x or newer is available install it, otherwise install Tomcat 7
+# I have not testing with Tomcat9...
 if [[ $(apt-cache show tomcat8 | egrep "Version: 8.[5-9]" | wc -l) -gt 0 ]]
 then
     TOMCAT="tomcat8"
@@ -114,7 +115,7 @@ fi
 #TOMCAT=""
 
 # Install features
-echo -e "${BLUE}Installing dependencies${NC}"
+echo -e "${BLUE}Installing dependencies (This might take a few minutes...)${NC}"
 
 apt-get -y install build-essential libcairo2-dev ${JPEGTURBO} ${LIBPNG} libossp-uuid-dev libavcodec-dev libavutil-dev \
 libswscale-dev libfreerdp-dev libpango1.0-dev libssh2-1-dev libtelnet-dev libvncserver-dev libpulse-dev libssl-dev \
@@ -122,9 +123,9 @@ libvorbis-dev libwebp-dev mysql-server mysql-client mysql-common mysql-utilities
 ghostscript wget dpkg-dev &>> ${LOG}
 
 if [ $? -ne 0 ]; then
-    echo -e "${RED}Failed${NC}"
+    echo -e "${RED}Failed. See ${LOG}${NC}"
     exit 1
-    else
+else
     echo -e "${GREEN}OK${NC}"
 fi
 
@@ -177,7 +178,7 @@ echo -e "${BLUE}Building Guacamole with GCC $(gcc --version | head -n1 | grep -o
 echo -e "${BLUE}Configuring...${NC}"
 ./configure --with-init-dir=/etc/init.d  &>> ${LOG}
 if [ $? -ne 0 ]; then
-    echo -e "${RED}Failed${NC}"
+    echo -e "${RED}Failed. See ${LOG}${NC}"
     exit 1
 else
     echo -e "${GREEN}OK${NC}"
@@ -186,7 +187,7 @@ fi
 echo -e "${BLUE}Running Make...${NC}"
 make &>> ${LOG}
 if [ $? -ne 0 ]; then
-    echo -e "${RED}Failed${NC}"
+    echo -e "${RED}Failed. See ${LOG}${NC}"
     exit 1
 else
     echo -e "${GREEN}OK${NC}"
@@ -195,7 +196,7 @@ fi
 echo -e "${BLUE}Running Make Install...${NC}"
 make install &>> ${LOG}
 if [ $? -ne 0 ]; then
-    echo -e "${RED}Failed${NC}"
+    echo -e "${RED}Failed. See ${LOG}${NC}"
     exit 1
 else
     echo -e "${GREEN}OK${NC}"
