@@ -116,16 +116,17 @@ fi
 # Install features
 echo -e "${BLUE}Installing dependencies${NC}"
 
-apt-get -qq -y install build-essential libcairo2-dev ${JPEGTURBO} ${LIBPNG} libossp-uuid-dev libavcodec-dev libavutil-dev \
+apt-get -y install build-essential libcairo2-dev ${JPEGTURBO} ${LIBPNG} libossp-uuid-dev libavcodec-dev libavutil-dev \
 libswscale-dev libfreerdp-dev libpango1.0-dev libssh2-1-dev libtelnet-dev libvncserver-dev libpulse-dev libssl-dev \
 libvorbis-dev libwebp-dev mysql-server mysql-client mysql-common mysql-utilities libmysql-java ${TOMCAT} freerdp-x11 \
-ghostscript wget dpkg-dev
-  if [ $? -ne 0 ]; then
-        echo -e "${RED}Failed${NC}"
-        exit 1
-        else
-        echo -e "${GREEN}OK${NC}"
-    fi
+ghostscript wget dpkg-dev &>> ${LOG}
+
+if [ $? -ne 0 ]; then
+    echo -e "${RED}Failed${NC}"
+    exit 1
+    else
+    echo -e "${GREEN}OK${NC}"
+fi
 
 # Set SERVER to be the preferred download server from the Apache CDN
 SERVER="http://apache.org/dyn/closer.cgi?action=download&filename=guacamole/${GUACVERSION}"
@@ -171,58 +172,35 @@ mkdir -p /etc/guacamole/extensions
 # Install guacd
 cd guacamole-server-${GUACVERSION}
 
-# Patch leftover for Guacamole Server 0.9.14
-#wget -q --show-progress -O ./src/terminal/cd0e48234a079813664052b56c501e854753303a.patch https://github.com/apache/guacamole-server/commit/cd0e48234a079813664052b56c501e854753303a.patch
-#if [ $? -ne 0 ]; then
-#    echo -e "${RED}Failed to download cd0e48234a079813664052b56c501e854753303a.patch"
-#    echo -e "https://github.com/apache/guacamole-server/commit/cd0e48234a079813664052b56c501e854753303a.patch"
-#    echo -e "Attempting to proceed without patch...${NC}"
-#else
-#    patch ./src/terminal/typescript.c ./src/terminal/cd0e48234a079813664052b56c501e854753303a.patch
-#fi
+echo -e "${BLUE}Building Guacamole with GCC $(gcc --version | head -n1 | grep -oP '\)\K.*' | awk '{print $1}') ${NC}"
 
-# Hack for gcc7
-if [[ $(gcc --version | head -n1 | grep -oP '\)\K.*' | awk '{print $1}' | grep "^7" | wc -l) -gt 0 ]]
-then
-    echo -e "${BLUE}Building Guacamole with GCC6...${NC}"
-    apt-get -qq -y install gcc-6
-    if [ $? -ne 0 ]; then
-        echo -e "${RED}apt-get failed to install gcc-6${NC}"
-        exit 1
-        else
-        echo -e "${GREEN}GCC6 Installed${NC}"
-    fi
-    CC="gcc-6"
-
+echo -e "${BLUE}Configuring...${NC}"
+./configure --with-init-dir=/etc/init.d  &>> ${LOG}
+if [ $? -ne 0 ]; then
+    echo -e "${RED}Failed${NC}"
+    exit 1
 else
-    echo -e "${BLUE}Building Guacamole with GCC7...${NC}"
-    CC="gcc-7"
+    echo -e "${GREEN}OK${NC}"
 fi
-     echo -e "${BLUE}Configuring...${NC}"
-     ./configure --with-init-dir=/etc/init.d  &>> ${LOG}
-    if [ $? -ne 0 ]; then
-        echo -e "${RED}Failed${NC}"
-        exit 1
-        else
-        echo -e "${GREEN}OK${NC}"
-    fi
-     echo -e "${BLUE}Running Make...${NC}"
-    make &>> ${LOG}
-    if [ $? -ne 0 ]; then
-        echo -e "${RED}Failed${NC}"
-        exit 1
-        else
-        echo -e "${GREEN}OK${NC}"
-    fi
-     echo -e "${BLUE}Running Make Install...${NC}"
-     make install &>> ${LOG}
-     if [ $? -ne 0 ]; then
-        echo -e "${RED}Failed${NC}"
-        exit 1
-        else
-        echo -e "${GREEN}OK${NC}"
-    fi
-    
+
+echo -e "${BLUE}Running Make...${NC}"
+make &>> ${LOG}
+if [ $? -ne 0 ]; then
+    echo -e "${RED}Failed${NC}"
+    exit 1
+else
+    echo -e "${GREEN}OK${NC}"
+fi
+
+echo -e "${BLUE}Running Make Install...${NC}"
+make install &>> ${LOG}
+if [ $? -ne 0 ]; then
+    echo -e "${RED}Failed${NC}"
+    exit 1
+else
+    echo -e "${GREEN}OK${NC}"
+fi
+
 ldconfig
 systemctl enable guacd
 cd ..
