@@ -115,7 +115,7 @@ fi
 #TOMCAT=""
 
 # Install features
-echo -e "${BLUE}Installing dependencies (This might take a few minutes...)${NC}"
+echo -e "${BLUE}Installing dependencies. This might take a few minutes...${NC}"
 
 apt-get -y install build-essential libcairo2-dev ${JPEGTURBO} ${LIBPNG} libossp-uuid-dev libavcodec-dev libavutil-dev \
 libswscale-dev libfreerdp-dev libpango1.0-dev libssh2-1-dev libtelnet-dev libvncserver-dev libpulse-dev libssl-dev \
@@ -184,7 +184,7 @@ else
     echo -e "${GREEN}OK${NC}"
 fi
 
-echo -e "${BLUE}Running Make...${NC}"
+echo -e "${BLUE}Running Make. This might take a few minutes...${NC}"
 make &>> ${LOG}
 if [ $? -ne 0 ]; then
     echo -e "${RED}Failed. See ${LOG}${NC}"
