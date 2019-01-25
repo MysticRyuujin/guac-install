@@ -38,7 +38,12 @@ The default credentials are guacadmin as both username and password. Please chan
 # guac-upgrade
 Script for upgrading currently installed Guacamole instance (previously installed via this script/guide)
 
+
 If looks for the tomcat folder in /etc/ (E.G. `/etc/tomcat7` or `/etc/tomcat8`) hopefully that works to identify the correct tomcat version/path :smile: I'm open to suggestions/pull requests for a cleaner method.
+
+## WARNING
+
+I don't think this script is working anymore. Way too many reports that 0.9.14 -> 1.0.0 are not working. I don't know why.
 
 ## How to Run:
 
