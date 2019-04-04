@@ -16,9 +16,6 @@ NC='\033[0m' # No Color
 # Log Location
 LOG="/tmp/guacamole_${GUACVERSION}_build.log"
 
-# Database Name
-DB="guacamole_db"
-
 # Get script arguments for non-interactive mode
 while [ "$1" != "" ]; do
     case $1 in
@@ -30,9 +27,27 @@ while [ "$1" != "" ]; do
             shift
             guacpwd="$1"
             ;;
+        -u | --mysqluser )
+            shift
+            mysqluser="$1"
+            ;;
+        -d | --database )
+            shift
+            DB="$1"
+            ;;
     esac
     shift
 done
+
+# Checking if mysql user given
+if [ -z "$mysqluser" ]; then
+    mysqluser="guacamole_user"
+fi
+
+# Checking if database name given
+if [ -z "$DB" ]; then
+    DB="guacamole_db"
+fi
 
 # Get MySQL root password and Guacamole User password
 if [ -n "$mysqlpwd" ] && [ -n "$guacpwd" ]; then
@@ -111,6 +126,13 @@ else
     TOMCAT="tomcat7"
 fi
 
+if [ -z $(command -v mysql)]
+then
+    MYSQL="mysql-server mysql-client mysql-common mysql-utilities"
+else
+    MYSQL=""
+fi
+
 # Uncomment to manually force a tomcat version
 #TOMCAT=""
 
@@ -119,7 +141,7 @@ echo -e "${BLUE}Installing dependencies. This might take a few minutes...${NC}"
 
 apt-get -y install build-essential libcairo2-dev ${JPEGTURBO} ${LIBPNG} libossp-uuid-dev libavcodec-dev libavutil-dev \
 libswscale-dev libfreerdp-dev libpango1.0-dev libssh2-1-dev libtelnet-dev libvncserver-dev libpulse-dev libssl-dev \
-libvorbis-dev libwebp-dev mysql-server mysql-client mysql-common mysql-utilities libmysql-java ${TOMCAT} freerdp-x11 \
+libvorbis-dev libwebp-dev ${MYSQL} libmysql-java ${TOMCAT} freerdp-x11 \
 ghostscript wget dpkg-dev &>> ${LOG}
 
 if [ $? -ne 0 ]; then
@@ -220,7 +242,7 @@ cp guacamole-auth-jdbc-${GUACVERSION}/mysql/guacamole-auth-jdbc-mysql-${GUACVERS
 echo "mysql-hostname: localhost" >> /etc/guacamole/guacamole.properties
 echo "mysql-port: 3306" >> /etc/guacamole/guacamole.properties
 echo "mysql-database: ${DB}" >> /etc/guacamole/guacamole.properties
-echo "mysql-username: guacamole_user" >> /etc/guacamole/guacamole.properties
+echo "mysql-username: ${mysqluser}" >> /etc/guacamole/guacamole.properties
 echo "mysql-password: ${guacdbuserpassword}" >> /etc/guacamole/guacamole.properties
 
 # restart tomcat
@@ -234,13 +256,13 @@ else
     echo -e "${GREEN}OK${NC}"
 fi
 
-# Create guacamole_db and grant guacamole_user permissions to it
+# Create guacamole_db and grant $mysqluser permissions to it
 
 # SQL code
 SQLCODE="
 create database ${DB};
-create user 'guacamole_user'@'localhost' identified by \"${guacdbuserpassword}\";
-GRANT SELECT,INSERT,UPDATE,DELETE ON guacamole_db.* TO 'guacamole_user'@'localhost';
+create user if not exists '${mysqluser}'@'localhost' identified by \"${guacdbuserpassword}\";
+GRANT SELECT,INSERT,UPDATE,DELETE ON guacamole_db.* TO '${mysqluser}'@'localhost';
 flush privileges;"
 
 # Execute SQL code
