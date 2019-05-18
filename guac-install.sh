@@ -173,7 +173,7 @@ if [ $? -ne 0 ]; then
 fi
 echo -e "${GREEN}Downloaded guacamole-${GUACVERSION}.war${NC}"
 
-# Download Guacamole authentication extensions
+# Download Guacamole authentication extensions (Database)
 wget -q --show-progress -O guacamole-auth-jdbc-${GUACVERSION}.tar.gz ${SERVER}/binary/guacamole-auth-jdbc-${GUACVERSION}.tar.gz
 if [ $? -ne 0 ]; then
     echo -e "${RED}Failed to download guacamole-auth-jdbc-${GUACVERSION}.tar.gz"
@@ -182,11 +182,21 @@ if [ $? -ne 0 ]; then
 fi
 echo -e "${GREEN}Downloaded guacamole-auth-jdbc-${GUACVERSION}.tar.gz${NC}"
 
+# Download Guacamole authentication extensions (TOTP)
+wget -q --show-progress -O guacamole-auth-totp-${GUACVERSION}.tar.gz ${SERVER}/binary/guacamole-auth-totp-${GUACVERSION}.tar.gz
+if [ $? -ne 0 ]; then
+    echo -e "${RED}Failed to download guacamole-auth-totp-${GUACVERSION}.tar.gz"
+    echo -e "${SERVER}/binary/guacamole-auth-totp-${GUACVERSION}.tar.gz"
+    exit 1
+fi
+echo -e "${GREEN}Downloaded guacamole-auth-totp-${GUACVERSION}.tar.gz${NC}"
+
 echo -e "${GREEN}Downloading complete.${NC}"
 
 # Extract Guacamole files
 tar -xzf guacamole-server-${GUACVERSION}.tar.gz
 tar -xzf guacamole-auth-jdbc-${GUACVERSION}.tar.gz
+tar -xzf guacamole-auth-totp-${GUACVERSION}.tar.gz
 
 # Make directories
 mkdir -p /etc/guacamole/lib
@@ -197,7 +207,7 @@ cd guacamole-server-${GUACVERSION}
 
 echo -e "${BLUE}Building Guacamole with GCC $(gcc --version | head -n1 | grep -oP '\)\K.*' | awk '{print $1}') ${NC}"
 
-echo -e "${BLUE}Configuring...${NC}"
+echo -e "${BLUE}Configuring. This might take a minute...${NC}"
 ./configure --with-init-dir=/etc/init.d  &>> ${LOG}
 if [ $? -ne 0 ]; then
     echo -e "${RED}Failed. See ${LOG}${NC}"
@@ -237,6 +247,7 @@ ln -s /etc/guacamole/guacamole.war /var/lib/${TOMCAT}/webapps/
 ln -s /usr/local/lib/freerdp/guac*.so /usr/lib/${BUILD_FOLDER}/freerdp/
 ln -s /usr/share/java/mysql-connector-java.jar /etc/guacamole/lib/
 cp guacamole-auth-jdbc-${GUACVERSION}/mysql/guacamole-auth-jdbc-mysql-${GUACVERSION}.jar /etc/guacamole/extensions/
+cp guacamole-auth-totp-${GUACVERSION}/guacamole-auth-totp-${GUACVERSION}.jar /etc/guacamole/extensions/
 
 # Configure guacamole.properties
 echo "mysql-hostname: localhost" >> /etc/guacamole/guacamole.properties
