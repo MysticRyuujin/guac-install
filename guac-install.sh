@@ -250,6 +250,8 @@ cp guacamole-auth-jdbc-${GUACVERSION}/mysql/guacamole-auth-jdbc-mysql-${GUACVERS
 cp guacamole-auth-totp-${GUACVERSION}/guacamole-auth-totp-${GUACVERSION}.jar /etc/guacamole/extensions/
 
 # Configure guacamole.properties
+rm -f /etc/guacamole/guacamole.properties
+touch /etc/guacamole/guacamole.properties
 echo "mysql-hostname: localhost" >> /etc/guacamole/guacamole.properties
 echo "mysql-port: 3306" >> /etc/guacamole/guacamole.properties
 echo "mysql-database: ${DB}" >> /etc/guacamole/guacamole.properties
