@@ -126,7 +126,7 @@ else
     TOMCAT="tomcat7"
 fi
 
-if [ -z $(command -v mysql)]
+if [ -z $(command -v mysql) ]
 then
     MYSQL="mysql-server mysql-client mysql-common mysql-utilities"
 else
