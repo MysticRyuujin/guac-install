@@ -12,7 +12,7 @@ If you're looking to also have NGINX / Let's Encrypt / HTTPS click [HERE](https:
 
 ### Download file directly from here:
 
-<code>wget https://raw.githubusercontent.com/MysticRyuujin/guac-install/master/guac-install.sh</code>
+<code>wget https://git.io/fxZq5</code>
 
 ### Make it executable:
 
