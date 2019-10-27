@@ -16,6 +16,8 @@ NC='\033[0m' # No Color
 # Log Location
 LOG="/tmp/guacamole_${GUACVERSION}_build.log"
 
+# Default : Install TOTP
+installTOTP=true
 # Get script arguments for non-interactive mode
 while [ "$1" != "" ]; do
     case $1 in
@@ -35,6 +37,8 @@ while [ "$1" != "" ]; do
             shift
             DB="$1"
             ;;
+        -n | --nototp )
+            installTOTP=false
     esac
     shift
 done
@@ -183,22 +187,22 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 echo -e "${GREEN}Downloaded guacamole-auth-jdbc-${GUACVERSION}.tar.gz${NC}"
+if [ "$installTOTP" = true ] ; then
+	# Download Guacamole authentication extensions (TOTP)
+	wget -q --show-progress -O guacamole-auth-totp-${GUACVERSION}.tar.gz ${SERVER}/binary/guacamole-auth-totp-${GUACVERSION}.tar.gz
+	if [ $? -ne 0 ]; then
+    	echo -e "${RED}Failed to download guacamole-auth-totp-${GUACVERSION}.tar.gz"
+    	echo -e "${SERVER}/binary/guacamole-auth-totp-${GUACVERSION}.tar.gz"
+    	exit 1
+	fi
+	echo -e "${GREEN}Downloaded guacamole-auth-totp-${GUACVERSION}.tar.gz${NC}"
 
-# Download Guacamole authentication extensions (TOTP)
-wget -q --show-progress -O guacamole-auth-totp-${GUACVERSION}.tar.gz ${SERVER}/binary/guacamole-auth-totp-${GUACVERSION}.tar.gz
-if [ $? -ne 0 ]; then
-    echo -e "${RED}Failed to download guacamole-auth-totp-${GUACVERSION}.tar.gz"
-    echo -e "${SERVER}/binary/guacamole-auth-totp-${GUACVERSION}.tar.gz"
-    exit 1
+	echo -e "${GREEN}Downloading complete.${NC}"
+	tar -xzf guacamole-auth-totp-${GUACVERSION}.tar.gz
 fi
-echo -e "${GREEN}Downloaded guacamole-auth-totp-${GUACVERSION}.tar.gz${NC}"
-
-echo -e "${GREEN}Downloading complete.${NC}"
-
 # Extract Guacamole files
 tar -xzf guacamole-server-${GUACVERSION}.tar.gz
 tar -xzf guacamole-auth-jdbc-${GUACVERSION}.tar.gz
-tar -xzf guacamole-auth-totp-${GUACVERSION}.tar.gz
 
 # Make directories
 mkdir -p /etc/guacamole/lib
@@ -249,8 +253,10 @@ ln -s /etc/guacamole/guacamole.war /var/lib/${TOMCAT}/webapps/
 ln -s /usr/local/lib/freerdp/guac*.so /usr/lib/${BUILD_FOLDER}/freerdp/
 ln -s /usr/share/java/mysql-connector-java.jar /etc/guacamole/lib/
 cp guacamole-auth-jdbc-${GUACVERSION}/mysql/guacamole-auth-jdbc-mysql-${GUACVERSION}.jar /etc/guacamole/extensions/
-cp guacamole-auth-totp-${GUACVERSION}/guacamole-auth-totp-${GUACVERSION}.jar /etc/guacamole/extensions/
 
+if [ "$installTOTP" = true ] ; then 
+	cp guacamole-auth-totp-${GUACVERSION}/guacamole-auth-totp-${GUACVERSION}.jar /etc/guacamole/extensions/
+fi
 # Configure guacamole.properties
 rm -f /etc/guacamole/guacamole.properties
 touch /etc/guacamole/guacamole.properties
