@@ -8,6 +8,10 @@ The script attempts to install tomcat8 if the available version is 8.5.x or newe
 
 If you're looking to also have NGINX / Let's Encrypt / HTTPS click [HERE](https://github.com/bigredthelogger/guacamole)
 
+## MFA/2FA
+
+By default the script will install with TOTP support (Google Authenticator), if you do not want TOTP support (which if installed is mandatory for every user) you need to specify the `-n` or `--nototp` flags on the command line. Or Modify the script variable `installTOTP=false`
+
 ## How to Run:
 
 ### Download file directly from here:
