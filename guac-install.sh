@@ -293,7 +293,7 @@ if [ "$installDuo" = true ] ; then
     echo "duo-integration-key: <integration-key>" >> /etc/guacamole/guacamole.properties
     echo "duo-secret-key: <secret-key>" >> /etc/guacamole/guacamole.properties
     echo "duo-application-key: <application-key>" >> /etc/guacamole/guacamole.properties
-    echo -e "${BLUE}Duo is installed, it will need to be configured via guacamole.properties!"
+    echo -e "${BLUE}Duo is installed, it will need to be configured via guacamole.properties!${NC}"
 fi
 
 # restart tomcat
