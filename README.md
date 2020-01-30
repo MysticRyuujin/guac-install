@@ -1,6 +1,6 @@
 # guac-install
 
-Script for installing Guacamole 1.0.0 on Ubuntu 16.04 or newer with MySQL. It should also work on pure Debian 7, 8, and 9. **It seems Debian 10 is not working right now**
+Script for installing Guacamole 1.1.0 on Ubuntu 16.04 or newer with MySQL. It should also work on pure Debian 7, 8, and 9. **It seems Debian 10 is not working right now**
 
 Run script, enter MySQL Root Password and Guacamole User password. Guacamole User is used to connect to the Guacamole Database.
 
@@ -10,13 +10,13 @@ If you're looking to also have NGINX / Let's Encrypt / HTTPS click [HERE](https:
 
 ## MFA/2FA
 
-By default the script will install with TOTP support (Google Authenticator), if you do not want TOTP support (which if installed is mandatory for every user) you need to specify the `-n` or `--nototp` flags on the command line. Or Modify the script variable `installTOTP=false`
+By default the script will install with TOTP support (Google Authenticator) as well as Duo, if you do not want TOTP support (which if installed is mandatory for every user) you need to specify the `-n` or `--nototp` or for duo `-o` or `--noduo` flags on the command line. Or Modify the script variable `installTOTP=false` or `installDuo=false`
 
 ## How to Run:
 
 ### Download file directly from here:
 
-<code>wget https://git.io/fxZq5</code>
+<code>wget https://raw.githubusercontent.com/SoulSeekkor/guac-install/master/guac-install.sh</code>
 
 ### Make it executable:
 
@@ -53,7 +53,7 @@ I don't think this script is working anymore. Way too many reports that 0.9.14 -
 
 ### Download file directly from here:
 
-<code>wget https://raw.githubusercontent.com/MysticRyuujin/guac-install/master/guac-upgrade.sh</code>
+<code>wget https://raw.githubusercontent.com/SoulSeekkor/guac-install/master/guac-upgrade.sh</code>
 
 ### Make it executable:
 
