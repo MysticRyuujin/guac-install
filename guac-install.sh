@@ -4,7 +4,7 @@
 if ! [ $(id -u) = 0 ]; then echo "Please run this script as sudo or root"; exit 1 ; fi
 
 # Version number of Guacamole to install
-GUACVERSION="1.0.0"
+GUACVERSION="1.1.0"
 
 # Colors to use for output
 YELLOW='\033[1;33m'
@@ -18,6 +18,7 @@ LOG="/tmp/guacamole_${GUACVERSION}_build.log"
 
 # Default : Install TOTP
 installTOTP=true
+installDuo=true
 # Get script arguments for non-interactive mode
 while [ "$1" != "" ]; do
     case $1 in
@@ -39,6 +40,9 @@ while [ "$1" != "" ]; do
             ;;
         -n | --nototp )
             installTOTP=false
+            ;;
+        -o | --noduo )
+            installDuo=false
     esac
     shift
 done
@@ -147,7 +151,7 @@ export DEBIAN_FRONTEND=noninteractive
 
 apt-get -y install build-essential libcairo2-dev ${JPEGTURBO} ${LIBPNG} libossp-uuid-dev libavcodec-dev libavutil-dev \
 libswscale-dev libfreerdp-dev libpango1.0-dev libssh2-1-dev libtelnet-dev libvncserver-dev libpulse-dev libssl-dev \
-libvorbis-dev libwebp-dev ${MYSQL} libmysql-java ${TOMCAT} freerdp-x11 \
+libvorbis-dev libwebp-dev ${MYSQL} libmysql-java ${TOMCAT} freerdp2-x11 libtool-bin \
 ghostscript wget dpkg-dev &>> ${LOG}
 
 if [ $? -ne 0 ]; then
@@ -187,8 +191,9 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 echo -e "${GREEN}Downloaded guacamole-auth-jdbc-${GUACVERSION}.tar.gz${NC}"
+# Download Guacamole authentication extensions
 if [ "$installTOTP" = true ] ; then
-	# Download Guacamole authentication extensions (TOTP)
+    # TOTP
 	wget -q --show-progress -O guacamole-auth-totp-${GUACVERSION}.tar.gz ${SERVER}/binary/guacamole-auth-totp-${GUACVERSION}.tar.gz
 	if [ $? -ne 0 ]; then
     	echo -e "${RED}Failed to download guacamole-auth-totp-${GUACVERSION}.tar.gz"
@@ -199,6 +204,19 @@ if [ "$installTOTP" = true ] ; then
 
 	echo -e "${GREEN}Downloading complete.${NC}"
 	tar -xzf guacamole-auth-totp-${GUACVERSION}.tar.gz
+fi
+if [ "$installDuo" = true ] ; then
+    # Duo
+	wget -q --show-progress -O guacamole-auth-duo-${GUACVERSION}.tar.gz ${SERVER}/binary/guacamole-auth-duo-${GUACVERSION}.tar.gz
+	if [ $? -ne 0 ]; then
+    	echo -e "${RED}Failed to download guacamole-auth-duo-${GUACVERSION}.tar.gz"
+    	echo -e "${SERVER}/binary/guacamole-auth-duo-${GUACVERSION}.tar.gz"
+    	exit 1
+	fi
+	echo -e "${GREEN}Downloaded guacamole-auth-duo-${GUACVERSION}.tar.gz${NC}"
+
+	echo -e "${GREEN}Downloading complete.${NC}"
+	tar -xzf guacamole-auth-duo-${GUACVERSION}.tar.gz
 fi
 # Extract Guacamole files
 tar -xzf guacamole-server-${GUACVERSION}.tar.gz
@@ -254,9 +272,13 @@ ln -s /usr/local/lib/freerdp/guac*.so /usr/lib/${BUILD_FOLDER}/freerdp/
 ln -s /usr/share/java/mysql-connector-java.jar /etc/guacamole/lib/
 cp guacamole-auth-jdbc-${GUACVERSION}/mysql/guacamole-auth-jdbc-mysql-${GUACVERSION}.jar /etc/guacamole/extensions/
 
-if [ "$installTOTP" = true ] ; then 
+if [ "$installTOTP" = true ] ; then
 	cp guacamole-auth-totp-${GUACVERSION}/guacamole-auth-totp-${GUACVERSION}.jar /etc/guacamole/extensions/
 fi
+if [ "$installDuo" = true ] ; then
+	cp guacamole-auth-duo-${GUACVERSION}/guacamole-auth-duo-${GUACVERSION}.jar /etc/guacamole/extensions/
+fi
+
 # Configure guacamole.properties
 rm -f /etc/guacamole/guacamole.properties
 touch /etc/guacamole/guacamole.properties
@@ -265,6 +287,14 @@ echo "mysql-port: 3306" >> /etc/guacamole/guacamole.properties
 echo "mysql-database: ${DB}" >> /etc/guacamole/guacamole.properties
 echo "mysql-username: ${mysqluser}" >> /etc/guacamole/guacamole.properties
 echo "mysql-password: ${guacdbuserpassword}" >> /etc/guacamole/guacamole.properties
+
+if [ "$installDuo" = true ] ; then
+    echo "duo-api-hostname: <api-hostname>" >> /etc/guacamole/guacamole.properties
+    echo "duo-integration-key: <integration-key>" >> /etc/guacamole/guacamole.properties
+    echo "duo-secret-key: <secret-key>" >> /etc/guacamole/guacamole.properties
+    echo "duo-application-key: <application-key>" >> /etc/guacamole/guacamole.properties
+    echo -e "${BLUE}Duo is installed, it will need to be configured via guacamole.properties!"
+fi
 
 # restart tomcat
 echo -e "${BLUE}Restarting tomcat...${NC}"

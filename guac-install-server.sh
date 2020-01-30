@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Version number of Guacamole to install
-GUACVERSION="1.0.0"
+GUACVERSION="1.1.0"
 
 # Ubuntu and Debian have different names of the libjpeg-turbo library for some reason...
 source /etc/os-release
@@ -31,8 +31,8 @@ fi
 # Install Server Features
 apt update
 apt -y install build-essential libcairo2-dev ${JPEGTURBO} ${LIBPNG} libossp-uuid-dev libavcodec-dev libavutil-dev \
-libswscale-dev libfreerdp-dev libpango1.0-dev libssh2-1-dev libtelnet-dev libvncserver-dev libpulse-dev libssl-dev \
-libvorbis-dev libwebp-dev jq curl wget
+libswscale-dev freerdp2-dev libpango1.0-dev libssh2-1-dev libtelnet-dev libvncserver-dev libpulse-dev libssl-dev \
+libvorbis-dev libwebp-dev jq curl wget libtool-bin
 
 # If apt fails to run completely the rest of this isn't going to work...
 if [ $? != 0 ]
