@@ -56,7 +56,7 @@ service guacd stop
 apt-get -qq update
 
 # Install additional packages if they do not exist yet
-apt-get -y install freerdp2-dev freerdp2-x11
+apt-get -y install freerdp2-dev freerdp2-x11 libtool-bin
 
 # Download Guacamole server
 wget -O guacamole-server-${GUACVERSION}.tar.gz ${SERVER}/source/guacamole-server-${GUACVERSION}.tar.gz
