@@ -26,7 +26,7 @@ PROMPT=""
 echo -e -n "${CYAN}(!)${NC} Do you want to use TOTP? (y/N): "
 read PROMPT
 echo ""
-if [[ ! $PROMPT =~ [Yy]$ ]]; then
+if [[ $PROMPT =~ ^[Yy]$ ]]; then
     installTOTP=true;
 fi
 
@@ -34,7 +34,7 @@ fi
 echo -e -n "${CYAN}(!)${NC} Do you want to use Duo? (y/N): "
 read PROMPT
 echo ""
-if [[ ! $PROMPT =~ [Yy]$ ]]; then
+if [[ $PROMPT =~ ^[Yy]$ ]]; then
     installDuo=true;
 fi
 
