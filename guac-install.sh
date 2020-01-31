@@ -150,7 +150,7 @@ echo -e "${BLUE}Installing dependencies. This might take a few minutes...${NC}"
 export DEBIAN_FRONTEND=noninteractive
 
 apt-get -y install build-essential libcairo2-dev ${JPEGTURBO} ${LIBPNG} libossp-uuid-dev libavcodec-dev libavutil-dev \
-libswscale-dev libfreerdp-dev libpango1.0-dev libssh2-1-dev libtelnet-dev libvncserver-dev libpulse-dev libssl-dev \
+libswscale-dev freerdp2-dev libpango1.0-dev libssh2-1-dev libtelnet-dev libvncserver-dev libpulse-dev libssl-dev \
 libvorbis-dev libwebp-dev ${MYSQL} libmysql-java ${TOMCAT} freerdp2-x11 libtool-bin \
 ghostscript wget dpkg-dev &>> ${LOG}
 
