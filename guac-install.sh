@@ -26,25 +26,13 @@ PROMPT=""
 echo -e -n "${CYAN}(!)${NC} Do you want to use TOTP? (y/N): "
 read PROMPT
 echo ""
-if [[ $PROMPT =~ ^[Yy]$ ]]; then
-    installTOTP=true;
-fi
-
+if [[ $PROMPT =~ ^[Yy]$ ]]; then installTOTP=true; fi
 
 echo -e -n "${CYAN}(!)${NC} Do you want to use Duo? (y/N): "
 read PROMPT
 echo ""
-if [[ $PROMPT =~ ^[Yy]$ ]]; then
-    installDuo=true;
-fi
+if [[ $PROMPT =~ ^[Yy]$ ]]; then installDuo=true; fi
 
-if [ "$installTOTP" = true ] ; then
-	echo "Installing TOTP!"
-fi
-if [ "$installDuo" = true ] ; then
-	echo "Installing Duo!"
-fi
-exit 1
 # Get script arguments for non-interactive mode
 while [ "$1" != "" ]; do
     case $1 in
