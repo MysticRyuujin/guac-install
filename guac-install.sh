@@ -22,21 +22,21 @@ installTOTP=false
 installDuo=false
 
 # Prompt the user if they would like to install MFA, default of no
-while true; do
-    read -p "${CYAN}(!)${NC} Do you want to use TOTP? (y/N): " yn
-    case $yn in
-        [Yy]* ) installTOTP=true; break;;
-        * ) break;;
-    esac
-done
+PROMPT=""
+echo -e -n "${CYAN}(!)${NC} Do you want to use TOTP? (y/N): "
+read PROMPT
+echo ""
+if [[ ! $PROMPT =~ [Yy]$ ]]; then
+    installTOTP=true;
+fi
 
-while true; do
-    read -p "${CYAN}(!)${NC} Do you want to use Duo? (y/N): " yn
-    case $yn in
-        [Yy]* ) installDuo=true; break;;
-        * ) break;;
-    esac
-done
+
+echo -e -n "${CYAN}(!)${NC} Do you want to use Duo? (y/N): "
+read PROMPT
+echo ""
+if [[ ! $PROMPT =~ [Yy]$ ]]; then
+    installDuo=true;
+fi
 
 if [ "$installTOTP" = true ] ; then
 	echo "Installing TOTP!"
