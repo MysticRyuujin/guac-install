@@ -11,6 +11,7 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 RED='\033[0;31m'
 GREEN='\033[0;32m'
+CYAN='\033[0;36m'
 NC='\033[0m' # No Color
 
 # Log Location
@@ -20,23 +21,22 @@ LOG="/tmp/guacamole_${GUACVERSION}_build.log"
 installTOTP=false
 installDuo=false
 
-ANSWER="n"
-echo -e -n "${CYAN}(!)${NC} Do you want to use TOTP? (y/n): "
-read ANSWER
-echo ""
+# Prompt the user if they would like to install MFA, default of no
+while true; do
+    read -p "${CYAN}(!)${NC} Do you want to use TOTP? (y/N): " yn
+    case $yn in
+        [Yy]* ) installTOTP=true; break;;
+        * ) break;;
+    esac
+done
 
-if [ "$ANSWER" == "y" ]; then
-    installTOTP=true
-fi
-
-ANSWER="n"
-echo -e -n "${CYAN}(!)${NC} Do you want to use Duo? (y/n): "
-read ANSWER
-echo ""
-
-if [ "$ANSWER" == "y" ]; then
-    installDuo=true
-fi
+while true; do
+    read -p "${CYAN}(!)${NC} Do you want to use Duo? (y/N): " yn
+    case $yn in
+        [Yy]* ) installDuo=true; break;;
+        * ) break;;
+    esac
+done
 
 if [ "$installTOTP" = true ] ; then
 	echo "Installing TOTP!"
@@ -64,11 +64,11 @@ while [ "$1" != "" ]; do
             shift
             DB="$1"
             ;;
-        -n | --nototp )
-            installTOTP=false
+        -t | --totp )
+            installTOTP=true
             ;;
-        -o | --noduo )
-            installDuo=false
+        -o | --duo )
+            installDuo=true
     esac
     shift
 done

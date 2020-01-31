@@ -10,7 +10,7 @@ If you're looking to also have NGINX / Let's Encrypt / HTTPS click [HERE](https:
 
 ## MFA/2FA
 
-By default the script will install with TOTP support (Google Authenticator) as well as Duo, if you do not want TOTP support (which if installed is mandatory for every user) you need to specify the `-n` or `--nototp` or for duo `-o` or `--noduo` flags on the command line. Or Modify the script variable `installTOTP=false` or `installDuo=false`
+By default the script will not install MFA support (QR code for Google/Microsoft Authenticator, Duo Mobile, etc. or Duo Push), if you do want MFA support you need to specify the `-t` or `--totp` or for Duo `-o` or `--duo` flags on the command line. Or modify the script variable `installTOTP=true` or `installDuo=true`
 
 ## How to Run:
 
