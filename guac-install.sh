@@ -16,9 +16,35 @@ NC='\033[0m' # No Color
 # Log Location
 LOG="/tmp/guacamole_${GUACVERSION}_build.log"
 
-# Default : Install TOTP
-installTOTP=true
-installDuo=true
+# Default : Do not install TOTP/Duo
+installTOTP=false
+installDuo=false
+
+ANSWER="n"
+echo -e -n "${CYAN}(!)${NC} Do you want to use TOTP? (y/n): "
+read ANSWER
+echo ""
+
+if [ "$ANSWER" == "y" ]; then
+    installTOTP=true
+fi
+
+ANSWER="n"
+echo -e -n "${CYAN}(!)${NC} Do you want to use Duo? (y/n): "
+read ANSWER
+echo ""
+
+if [ "$ANSWER" == "y" ]; then
+    installDuo=true
+fi
+
+if [ "$installTOTP" = true ] ; then
+	echo "Installing TOTP!"
+fi
+if [ "$installDuo" = true ] ; then
+	echo "Installing Duo!"
+fi
+exit 1
 # Get script arguments for non-interactive mode
 while [ "$1" != "" ]; do
     case $1 in
