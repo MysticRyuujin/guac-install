@@ -48,8 +48,15 @@ OLDVERSION=$(grep -oP 'Guacamole.API_VERSION = "\K[0-9\.]+' /var/lib/${TOMCAT}/w
 # Set SERVER to be the preferred download server from the Apache CDN
 SERVER="http://apache.org/dyn/closer.cgi?action=download&filename=guacamole/${GUACVERSION}"
 
-# Stop tomcat
+# Stop tomcat and guac
 service ${TOMCAT} stop
+service guacd stop
+
+# Update apt so we can search apt-cache
+apt-get -qq update
+
+# Install additional packages if they do not exist yet
+apt-get -y install freerdp2-dev freerdp2-x11
 
 # Download Guacamole server
 wget -O guacamole-server-${GUACVERSION}.tar.gz ${SERVER}/source/guacamole-server-${GUACVERSION}.tar.gz

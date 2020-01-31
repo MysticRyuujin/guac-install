@@ -303,11 +303,17 @@ echo "mysql-username: ${mysqluser}" >> /etc/guacamole/guacamole.properties
 echo "mysql-password: ${guacdbuserpassword}" >> /etc/guacamole/guacamole.properties
 
 if [ "$installDuo" = true ] ; then
-    echo "duo-api-hostname: <api-hostname>" >> /etc/guacamole/guacamole.properties
-    echo "duo-integration-key: <integration-key>" >> /etc/guacamole/guacamole.properties
-    echo "duo-secret-key: <secret-key>" >> /etc/guacamole/guacamole.properties
-    echo "duo-application-key: <application-key>" >> /etc/guacamole/guacamole.properties
+    echo "duo-api-hostname: <value>" >> /etc/guacamole/guacamole.properties
+    echo "duo-integration-key: <value>" >> /etc/guacamole/guacamole.properties
+    echo "duo-secret-key: <value>" >> /etc/guacamole/guacamole.properties
+    echo "duo-application-key: <value>" >> /etc/guacamole/guacamole.properties
     echo -e "${BLUE}Duo is installed, it will need to be configured via guacamole.properties!${NC}"
+else
+    # Still output the values, but comment them out
+    echo "# duo-api-hostname: <value>" >> /etc/guacamole/guacamole.properties
+    echo "# duo-integration-key: <value>" >> /etc/guacamole/guacamole.properties
+    echo "# duo-secret-key: <value>" >> /etc/guacamole/guacamole.properties
+    echo "# duo-application-key: <value>" >> /etc/guacamole/guacamole.properties
 fi
 
 # restart tomcat
