@@ -56,7 +56,7 @@ service guacd stop
 apt-get -qq update
 
 # Install additional packages if they do not exist yet
-apt-get -y install freerdp2-dev freerdp2-x11 libtool-bin
+apt-get -y install freerdp2-dev freerdp2-x11 libtool-bin libwebsockets-dev
 
 # Download Guacamole server
 wget -O guacamole-server-${GUACVERSION}.tar.gz ${SERVER}/source/guacamole-server-${GUACVERSION}.tar.gz
@@ -107,8 +107,7 @@ UPGRADEFILES=($(ls -1 guacamole-auth-jdbc-${GUACVERSION}/mysql/schema/upgrade/ |
 for FILE in ${UPGRADEFILES[@]}
 do
     FILEVERSION=$(echo ${FILE} | grep -oP 'upgrade-pre-\K[0-9\.]+(?=\.)')
-    if [[ $(echo -e "${FILEVERSION}\n${OLDVERSION}" | sort -V | head -n1) == ${OLDVERSION} && ${FILEVERSION} != ${OLDVERSION} ]]
-    then
+    if [[ $(echo -e "${FILEVERSION}\n${OLDVERSION}" | sort -V | head -n1) == ${OLDVERSION} && ${FILEVERSION} != ${OLDVERSION} ]]; then
         echo "Patching ${DATABASE} with ${FILE}"
         mysql -u root -h ${MYSQL_SERVER} ${DATABASE} < guacamole-auth-jdbc-${GUACVERSION}/mysql/schema/upgrade/${FILE}
     fi
