@@ -6,6 +6,14 @@ if ! [ $(id -u) = 0 ]; then echo "Please run this script as sudo or root"; exit 
 # Version number of Guacamole to install
 GUACVERSION="1.1.0"
 
+# Colors to use for output
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+CYAN='\033[0;36m'
+NC='\033[0m' # No Color
+
 # Try to get database from /etc/guacamole/guacamole.properties
 DATABASE=$(grep -oP 'mysql-database:\K.*' /etc/guacamole/guacamole.properties | awk '{print $1}')
 MYSQL_SERVER=$(grep -oP 'mysql-hostname:\K.*' /etc/guacamole/guacamole.properties | awk '{print $1}')
@@ -110,6 +118,51 @@ do
     if [[ $(echo -e "${FILEVERSION}\n${OLDVERSION}" | sort -V | head -n1) == ${OLDVERSION} && ${FILEVERSION} != ${OLDVERSION} ]]; then
         echo "Patching ${DATABASE} with ${FILE}"
         mysql -u root -h ${MYSQL_SERVER} ${DATABASE} < guacamole-auth-jdbc-${GUACVERSION}/mysql/schema/upgrade/${FILE}
+    fi
+done
+
+# Check for either TOTP or Duo extensions and ugprade if found
+for file in /etc/guacamole/extensions/guacamole-auth-totp*.jar; do
+    if [[ -f $file ]]; then
+        # Upgrade TOTP
+        echo -e "${BLUE}TOTP extension was found, upgrading...${NC}"
+        rm /etc/guacamole/extensions/guacamole-auth-totp*.jar
+        wget -q --show-progress -O guacamole-auth-totp-${GUACVERSION}.tar.gz ${SERVER}/binary/guacamole-auth-totp-${GUACVERSION}.tar.gz
+        if [ $? -ne 0 ]; then
+            echo -e "${RED}Failed to download guacamole-auth-totp-${GUACVERSION}.tar.gz"
+            echo -e "${SERVER}/binary/guacamole-auth-totp-${GUACVERSION}.tar.gz"
+            exit 1
+        fi
+        echo -e "${GREEN}Downloaded guacamole-auth-totp-${GUACVERSION}.tar.gz${NC}"
+
+        echo -e "${GREEN}Downloading complete.${NC}"
+        tar -xzf guacamole-auth-totp-${GUACVERSION}.tar.gz
+        cp guacamole-auth-totp-${GUACVERSION}/guacamole-auth-totp-${GUACVERSION}.jar /etc/guacamole/extensions/
+        echo -e "${GREEN}TOTP copied to extensions.${NC}"
+
+        break
+    fi
+done
+
+for file in /etc/guacamole/extensions/guacamole-auth-duo*.jar; do
+    if [[ -f $file ]]; then
+        # Upgrade Duo
+        echo -e "${BLUE}Duo extension was found, upgrading...${NC}"
+        rm /etc/guacamole/extensions/guacamole-auth-duo*.jar
+        wget -q --show-progress -O guacamole-auth-duo-${GUACVERSION}.tar.gz ${SERVER}/binary/guacamole-auth-duo-${GUACVERSION}.tar.gz
+        if [ $? -ne 0 ]; then
+            echo -e "${RED}Failed to download guacamole-auth-duo-${GUACVERSION}.tar.gz"
+            echo -e "${SERVER}/binary/guacamole-auth-duo-${GUACVERSION}.tar.gz"
+            exit 1
+        fi
+        echo -e "${GREEN}Downloaded guacamole-auth-duo-${GUACVERSION}.tar.gz${NC}"
+
+        echo -e "${GREEN}Downloading complete.${NC}"
+        tar -xzf guacamole-auth-duo-${GUACVERSION}.tar.gz
+        cp guacamole-auth-duo-${GUACVERSION}/guacamole-auth-duo-${GUACVERSION}.jar /etc/guacamole/extensions/
+        echo -e "${GREEN}Duo copied to extensions.${NC}"
+
+        break
     fi
 done
 
