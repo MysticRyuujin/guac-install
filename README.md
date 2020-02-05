@@ -16,7 +16,7 @@ By default the script will not install MFA support (QR code for Google/Microsoft
 
 ### Download file directly from here:
 
-<code>wget https://raw.githubusercontent.com/SoulSeekkor/guac-install/master/guac-install.sh</code>
+<code>wget https://git.io/fxZq5</code>
 
 ### Make it executable:
 
@@ -53,7 +53,7 @@ I don't think this script is working anymore. Way too many reports that 0.9.14 -
 
 ### Download file directly from here:
 
-<code>wget https://raw.githubusercontent.com/SoulSeekkor/guac-install/master/guac-upgrade.sh</code>
+<code>wget https://raw.githubusercontent.com/MysticRyuujin/guac-install/master/guac-upgrade.sh</code>
 
 ### Make it executable:
 
