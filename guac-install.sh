@@ -26,31 +26,28 @@ installMySQL=true
 PROMPT=""
 echo -e -n "${CYAN}(!)${NC} Would you like to install TOTP? (y/N): "
 read PROMPT
-echo ""
 if [[ $PROMPT =~ ^[Yy]$ ]]; then installTOTP=true; fi
 
 echo -e -n "${CYAN}(!)${NC} Would you like to install Duo (configuration values must be set after install in guacamole.properties)? (y/N): "
 read PROMPT
-echo ""
 if [[ $PROMPT =~ ^[Yy]$ ]]; then installDuo=true; fi
 
 # Prompt the user to see if they would like to install MySQL, default of yes
 echo -e -n "${CYAN}(!)${NC} Would you like to install MySQL? (Y/n): "
 read PROMPT
-echo ""
-if [[ $PROMPT =~ ^[Nn]$ ]] || [[ "$PROMPT" == "no" ]]; then installMySQL=false; fi
-
-if [ "$installMySQL" = true ]; then
-    echo "Installing MySQL!"
-else
-    echo "Not installing MySQL!"
-fi
-
-exit 1
+if [[ $PROMPT =~ ^[Nn]$ ]]; then installMySQL=false; fi
 
 # Get script arguments for non-interactive mode
 while [ "$1" != "" ]; do
     case $1 in
+        -h | --mysqlhost )
+            shift
+            mysqlhost="$1"
+            ;;
+        -p | --mysqlport )
+            shift
+            mysqlport="$1"
+            ;;
         -m | --mysqlpwd )
             shift
             mysqlpwd="$1"
@@ -76,6 +73,58 @@ while [ "$1" != "" ]; do
     shift
 done
 
+if [ "$installMySQL" = false ]; then
+    # We need to get additional values
+    while [ -n "$mysqlhost"]
+    do
+        read -p "Enter MySQL server hostname or IP: " mysqlhost
+    done
+    read -p "Enter MySQL server port [3306]: " mysqlport
+else
+    # Get MySQL root password and Guacamole User password
+    if [ -n "$mysqlpwd" ] && [ -n "$guacpwd" ]; then
+        mysqlrootpassword=$mysqlpwd
+        guacdbuserpassword=$guacpwd
+    else
+        echo
+        while true
+        do
+            read -s -p "Enter a MySQL ROOT Password: " mysqlrootpassword
+            echo
+            read -s -p "Confirm MySQL ROOT Password: " password2
+            echo
+            [ "$mysqlrootpassword" = "$password2" ] && break
+            echo "Passwords don't match. Please try again."
+            echo
+        done
+        echo
+        while true
+        do
+            read -s -p "Enter a Guacamole User Database Password: " guacdbuserpassword
+            echo
+            read -s -p "Confirm Guacamole User Database Password: " password2
+            echo
+            [ "$guacdbuserpassword" = "$password2" ] && break
+            echo "Passwords don't match. Please try again."
+            echo
+        done
+        echo
+    fi
+
+    debconf-set-selections <<< "mysql-server mysql-server/root_password password $mysqlrootpassword"
+    debconf-set-selections <<< "mysql-server mysql-server/root_password_again password $mysqlrootpassword"
+fi
+
+# Checking if mysql host given
+if [ -z "$mysqlhost" ]; then
+    mysqlhost="localhost"
+fi
+
+# Checking if mysql port given
+if [ -z "$mysqlport" ]; then
+    mysqlport="3306"
+fi
+
 # Checking if mysql user given
 if [ -z "$mysqluser" ]; then
     mysqluser="guacamole_user"
@@ -86,38 +135,7 @@ if [ -z "$DB" ]; then
     DB="guacamole_db"
 fi
 
-# Get MySQL root password and Guacamole User password
-if [ -n "$mysqlpwd" ] && [ -n "$guacpwd" ]; then
-    mysqlrootpassword=$mysqlpwd
-    guacdbuserpassword=$guacpwd
-else
-    echo
-    while true
-    do
-        read -s -p "Enter a MySQL ROOT Password: " mysqlrootpassword
-        echo
-        read -s -p "Confirm MySQL ROOT Password: " password2
-        echo
-        [ "$mysqlrootpassword" = "$password2" ] && break
-        echo "Passwords don't match. Please try again."
-        echo
-    done
-    echo
-    while true
-    do
-        read -s -p "Enter a Guacamole User Database Password: " guacdbuserpassword
-        echo
-        read -s -p "Confirm Guacamole User Database Password: " password2
-        echo
-        [ "$guacdbuserpassword" = "$password2" ] && break
-        echo "Passwords don't match. Please try again."
-        echo
-    done
-    echo
-fi
-
-debconf-set-selections <<< "mysql-server mysql-server/root_password password $mysqlrootpassword"
-debconf-set-selections <<< "mysql-server mysql-server/root_password_again password $mysqlrootpassword"
+exit 1
 
 # Ubuntu and Debian have different package names for libjpeg
 # Ubuntu and Debian versions have differnet package names for libpng-dev
@@ -157,10 +175,12 @@ else
     TOMCAT="tomcat7"
 fi
 
-if [ -z $(command -v mysql) ]; then
-    MYSQL="mysql-server mysql-client mysql-common mysql-utilities"
-else
-    MYSQL=""
+if [ "$installMySQL" = true ]; then
+    if [ -z $(command -v mysql) ]; then
+        MYSQL="mysql-server mysql-client mysql-common mysql-utilities"
+    else
+        MYSQL=""
+    fi
 fi
 
 # Uncomment to manually force a tomcat version
@@ -304,8 +324,8 @@ fi
 # Configure guacamole.properties
 rm -f /etc/guacamole/guacamole.properties
 touch /etc/guacamole/guacamole.properties
-echo "mysql-hostname: localhost" >> /etc/guacamole/guacamole.properties
-echo "mysql-port: 3306" >> /etc/guacamole/guacamole.properties
+echo "mysql-hostname: ${mysqlhost}" >> /etc/guacamole/guacamole.properties
+echo "mysql-port: ${mysqlport}" >> /etc/guacamole/guacamole.properties
 echo "mysql-database: ${DB}" >> /etc/guacamole/guacamole.properties
 echo "mysql-username: ${mysqluser}" >> /etc/guacamole/guacamole.properties
 echo "mysql-password: ${guacdbuserpassword}" >> /etc/guacamole/guacamole.properties
