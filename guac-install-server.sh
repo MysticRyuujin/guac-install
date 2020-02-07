@@ -32,7 +32,7 @@ fi
 apt update
 apt -y install build-essential libcairo2-dev ${JPEGTURBO} ${LIBPNG} libossp-uuid-dev libavcodec-dev libavutil-dev \
 libswscale-dev freerdp2-dev libpango1.0-dev libssh2-1-dev libtelnet-dev libvncserver-dev libpulse-dev libssl-dev \
-libvorbis-dev libwebp-dev jq curl wget libtool-bin
+libvorbis-dev libwebp-dev jq curl wget libtool-bin libwebsockets-dev
 
 # If apt fails to run completely the rest of this isn't going to work...
 if [ $? != 0 ]
