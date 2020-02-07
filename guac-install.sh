@@ -20,18 +20,33 @@ LOG="/tmp/guacamole_${GUACVERSION}_build.log"
 # Default : Do not install TOTP/Duo
 installTOTP=false
 installDuo=false
+installMySQL=true
 
 # Prompt the user if they would like to install MFA, default of no
 PROMPT=""
-echo -e -n "${CYAN}(!)${NC} Do you want to use TOTP? (y/N): "
+echo -e -n "${CYAN}(!)${NC} Would you like to install TOTP? (y/N): "
 read PROMPT
 echo ""
 if [[ $PROMPT =~ ^[Yy]$ ]]; then installTOTP=true; fi
 
-echo -e -n "${CYAN}(!)${NC} Do you want to use Duo? (y/N): "
+echo -e -n "${CYAN}(!)${NC} Would you like to install Duo (configuration values must be set after install in guacamole.properties)? (y/N): "
 read PROMPT
 echo ""
 if [[ $PROMPT =~ ^[Yy]$ ]]; then installDuo=true; fi
+
+# Prompt the user to see if they would like to install MySQL, default of yes
+echo -e -n "${CYAN}(!)${NC} Would you like to install MySQL? (Y/n): "
+read PROMPT
+echo ""
+if [[ $PROMPT =~ ^[Nn]$ ]] || [[ "$PROMPT" == "no" ]]; then installMySQL=false; fi
+
+if [ "$installMySQL" = true ]; then
+    echo "Installing MySQL!"
+else
+    echo "Not installing MySQL!"
+fi
+
+exit 1
 
 # Get script arguments for non-interactive mode
 while [ "$1" != "" ]; do
