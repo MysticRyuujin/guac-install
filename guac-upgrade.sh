@@ -14,34 +14,49 @@ GREEN='\033[0;32m'
 CYAN='\033[0;36m'
 NC='\033[0m' # No Color
 
-# Try to get database from /etc/guacamole/guacamole.properties
-DATABASE=$(grep -oP 'mysql-database:\K.*' /etc/guacamole/guacamole.properties | awk '{print $1}')
-MYSQL_SERVER=$(grep -oP 'mysql-hostname:\K.*' /etc/guacamole/guacamole.properties | awk '{print $1}')
+# Try to get host and database from /etc/guacamole/guacamole.properties
+mysqlHost=$(grep -oP 'mysql-hostname:\K.*' /etc/guacamole/guacamole.properties | awk '{print $1}')
+guacDb=$(grep -oP 'mysql-database:\K.*' /etc/guacamole/guacamole.properties | awk '{print $1}')
 
 # Get script arguments for non-interactive mode
 while [ "$1" != "" ]; do
     case $1 in
-        -m | --mysqlpwd )
+        -h | --mysqlhost )
             shift
-            mysqlpwd="$1"
+            mysqlHost="$1"
+            ;;
+        -r | --mysqlpwd )
+            shift
+            mysqlrootpwd="$1"
             ;;
     esac
     shift
 done
 
+# Get MySQL host
+if [ -z "$mysqlHost" ]; then
+    echo
+    while true
+    do
+        read -p "Enter MySQL Host: " mysqlHost
+        echo
+        [[ -n $mysqlHost ]] && break
+    done
+    echo
+fi
+
 # Get MySQL root password
-if [ -n "$mysqlpwd" ]; then
-        mysqlrootpassword=$mysqlpwd
-        export MYSQL_PWD=${mysqlrootpassword}
-        mysql -u root -h ${MYSQL_SERVER} ${DATABASE} -e"quit" || exit
+if [ -n "$mysqlRootPwd" ]; then
+    export MYSQL_PWD=${mysqlRootPwd}
+    mysql -u root -h ${mysqlHost} ${guacDb} -e"quit" || exit
 else
     echo
     while true
     do
-        read -s -p "Enter MySQL ROOT Password: " mysqlrootpassword
-        export MYSQL_PWD=${mysqlrootpassword}
+        read -s -p "Enter MySQL ROOT Password: " mysqlRootPwd
+        export MYSQL_PWD=${mysqlRootPwd}
         echo
-        mysql -u root -h ${MYSQL_SERVER} ${DATABASE} -e"quit" && break
+        mysql -u root -h ${mysqlHost} ${guacDb} -e"quit" && break
         echo
     done
     echo
@@ -116,8 +131,8 @@ for FILE in ${UPGRADEFILES[@]}
 do
     FILEVERSION=$(echo ${FILE} | grep -oP 'upgrade-pre-\K[0-9\.]+(?=\.)')
     if [[ $(echo -e "${FILEVERSION}\n${OLDVERSION}" | sort -V | head -n1) == ${OLDVERSION} && ${FILEVERSION} != ${OLDVERSION} ]]; then
-        echo "Patching ${DATABASE} with ${FILE}"
-        mysql -u root -h ${MYSQL_SERVER} ${DATABASE} < guacamole-auth-jdbc-${GUACVERSION}/mysql/schema/upgrade/${FILE}
+        echo "Patching ${guacDb} with ${FILE}"
+        mysql -u root -h ${mysqlHost} ${guacDb} < guacamole-auth-jdbc-${GUACVERSION}/mysql/schema/upgrade/${FILE}
     fi
 done
 

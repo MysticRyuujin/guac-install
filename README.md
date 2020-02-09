@@ -89,6 +89,8 @@ Install Duo:
 
 <code>-d or --duo</code>
 
+NOTE: Only the switches for MySQL Host and Guacamole Database are available in the upgrade script.
+
 ## WARNING
 
 - Upgrading from 0.9.14 -> 1.1.0 has not been tested, only 1.0.0 -> 1.1.0.
