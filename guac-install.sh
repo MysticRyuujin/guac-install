@@ -36,10 +36,10 @@ PROMPT=""
 while [ "$1" != "" ]; do
     case $1 in
         # Install MySQL selection
-        -m | --installmysql )
+        -i | --installmysql )
             installMySQL=true
             ;;
-        -nm | --nomysql )
+        -n | --nomysql )
             installMySQL=false
             ;;
 
