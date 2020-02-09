@@ -193,6 +193,7 @@ for file in /etc/guacamole/extensions/guacamole-auth-duo*.jar; do
 done
 
 # Start tomcat and Guacamole
+echo -e "${BLUE}Starting tomcat and guacamole...${NC}"
 service ${TOMCAT} start
 service guacd start
 
