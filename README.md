@@ -1,16 +1,18 @@
+
+
 # guac-install
 
-Script for installing Guacamole 1.1.0 on Ubuntu 16.04 or newer with MySQL. It should also work on pure Debian 7, 8, and 9. **It seems Debian 10 is not working right now**
+Script for installing Guacamole 1.1.0 on Ubuntu 16.04 or newer (optionally with MySQL by default). It should also work on pure Debian 7, 8, and 9. **It seems Debian 10 is not working right now**
 
 Run script, enter MySQL Root Password and Guacamole User password. Guacamole User is used to connect to the Guacamole Database.
 
-The script attempts to install tomcat8 if the available version is 8.5.x or newer, if tomcat8 is only 8.0.x it will fall back to tomcat7. If you want to manually specify a tomcat version there's a commented out line you can modify at line #73. Have at it.
+The script attempts to install tomcat8 if the available version is 8.5.x or newer, if tomcat8 is only 8.0.x it will fall back to tomcat7. If you want to manually specify a tomcat version there's a commented out line you can modify. Have at it.
 
 If you're looking to also have NGINX / Let's Encrypt / HTTPS click [HERE](https://github.com/bigredthelogger/guacamole)
 
 ## MFA/2FA
 
-By default the script will not install MFA support (QR code for Google/Microsoft Authenticator, Duo Mobile, etc. or Duo Push), if you do want MFA support you need to specify the `-t` or `--totp` or for Duo `-o` or `--duo` flags on the command line. Or modify the script variable `installTOTP=true` or `installDuo=true`
+By default the script will not install MFA support (QR code for Google/Microsoft Authenticator, Duo Mobile, etc. or Duo Push), if you do want MFA support you need to specify the `-t` or `--totp` or for Duo `-d` or `--duo` flags on the command line. Or modify the script variables `installTOTP=true` or `installDuo=true`.
 
 ## How to Run:
 
@@ -28,26 +30,59 @@ Interactive (asks for passwords):
 
 <code>./guac-install.sh</code>
 
-Non-Interactive (passwords provided via cli):
+Non-Interactive (values provided via cli):
 
 <code>./guac-install.sh --mysqlpwd password --guacpwd password</code>
 
 OR
 
-<code>./guac-install.sh -m password -g password</code>
+<code>./guac-install.sh -r password -gp password</code>
 
-Once installation is done you can access guacamole by browsing to: http://<host_or_ip>:8080/guacamole/
+Once installation is done you can access Guacamole by browsing to: http://<host_or_ip>:8080/guacamole/
 The default credentials are guacadmin as both username and password. Please change them or disable guacadmin after install!
 
 # guac-upgrade
-Script for upgrading currently installed Guacamole instance (previously installed via this script/guide)
+Script for upgrading currently installed Guacamole instance (previously installed via this script/guide).  This will also now update the TOTP or Duo extensions if used.
 
 
 If looks for the tomcat folder in /etc/ (E.G. `/etc/tomcat7` or `/etc/tomcat8`) hopefully that works to identify the correct tomcat version/path :smile: I'm open to suggestions/pull requests for a cleaner method.
 
+## All Switches
+
+Install MySQL:
+<code>-i or --installmysql</code>
+
+Do *NOT* install MySQL:
+<code>-n or --nomysql</code>
+
+MySQL Host:
+<code>-h or --mysqlhost</code>
+
+MySQL Port:
+<code>-p or --mysqlport</code>
+
+MySQL Root Password:
+<code>-r or --mysqlpwd</code>
+
+Guacamole Database:
+<code>-db or --guacdb</code>
+
+Guacamole User:
+<code>-gu or --guacuser</code>
+
+Guacamole User Password:
+<code>-gp or --guacpwd</code>
+
+Install TOTP:
+<code>-t or --totp</code>
+
+Install Duo:
+<code>-d or --duo</code>
+
 ## WARNING
 
-I don't think this script is working anymore. Way too many reports that 0.9.14 -> 1.0.0 are not working. I don't know why.
+- Upgrading from 0.9.14 -> 1.1.0 has not been tested, only 1.0.0 -> 1.1.0.
+- Switches have changed and additional ones have been added!
 
 ## How to Run:
 
@@ -65,6 +100,6 @@ Interactive (asks for passwords):
 
 <code>./guac-upgrade.sh</code>
 
-Non-Interactive (password provided via cli):
+Non-Interactive (MySQL root password provided via cli):
 
 <code>./guac-upgrade.sh --mysqlpwd password</code>
