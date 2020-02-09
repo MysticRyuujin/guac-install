@@ -14,34 +14,60 @@ GREEN='\033[0;32m'
 CYAN='\033[0;36m'
 NC='\033[0m' # No Color
 
-# Try to get database from /etc/guacamole/guacamole.properties
-DATABASE=$(grep -oP 'mysql-database:\K.*' /etc/guacamole/guacamole.properties | awk '{print $1}')
-MYSQL_SERVER=$(grep -oP 'mysql-hostname:\K.*' /etc/guacamole/guacamole.properties | awk '{print $1}')
+# Try to get host and database from /etc/guacamole/guacamole.properties
+mysqlHost=$(grep -oP 'mysql-hostname:\K.*' /etc/guacamole/guacamole.properties | awk '{print $1}')
+mysqlPort=$(grep -oP 'mysql-port:\K.*' /etc/guacamole/guacamole.properties | awk '{print $1}')
+guacDb=$(grep -oP 'mysql-database:\K.*' /etc/guacamole/guacamole.properties | awk '{print $1}')
 
 # Get script arguments for non-interactive mode
 while [ "$1" != "" ]; do
     case $1 in
-        -m | --mysqlpwd )
+        -h | --mysqlhost )
             shift
-            mysqlpwd="$1"
+            mysqlHost="$1"
+            ;;
+        -p | --mysqlport )
+            shift
+            mysqlPort="$1"
+            ;;
+        -r | --mysqlpwd )
+            shift
+            mysqlrootpwd="$1"
             ;;
     esac
     shift
 done
 
-# Get MySQL root password
-if [ -n "$mysqlpwd" ]; then
-        mysqlrootpassword=$mysqlpwd
-        export MYSQL_PWD=${mysqlrootpassword}
-        mysql -u root -h ${MYSQL_SERVER} ${DATABASE} -e"quit" || exit
+# Get MySQL host
+if [ -z "$mysqlHost" ]; then
+    read -p "Enter MySQL Host [localhost]: " mysqlHost
+    echo
+    if [ -z "$mysqlHost" ]; then
+        mysqlHost="localhost"
+    fi
+fi
+
+# Get MySQL port
+if [ -z "$mysqlPort" ]; then
+    read -p "Enter MySQL Port [3306]: " mysqlPort
+    echo
+    if [ -z "$mysqlPort" ]; then
+        mysqlPort="3306"
+    fi
+fi
+
+if [ -n "$mysqlRootPwd" ]; then
+    export MYSQL_PWD=${mysqlRootPwd}
+    mysql -u root -D ${guacDb} -h ${mysqlHost} -P ${mysqlPort} -e"quit" || exit
 else
+    # Get MySQL root password
     echo
     while true
     do
-        read -s -p "Enter MySQL ROOT Password: " mysqlrootpassword
-        export MYSQL_PWD=${mysqlrootpassword}
+        read -s -p "Enter MySQL ROOT Password: " mysqlRootPwd
+        export MYSQL_PWD=${mysqlRootPwd}
         echo
-        mysql -u root -h ${MYSQL_SERVER} ${DATABASE} -e"quit" && break
+        mysql -u root -D ${guacDb} -h ${mysqlHost} -P ${mysqlPort} -e"quit" && break
         echo
     done
     echo
@@ -116,8 +142,8 @@ for FILE in ${UPGRADEFILES[@]}
 do
     FILEVERSION=$(echo ${FILE} | grep -oP 'upgrade-pre-\K[0-9\.]+(?=\.)')
     if [[ $(echo -e "${FILEVERSION}\n${OLDVERSION}" | sort -V | head -n1) == ${OLDVERSION} && ${FILEVERSION} != ${OLDVERSION} ]]; then
-        echo "Patching ${DATABASE} with ${FILE}"
-        mysql -u root -h ${MYSQL_SERVER} ${DATABASE} < guacamole-auth-jdbc-${GUACVERSION}/mysql/schema/upgrade/${FILE}
+        echo "Patching ${guacDb} with ${FILE}"
+        mysql -u root -D ${guacDb} -h ${mysqlHost} -P ${mysqlPort} < guacamole-auth-jdbc-${GUACVERSION}/mysql/schema/upgrade/${FILE}
     fi
 done
 
@@ -166,7 +192,8 @@ for file in /etc/guacamole/extensions/guacamole-auth-duo*.jar; do
     fi
 done
 
-# Start tomcat
+# Start tomcat and Guacamole
+echo -e "${BLUE}Starting tomcat and guacamole...${NC}"
 service ${TOMCAT} start
 service guacd start
 

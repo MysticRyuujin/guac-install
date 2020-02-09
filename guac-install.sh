@@ -17,92 +17,148 @@ NC='\033[0m' # No Color
 # Log Location
 LOG="/tmp/guacamole_${GUACVERSION}_build.log"
 
-# Default : Do not install TOTP/Duo
-installTOTP=false
-installDuo=false
+# Initialize variable values
+installTOTP=""
+installDuo=""
 
-# Prompt the user if they would like to install MFA, default of no
+installMySQL=""
+mysqlHost=""
+mysqlPort=""
+mysqlRootPwd=""
+
+guacDb=""
+guacUser=""
+guacPwd=""
+
 PROMPT=""
-echo -e -n "${CYAN}(!)${NC} Do you want to use TOTP? (y/N): "
-read PROMPT
-echo ""
-if [[ $PROMPT =~ ^[Yy]$ ]]; then installTOTP=true; fi
-
-echo -e -n "${CYAN}(!)${NC} Do you want to use Duo? (y/N): "
-read PROMPT
-echo ""
-if [[ $PROMPT =~ ^[Yy]$ ]]; then installDuo=true; fi
 
 # Get script arguments for non-interactive mode
 while [ "$1" != "" ]; do
     case $1 in
-        -m | --mysqlpwd )
-            shift
-            mysqlpwd="$1"
+        # Install MySQL selection
+        -i | --installmysql )
+            installMySQL=true
             ;;
-        -g | --guacpwd )
+        -n | --nomysql )
+            installMySQL=false
+            ;;
+
+        # MySQL server/root information
+        -h | --mysqlhost )
+            shift
+            mysqlHost="$1"
+            ;;
+        -p | --mysqlport )
+            shift
+            mysqlPort="$1"
+            ;;
+        -r | --mysqlpwd )
+            shift
+            mysqlRootPwd="$1"
+            ;;
+
+        # Guac database/user information
+        -db | --guacdb )
+            shift
+            guacDb="$1"
+            ;;
+        -gu | --guacuser )
+            shift
+            guacUser="$1"
+            ;;
+        -gp | --guacpwd )
             shift
             guacpwd="$1"
             ;;
-        -u | --mysqluser )
-            shift
-            mysqluser="$1"
-            ;;
-        -d | --database )
-            shift
-            DB="$1"
-            ;;
+
+        # MFA selection
         -t | --totp )
             installTOTP=true
             ;;
-        -o | --duo )
+        -d | --duo )
             installDuo=true
     esac
     shift
 done
 
+if [[ -z $installTOTP ]]; then
+    # Prompt the user if they would like to install MFA, default of no
+    echo -e -n "${CYAN}(!)${NC} Would you like to install TOTP? (y/N): "
+    read PROMPT
+    if [[ $PROMPT =~ ^[Yy]$ ]]; then installTOTP=true; else installTOTP=false; fi
+fi
+
+if [[ -z $installDuo ]]; then
+    echo -e -n "${CYAN}(!)${NC} Would you like to install Duo (configuration values must be set after install in guacamole.properties)? (y/N): "
+    read PROMPT
+    if [[ $PROMPT =~ ^[Yy]$ ]]; then installDuo=true; else installDuo=false; fi
+fi
+
+if [[ -z $installMySQL ]]; then
+    # Prompt the user to see if they would like to install MySQL, default of yes
+    echo -e -n "${CYAN}(!)${NC} Would you like to install MySQL? (Y/n): "
+    read PROMPT
+    if [[ $PROMPT =~ ^[Nn]$ ]]; then installMySQL=false; else installMySQL=true; fi
+fi
+
+if [ "$installMySQL" = false ]; then
+    # We need to get additional values
+    read -p "Enter MySQL server hostname or IP: " mysqlHost
+    read -p "Enter MySQL server port [3306]: " mysqlPort
+    read -p "Enter Guacamole database name [guacamole_db]: " guacDb
+    read -p "Enter Guacamole user [guacamole_user]: " guacUser
+fi
+
+# Get MySQL Root password and Guacamole User password
+echo
+while true
+do
+    read -s -p "Enter a MySQL ROOT Password: " mysqlRootPwd
+    echo
+    read -s -p "Confirm MySQL ROOT Password: " PROMPT2
+    echo
+    [ "$mysqlRootPwd" = "$PROMPT2" ] && break
+    echo "Passwords don't match. Please try again."
+    echo
+done
+echo
+while true
+do
+    read -s -p "Enter a Guacamole User Database Password: " guacPwd
+    echo
+    read -s -p "Confirm Guacamole User Database Password: " PROMPT2
+    echo
+    [ "$guacPwd" = "$PROMPT2" ] && break
+    echo "Passwords don't match. Please try again."
+    echo
+done
+echo
+
+if [ "$installMySQL" = true ]; then
+    # Seed MySQL install values
+    debconf-set-selections <<< "mysql-server mysql-server/root_password password $mysqlRootPwd"
+    debconf-set-selections <<< "mysql-server mysql-server/root_password_again password $mysqlRootPwd"
+fi
+
+# Checking if mysql host given
+if [ -z "$mysqlHost" ]; then
+    mysqlHost="localhost"
+fi
+
+# Checking if mysql port given
+if [ -z "$mysqlPort" ]; then
+    mysqlPort="3306"
+fi
+
 # Checking if mysql user given
-if [ -z "$mysqluser" ]; then
-    mysqluser="guacamole_user"
+if [ -z "$guacUser" ]; then
+    guacUser="guacamole_user"
 fi
 
 # Checking if database name given
-if [ -z "$DB" ]; then
-    DB="guacamole_db"
+if [ -z "$guacDb" ]; then
+    guacDb="guacamole_db"
 fi
-
-# Get MySQL root password and Guacamole User password
-if [ -n "$mysqlpwd" ] && [ -n "$guacpwd" ]; then
-    mysqlrootpassword=$mysqlpwd
-    guacdbuserpassword=$guacpwd
-else
-    echo
-    while true
-    do
-        read -s -p "Enter a MySQL ROOT Password: " mysqlrootpassword
-        echo
-        read -s -p "Confirm MySQL ROOT Password: " password2
-        echo
-        [ "$mysqlrootpassword" = "$password2" ] && break
-        echo "Passwords don't match. Please try again."
-        echo
-    done
-    echo
-    while true
-    do
-        read -s -p "Enter a Guacamole User Database Password: " guacdbuserpassword
-        echo
-        read -s -p "Confirm Guacamole User Database Password: " password2
-        echo
-        [ "$guacdbuserpassword" = "$password2" ] && break
-        echo "Passwords don't match. Please try again."
-        echo
-    done
-    echo
-fi
-
-debconf-set-selections <<< "mysql-server mysql-server/root_password password $mysqlrootpassword"
-debconf-set-selections <<< "mysql-server mysql-server/root_password_again password $mysqlrootpassword"
 
 # Ubuntu and Debian have different package names for libjpeg
 # Ubuntu and Debian versions have differnet package names for libpng-dev
@@ -142,10 +198,13 @@ else
     TOMCAT="tomcat7"
 fi
 
-if [ -z $(command -v mysql) ]; then
-    MYSQL="mysql-server mysql-client mysql-common mysql-utilities"
+MYSQL=""
+if [ "$installMySQL" = true ]; then
+    if [ -z $(command -v mysql) ]; then
+        MYSQL="mysql-server mysql-client mysql-common mysql-utilities"
+    fi
 else
-    MYSQL=""
+    MYSQL="mysql-client"
 fi
 
 # Uncomment to manually force a tomcat version
@@ -198,6 +257,7 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 echo -e "${GREEN}Downloaded guacamole-auth-jdbc-${GUACVERSION}.tar.gz${NC}"
+
 # Download Guacamole authentication extensions
 if [ "$installTOTP" = true ]; then
     # TOTP
@@ -225,6 +285,7 @@ if [ "$installDuo" = true ]; then
 	echo -e "${GREEN}Downloading complete.${NC}"
 	tar -xzf guacamole-auth-duo-${GUACVERSION}.tar.gz
 fi
+
 # Extract Guacamole files
 tar -xzf guacamole-server-${GUACVERSION}.tar.gz
 tar -xzf guacamole-auth-jdbc-${GUACVERSION}.tar.gz
@@ -289,24 +350,19 @@ fi
 # Configure guacamole.properties
 rm -f /etc/guacamole/guacamole.properties
 touch /etc/guacamole/guacamole.properties
-echo "mysql-hostname: localhost" >> /etc/guacamole/guacamole.properties
-echo "mysql-port: 3306" >> /etc/guacamole/guacamole.properties
-echo "mysql-database: ${DB}" >> /etc/guacamole/guacamole.properties
-echo "mysql-username: ${mysqluser}" >> /etc/guacamole/guacamole.properties
-echo "mysql-password: ${guacdbuserpassword}" >> /etc/guacamole/guacamole.properties
+echo "mysql-hostname: ${mysqlHost}" >> /etc/guacamole/guacamole.properties
+echo "mysql-port: ${mysqlPort}" >> /etc/guacamole/guacamole.properties
+echo "mysql-database: ${guacDb}" >> /etc/guacamole/guacamole.properties
+echo "mysql-username: ${guacUser}" >> /etc/guacamole/guacamole.properties
+echo "mysql-password: ${guacPwd}" >> /etc/guacamole/guacamole.properties
 
+# Output Duo configuration settings but comment them out for now
+echo "# duo-api-hostname: " >> /etc/guacamole/guacamole.properties
+echo "# duo-integration-key: " >> /etc/guacamole/guacamole.properties
+echo "# duo-secret-key: " >> /etc/guacamole/guacamole.properties
+echo "# duo-application-key: " >> /etc/guacamole/guacamole.properties
 if [ "$installDuo" = true ]; then
-    echo "duo-api-hostname: <value>" >> /etc/guacamole/guacamole.properties
-    echo "duo-integration-key: <value>" >> /etc/guacamole/guacamole.properties
-    echo "duo-secret-key: <value>" >> /etc/guacamole/guacamole.properties
-    echo "duo-application-key: <value>" >> /etc/guacamole/guacamole.properties
-    echo -e "${BLUE}Duo is installed, it will need to be configured via guacamole.properties!${NC}"
-else
-    # Still output the values, but comment them out
-    echo "# duo-api-hostname: <value>" >> /etc/guacamole/guacamole.properties
-    echo "# duo-integration-key: <value>" >> /etc/guacamole/guacamole.properties
-    echo "# duo-secret-key: <value>" >> /etc/guacamole/guacamole.properties
-    echo "# duo-application-key: <value>" >> /etc/guacamole/guacamole.properties
+    echo -e "${YELLOW}Duo is installed, it will need to be configured via guacamole.properties!${NC}"
 fi
 
 # restart tomcat
@@ -320,21 +376,30 @@ else
     echo -e "${GREEN}OK${NC}"
 fi
 
-# Create guacamole_db and grant $mysqluser permissions to it
+# Create $guacDb and grant $guacUser permissions to it
 
 # SQL code
+guacUserHost="localhost"
+
+if [[ "$mysqlHost" != "localhost" ]]; then
+    guacUserHost="%"
+    echo -e "${YELLOW}MySQL Guacamole user is set to accept login from any host, please change this for security reasons if possible.${NC}"
+fi
+
 SQLCODE="
-create database ${DB};
-create user if not exists '${mysqluser}'@'localhost' identified by \"${guacdbuserpassword}\";
-GRANT SELECT,INSERT,UPDATE,DELETE ON guacamole_db.* TO '${mysqluser}'@'localhost';
+create database ${guacDb};
+create user if not exists '${guacUser}'@'${guacUserHost}' identified by \"${guacPwd}\";
+GRANT SELECT,INSERT,UPDATE,DELETE ON ${guacDb}.* TO '${guacUser}'@'${guacUserHost}';
 flush privileges;"
 
+export MYSQL_PWD=${mysqlRootPwd}
+
 # Execute SQL code
-echo ${SQLCODE} | mysql -u root -p${mysqlrootpassword}
+echo ${SQLCODE} | mysql -u root -h ${mysqlHost} -P ${mysqlPort}
 
 # Add Guacamole schema to newly created database
 echo -e "Adding db tables..."
-cat guacamole-auth-jdbc-${GUACVERSION}/mysql/schema/*.sql | mysql -u root -p${mysqlrootpassword} ${DB}
+cat guacamole-auth-jdbc-${GUACVERSION}/mysql/schema/*.sql | mysql -u root -D ${guacDb} -h ${mysqlHost} -P ${mysqlPort}
 if [ $? -ne 0 ]; then
     echo -e "${RED}Failed${NC}"
     exit 1
@@ -343,6 +408,7 @@ else
 fi
 
 # Ensure guacd is started
+echo -e "${BLUE}Starting guacamole...${NC}"
 service guacd start
 
 # Cleanup
@@ -355,5 +421,6 @@ if [ $? -ne 0 ]; then
 else
     echo -e "${GREEN}OK${NC}"
 fi
+unset MYSQL_PWD
 
 echo -e "${BLUE}Installation Complete\nhttp://localhost:8080/guacamole/\nDefault login guacadmin:guacadmin\nBe sure to change the password.${NC}"
