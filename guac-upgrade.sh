@@ -56,18 +56,18 @@ if [ -z "$mysqlPort" ]; then
     fi
 fi
 
-# Get MySQL root password
 if [ -n "$mysqlRootPwd" ]; then
     export MYSQL_PWD=${mysqlRootPwd}
-    mysql -u root -h ${mysqlHost} ${guacDb} -e"quit" || exit
+    mysql -u root -D ${guacDb} -h ${mysqlHost} -P ${mysqlPort} -e"quit" || exit
 else
+    # Get MySQL root password
     echo
     while true
     do
         read -s -p "Enter MySQL ROOT Password: " mysqlRootPwd
         export MYSQL_PWD=${mysqlRootPwd}
         echo
-        mysql -u root -h ${mysqlHost} ${guacDb} -e"quit" && break
+        mysql -u root -D ${guacDb} -h ${mysqlHost} -P ${mysqlPort} -e"quit" && break
         echo
     done
     echo

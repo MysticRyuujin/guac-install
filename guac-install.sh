@@ -380,7 +380,7 @@ fi
 # SQL code
 guacUserHost="localhost"
 
-if [ ! "$mysqlHost" = "localhost"]; then
+if [[ "$mysqlHost" != "localhost" ]]; then
     guacUserHost="%"
     echo -e "${YELLOW}MySQL Guacamole user is set to accept login from any host, please change this for security reasons if possible.${NC}"
 fi
@@ -391,12 +391,14 @@ create user if not exists '${guacUser}'@'${guacUserHost}' identified by \"${guac
 GRANT SELECT,INSERT,UPDATE,DELETE ON ${guacDb}.* TO '${guacUser}'@'${guacUserHost}';
 flush privileges;"
 
+export MYSQL_PWD=${mysqlRootPwd}
+
 # Execute SQL code
-echo ${SQLCODE} | mysql -u root -p${mysqlRootPwd} -h ${mysqlHost} -P ${mysqlPort}
+echo ${SQLCODE} | mysql -u root -h ${mysqlHost} -P ${mysqlPort}
 
 # Add Guacamole schema to newly created database
 echo -e "Adding db tables..."
-cat guacamole-auth-jdbc-${GUACVERSION}/mysql/schema/*.sql | mysql -u root -p${mysqlRootPwd} ${guacDb} -h ${mysqlHost} -P ${mysqlPort}
+cat guacamole-auth-jdbc-${GUACVERSION}/mysql/schema/*.sql | mysql -u root -D ${guacDb} -h ${mysqlHost} -P ${mysqlPort}
 if [ $? -ne 0 ]; then
     echo -e "${RED}Failed${NC}"
     exit 1
@@ -418,5 +420,6 @@ if [ $? -ne 0 ]; then
 else
     echo -e "${GREEN}OK${NC}"
 fi
+unset MYSQL_PWD
 
 echo -e "${BLUE}Installation Complete\nhttp://localhost:8080/guacamole/\nDefault login guacadmin:guacadmin\nBe sure to change the password.${NC}"
