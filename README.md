@@ -89,7 +89,7 @@ Install Duo:
 
 <code>-d or --duo</code>
 
-NOTE: Only the switches for MySQL Host and Guacamole Database are available in the upgrade script.
+NOTE: Only the switches for MySQL Host, MySQL Port and Guacamole Database are available in the upgrade script.
 
 ## WARNING
 

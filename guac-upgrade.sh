@@ -16,6 +16,7 @@ NC='\033[0m' # No Color
 
 # Try to get host and database from /etc/guacamole/guacamole.properties
 mysqlHost=$(grep -oP 'mysql-hostname:\K.*' /etc/guacamole/guacamole.properties | awk '{print $1}')
+mysqlPort=$(grep -oP 'mysql-port:\K.*' /etc/guacamole/guacamole.properties | awk '{print $1}')
 guacDb=$(grep -oP 'mysql-database:\K.*' /etc/guacamole/guacamole.properties | awk '{print $1}')
 
 # Get script arguments for non-interactive mode
@@ -24,6 +25,10 @@ while [ "$1" != "" ]; do
         -h | --mysqlhost )
             shift
             mysqlHost="$1"
+            ;;
+        -p | --mysqlport )
+            shift
+            mysqlPort="$1"
             ;;
         -r | --mysqlpwd )
             shift
@@ -35,14 +40,20 @@ done
 
 # Get MySQL host
 if [ -z "$mysqlHost" ]; then
+    read -p "Enter MySQL Host [localhost]: " mysqlHost
     echo
-    while true
-    do
-        read -p "Enter MySQL Host: " mysqlHost
-        echo
-        [[ -n $mysqlHost ]] && break
-    done
+    if [ -z "$mysqlHost" ]; then
+        mysqlHost="localhost"
+    fi
+fi
+
+# Get MySQL port
+if [ -z "$mysqlPort" ]; then
+    read -p "Enter MySQL Port [3306]: " mysqlPort
     echo
+    if [ -z "$mysqlPort" ]; then
+        mysqlPort="3306"
+    fi
 fi
 
 # Get MySQL root password
@@ -132,7 +143,7 @@ do
     FILEVERSION=$(echo ${FILE} | grep -oP 'upgrade-pre-\K[0-9\.]+(?=\.)')
     if [[ $(echo -e "${FILEVERSION}\n${OLDVERSION}" | sort -V | head -n1) == ${OLDVERSION} && ${FILEVERSION} != ${OLDVERSION} ]]; then
         echo "Patching ${guacDb} with ${FILE}"
-        mysql -u root -h ${mysqlHost} ${guacDb} < guacamole-auth-jdbc-${GUACVERSION}/mysql/schema/upgrade/${FILE}
+        mysql -u root -D ${guacDb} -h ${mysqlHost} -P ${mysqlPort} < guacamole-auth-jdbc-${GUACVERSION}/mysql/schema/upgrade/${FILE}
     fi
 done
 
@@ -181,7 +192,7 @@ for file in /etc/guacamole/extensions/guacamole-auth-duo*.jar; do
     fi
 done
 
-# Start tomcat
+# Start tomcat and Guacamole
 service ${TOMCAT} start
 service guacd start
 
