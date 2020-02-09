@@ -24,7 +24,6 @@ installDuo=""
 installMySQL=""
 mysqlHost=""
 mysqlPort=""
-mysqlRootUser=""
 mysqlRootPwd=""
 
 guacDb=""
@@ -53,11 +52,7 @@ while [ "$1" != "" ]; do
             shift
             mysqlPort="$1"
             ;;
-        -ru | --mysqluser )
-            shift
-            mysqlRootUser="$1"
-            ;;
-        -rp | --mysqlpwd )
+        -r | --mysqlpwd )
             shift
             mysqlRootPwd="$1"
             ;;
@@ -159,8 +154,8 @@ if [ -z "$mysqlPort" ]; then
 fi
 
 # Checking if mysql user given
-if [ -z "$mysqlRootUser" ]; then
-    mysqlRootUser="guacamole_user"
+if [ -z "$guacUser" ]; then
+    guacUser="guacamole_user"
 fi
 
 # Checking if database name given
@@ -384,7 +379,7 @@ else
     echo -e "${GREEN}OK${NC}"
 fi
 
-# Create guacamole_db and grant $mysqlRootUser permissions to it
+# Create guacamole_db and grant $guacUser permissions to it
 
 # SQL code
 SQLCODE="
