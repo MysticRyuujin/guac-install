@@ -50,33 +50,43 @@ If looks for the tomcat folder in /etc/ (E.G. `/etc/tomcat7` or `/etc/tomcat8`) 
 ## All Switches
 
 Install MySQL:
+
 <code>-i or --installmysql</code>
 
 Do *NOT* install MySQL:
+
 <code>-n or --nomysql</code>
 
 MySQL Host:
+
 <code>-h or --mysqlhost</code>
 
 MySQL Port:
+
 <code>-p or --mysqlport</code>
 
 MySQL Root Password:
+
 <code>-r or --mysqlpwd</code>
 
 Guacamole Database:
+
 <code>-db or --guacdb</code>
 
 Guacamole User:
+
 <code>-gu or --guacuser</code>
 
 Guacamole User Password:
+
 <code>-gp or --guacpwd</code>
 
 Install TOTP:
+
 <code>-t or --totp</code>
 
 Install Duo:
+
 <code>-d or --duo</code>
 
 ## WARNING
