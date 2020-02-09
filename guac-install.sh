@@ -336,7 +336,6 @@ BUILD_FOLDER=$(dpkg-architecture -qDEB_BUILD_GNU_TYPE)
 # Move files to correct locations
 mv guacamole-${GUACVERSION}.war /etc/guacamole/guacamole.war
 ln -s /etc/guacamole/guacamole.war /var/lib/${TOMCAT}/webapps/
-ln -s /usr/local/lib/freerdp/guac*.so /usr/lib/${BUILD_FOLDER}/freerdp/
 ln -s /usr/share/java/mysql-connector-java.jar /etc/guacamole/lib/
 cp guacamole-auth-jdbc-${GUACVERSION}/mysql/guacamole-auth-jdbc-mysql-${GUACVERSION}.jar /etc/guacamole/extensions/
 
@@ -381,7 +380,7 @@ fi
 # SQL code
 guacUserHost="localhost"
 
-if [ ! "$mysqlHost" = "localhost"]
+if [ ! "$mysqlHost" = "localhost"]; then
     guacUserHost="%"
     echo -e "${YELLOW}MySQL Guacamole user is set to accept login from any host, please change this for security reasons if possible.${NC}"
 fi
