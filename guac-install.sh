@@ -437,6 +437,6 @@ unset MYSQL_PWD
 
 echo -e "${BLUE}Installation Complete\nhttp://localhost:8080/guacamole/\nDefault login guacadmin:guacadmin\nBe sure to change the password.${NC}"
 
-if [[ -z $installDuo ]]; then
+if [[ ! -z $installDuo ]]; then
     echo -e "${BLUE}Don't forget to configure Duo in guacamole.properties\nhttps://guacamole.apache.org/doc/${GUACVERSION}/gug/duo-auth.html${NC}"
 fi
