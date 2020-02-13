@@ -81,14 +81,21 @@ while [ "$1" != "" ]; do
     shift
 done
 
-if [[ -z $installTOTP ]]; then
-    # Prompt the user if they would like to install MFA, default of no
+# We can't install TOTP and Duo at the same time...
+if [[ ! -z $installTOTP ] && [ ! -z $installDuo ]]; then
+    echo "The script does not support installing TOTP and Duo at the same time."
+    exit 1
+fi
+
+if [[ -z $installTOTP ] && [ -z $installDuo ]]; then
+    # Prompt the user if they would like to install TOTP MFA, default of no
     echo -e -n "${CYAN}(!)${NC} Would you like to install TOTP? (y/N): "
     read PROMPT
     if [[ $PROMPT =~ ^[Yy]$ ]]; then installTOTP=true; else installTOTP=false; fi
 fi
 
-if [[ -z $installDuo ]]; then
+if [[ -z $installDuo ] && [ -z $installTOTP ]]; then
+    # Prompt the user if they would like to install Duo MFA, default of no
     echo -e -n "${CYAN}(!)${NC} Would you like to install Duo (configuration values must be set after install in guacamole.properties)? (y/N): "
     read PROMPT
     if [[ $PROMPT =~ ^[Yy]$ ]]; then installDuo=true; else installDuo=false; fi
@@ -162,27 +169,32 @@ fi
 
 # Ubuntu and Debian have different package names for libjpeg
 # Ubuntu and Debian versions have differnet package names for libpng-dev
-# Ubuntu 18.04 does not include universe repo by default
+# Ubuntu > 18.04 does not include universe repo by default
 source /etc/os-release
 if [[ "${NAME}" == "Ubuntu" ]]; then
+    # Add the "Universe" repo, don't update
+    add-apt-repository -yn universe
     JPEGTURBO="libjpeg-turbo8-dev"
-    if [[ "${VERSION_ID}" == "18.04" ]]; then
-        sed -i 's/bionic main$/bionic main universe/' /etc/apt/sources.list
-    fi
     if [[ "${VERSION_ID}" == "16.04" ]]; then
         LIBPNG="libpng12-dev"
     else
         LIBPNG="libpng-dev"
     fi
+    if [[ "${VERSION_ID}" == "19.10" ]]; then
+        JAVALIB="libmariadb-java"
+    else
+        JAVALIB="libmysql-java"
+    fi
 elif [[ "${NAME}" == *"Debian"* ]] || [[ "${NAME}" == *"Raspbian GNU/Linux"* ]]; then
     JPEGTURBO="libjpeg62-turbo-dev"
+    JAVALIB="libmysql-java"
     if [[ "${PRETTY_NAME}" == *"stretch"* ]]; then
         LIBPNG="libpng-dev"
     else
         LIBPNG="libpng12-dev"
     fi
 else
-    echo "Unsupported Distro - Ubuntu or Debian Only"
+    echo "Unsupported Distro - Ubuntu, Debian, or Raspbian Only"
     exit 1
 fi
 
@@ -217,7 +229,7 @@ export DEBIAN_FRONTEND=noninteractive
 
 apt-get -y install build-essential libcairo2-dev ${JPEGTURBO} ${LIBPNG} libossp-uuid-dev libavcodec-dev libavutil-dev \
 libswscale-dev freerdp2-dev libpango1.0-dev libssh2-1-dev libtelnet-dev libvncserver-dev libpulse-dev libssl-dev \
-libvorbis-dev libwebp-dev ${MYSQL} libmysql-java ${TOMCAT} freerdp2-x11 libtool-bin libwebsockets-dev \
+libvorbis-dev libwebp-dev ${MYSQL} ${JAVALIB} ${TOMCAT} freerdp2-x11 libtool-bin libwebsockets-dev \
 ghostscript wget dpkg-dev &>> ${LOG}
 
 if [ $? -ne 0 ]; then
@@ -424,3 +436,7 @@ fi
 unset MYSQL_PWD
 
 echo -e "${BLUE}Installation Complete\nhttp://localhost:8080/guacamole/\nDefault login guacadmin:guacadmin\nBe sure to change the password.${NC}"
+
+if [[ -z $installDuo ]]; then
+    echo -e "${BLUE}Don't forget to configure Duo in guacamole.properties\nhttps://guacamole.apache.org/doc/${GUACVERSION}/gug/duo-auth.html${NC}"
+fi
