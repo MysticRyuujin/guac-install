@@ -24,17 +24,15 @@ LOG="/tmp/guacamole_${GUACVERSION}_build.log"
 # Initialize variable values
 installTOTP=""
 installDuo=""
-
 installMySQL=""
 mysqlHost=""
 mysqlPort=""
 mysqlRootPwd=""
-
 guacDb=""
 guacUser=""
 guacPwd=""
-
 PROMPT=""
+MYSQL=""
 
 # Get script arguments for non-interactive mode
 while [ "$1" != "" ]; do
@@ -97,6 +95,7 @@ if [[ -z $installTOTP ]] && [[ -z $installDuo ]]; then
     read PROMPT
     if [[ $PROMPT =~ ^[Yy]$ ]]; then 
         installTOTP=true
+        installDuo=false
     else
         installTOTP=false
     fi
@@ -108,6 +107,7 @@ if [[ -z $installDuo ]] && [[ -z $installTOTP ]]; then
     read PROMPT
     if [[ $PROMPT =~ ^[Yy]$ ]]; then
         installDuo=true
+        installTOTP=false
     else
         installDuo=false
     fi
@@ -197,12 +197,22 @@ if [[ "${NAME}" == "Ubuntu" ]]; then
     else
         LIBPNG="libpng-dev"
     fi
+    if [ "$installMySQL" = true ]; then
+        MYSQL="mysql-server mysql-client mysql-common mysql-utilities"
+    else
+        MYSQL="mysql-client"
+    fi
 elif [[ "${NAME}" == *"Debian"* ]] || [[ "${NAME}" == *"Raspbian GNU/Linux"* ]]; then
     JPEGTURBO="libjpeg62-turbo-dev"
     if [[ "${PRETTY_NAME}" == *"stretch"* ]] || [[ "${PRETTY_NAME}" == *"buster"* ]]; then
         LIBPNG="libpng-dev"
     else
         LIBPNG="libpng12-dev"
+    fi
+    if [ "$installMySQL" = true ]; then
+        MYSQL="default-mysql-server default-mysql-client mysql-common"
+    else
+        MYSQL="default-mysql-client"
     fi
 else
     echo "Unsupported Distro - Ubuntu, Debian, or Raspbian Only"
@@ -230,15 +240,6 @@ elif [[ $(apt-cache show tomcat8 2> /dev/null | egrep "Version: 8.[5-9]" | wc -l
     TOMCAT="tomcat8"
 else
     TOMCAT="tomcat7"
-fi
-
-MYSQL=""
-if [ "$installMySQL" = true ]; then
-    if [ -z $(command -v mysql) ]; then
-        MYSQL="mysql-server mysql-client mysql-common mysql-utilities"
-    fi
-else
-    MYSQL="mysql-client"
 fi
 
 # Uncomment to manually force a tomcat version
@@ -271,6 +272,8 @@ if [ $? -ne 0 ]; then
     echo -e "${RED}Failed to download guacamole-server-${GUACVERSION}.tar.gz"
     echo -e "${SERVER}/source/guacamole-server-${GUACVERSION}.tar.gz${NC}"
     exit 1
+else
+    tar -xzf guacamole-server-${GUACVERSION}.tar.gz
 fi
 echo -e "${GREEN}Downloaded guacamole-server-${GUACVERSION}.tar.gz${NC}"
 
@@ -289,6 +292,8 @@ if [ $? -ne 0 ]; then
     echo -e "${RED}Failed to download guacamole-auth-jdbc-${GUACVERSION}.tar.gz"
     echo -e "${SERVER}/binary/guacamole-auth-jdbc-${GUACVERSION}.tar.gz"
     exit 1
+else
+    tar -xzf guacamole-auth-jdbc-${GUACVERSION}.tar.gz
 fi
 echo -e "${GREEN}Downloaded guacamole-auth-jdbc-${GUACVERSION}.tar.gz${NC}"
 
@@ -301,9 +306,10 @@ if [ "$installTOTP" = true ]; then
         echo -e "${RED}Failed to download guacamole-auth-totp-${GUACVERSION}.tar.gz"
         echo -e "${SERVER}/binary/guacamole-auth-totp-${GUACVERSION}.tar.gz"
         exit 1
+    else
+        tar -xzf guacamole-auth-totp-${GUACVERSION}.tar.gz
     fi
     echo -e "${GREEN}Downloaded guacamole-auth-totp-${GUACVERSION}.tar.gz${NC}"
-    tar -xzf guacamole-auth-totp-${GUACVERSION}.tar.gz
 fi
 
 # Duo
@@ -313,9 +319,10 @@ if [ "$installDuo" = true ]; then
         echo -e "${RED}Failed to download guacamole-auth-duo-${GUACVERSION}.tar.gz"
         echo -e "${SERVER}/binary/guacamole-auth-duo-${GUACVERSION}.tar.gz"
         exit 1
+    else
+        tar -xzf guacamole-auth-duo-${GUACVERSION}.tar.gz
     fi
     echo -e "${GREEN}Downloaded guacamole-auth-duo-${GUACVERSION}.tar.gz${NC}"
-    tar -xzf guacamole-auth-duo-${GUACVERSION}.tar.gz
 fi
 
 # Deal with Missing MySQL Connector/J
@@ -326,16 +333,13 @@ if [[ -z $JAVALIB ]]; then
         echo -e "${RED}Failed to download mysql-connector-java-${MCJVER}.tar.gz"
         echo -e "https://dev.mysql.com/get/Downloads/Connector-J/mysql-connector-java-${MCJVER}.tar.gz${NC}"
         exit 1
+    else
+        tar -xzf mysql-connector-java-${MCJVER}.tar.gz
     fi
     echo -e "${GREEN}Downloaded mysql-connector-java-${MCJVER}.tar.gz${NC}"
-    tar -xzf mysql-connector-java-${MCJVER}.tar.gz
 fi
 
 echo -e "${GREEN}Downloading complete.${NC}"
-
-# Extract Guacamole files
-tar -xzf guacamole-server-${GUACVERSION}.tar.gz
-tar -xzf guacamole-auth-jdbc-${GUACVERSION}.tar.gz
 
 # Make directories
 mkdir -p /etc/guacamole/lib
