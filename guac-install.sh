@@ -6,6 +6,10 @@ if ! [ $(id -u) = 0 ]; then echo "Please run this script as sudo or root"; exit 
 # Version number of Guacamole to install
 GUACVERSION="1.1.0"
 
+# Latest Version of MySQL Connector/J if manuall install is required
+# Manuall install is required if libmysql-java is not available via apt
+MCJVER="8.0.19"
+
 # Colors to use for output
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
@@ -82,30 +86,43 @@ while [ "$1" != "" ]; do
 done
 
 # We can't install TOTP and Duo at the same time...
-if [[ ! -z $installTOTP ] && [ ! -z $installDuo ]]; then
-    echo "The script does not support installing TOTP and Duo at the same time."
+if [[ ! -z $installTOTP ]] && [[ ! -z $installDuo ]]; then
+    echo "${RED}The script does not support installing TOTP and Duo at the same time.${NC}"
     exit 1
 fi
 
-if [[ -z $installTOTP ] && [ -z $installDuo ]]; then
+if [[ -z $installTOTP ]] && [[ -z $installDuo ]]; then
     # Prompt the user if they would like to install TOTP MFA, default of no
-    echo -e -n "${CYAN}(!)${NC} Would you like to install TOTP? (y/N): "
+    echo -e -n "${CYAN}Would you like to install TOTP? (y/N): ${NC}"
     read PROMPT
-    if [[ $PROMPT =~ ^[Yy]$ ]]; then installTOTP=true; else installTOTP=false; fi
+    if [[ $PROMPT =~ ^[Yy]$ ]]; then 
+        installTOTP=true
+    else
+        installTOTP=false
+    fi
 fi
 
-if [[ -z $installDuo ] && [ -z $installTOTP ]]; then
+if [[ -z $installDuo ]] && [[ -z $installTOTP ]]; then
     # Prompt the user if they would like to install Duo MFA, default of no
-    echo -e -n "${CYAN}(!)${NC} Would you like to install Duo (configuration values must be set after install in guacamole.properties)? (y/N): "
+    echo -e -n "${CYAN}Would you like to install Duo (configuration values must be set after install in guacamole.properties)? (y/N): ${NC}"
     read PROMPT
-    if [[ $PROMPT =~ ^[Yy]$ ]]; then installDuo=true; else installDuo=false; fi
+    if [[ $PROMPT =~ ^[Yy]$ ]]; then
+        installDuo=true
+    else
+        installDuo=false
+    fi
 fi
 
 if [[ -z $installMySQL ]]; then
     # Prompt the user to see if they would like to install MySQL, default of yes
-    echo -e -n "${CYAN}(!)${NC} Would you like to install MySQL? (Y/n): "
+    echo -e "MySQL is required for installation, if you're using a remote MySQL Server select 'N/n'"
+    echo -e -n "${CYAN}Would you like to install MySQL? (Y/n): ${NC}"
     read PROMPT
-    if [[ $PROMPT =~ ^[Nn]$ ]]; then installMySQL=false; else installMySQL=true; fi
+    if [[ $PROMPT =~ ^[Nn]$ ]]; then
+        installMySQL=false
+    else
+        installMySQL=true
+    fi
 fi
 
 if [ "$installMySQL" = false ]; then
@@ -167,27 +184,21 @@ if [ -z "$guacDb" ]; then
     guacDb="guacamole_db"
 fi
 
-# Ubuntu and Debian have different package names for libjpeg
-# Ubuntu and Debian versions have differnet package names for libpng-dev
 # Ubuntu > 18.04 does not include universe repo by default
+# Different version of Ubuntu and Debian have different package names...
 source /etc/os-release
 if [[ "${NAME}" == "Ubuntu" ]]; then
     # Add the "Universe" repo, don't update
     add-apt-repository -yn universe
+    # Set package names depending on version
     JPEGTURBO="libjpeg-turbo8-dev"
     if [[ "${VERSION_ID}" == "16.04" ]]; then
         LIBPNG="libpng12-dev"
     else
         LIBPNG="libpng-dev"
     fi
-    if [[ "${VERSION_ID}" == "19.10" ]]; then
-        JAVALIB="libmariadb-java"
-    else
-        JAVALIB="libmysql-java"
-    fi
 elif [[ "${NAME}" == *"Debian"* ]] || [[ "${NAME}" == *"Raspbian GNU/Linux"* ]]; then
     JPEGTURBO="libjpeg62-turbo-dev"
-    JAVALIB="libmysql-java"
     if [[ "${PRETTY_NAME}" == *"stretch"* ]] || [[ "${PRETTY_NAME}" == *"buster"* ]]; then
         LIBPNG="libpng-dev"
     else
@@ -198,13 +209,24 @@ else
     exit 1
 fi
 
-# Update apt so we can search apt-cache for newest tomcat version supported
+# Update apt so we can search apt-cache for newest tomcat version supported & libmysql-java
+echo -e "${BLUE}Updating apt...${NC}"
 apt-get -qq update
 
-# Tomcat 8.0.x is End of Life, however Tomcat 7.x is not...
-# If Tomcat 8.5.x or newer is available install it, otherwise install Tomcat 7
-# I have not testing with Tomcat9...
-if [[ $(apt-cache show tomcat8 | egrep "Version: 8.[5-9]" | wc -l) -gt 0 ]]; then
+# Check if libmysql-java is available
+if [[ $(apt-cache show libmysql-java 2> /dev/null | egrep "Version:" | wc -l) -gt 0 ]]; then
+    LIBJAVA="libmysql-java"
+else
+    LIBJAVA=""
+    echo -e "${YELLOW}libmysql-java not available. Will download ${MCJVER} and install manually${NC}"
+fi
+
+# tomcat9 is the latest version
+# tomcat8.0 is end of life, but tomcat8.5 is current
+# fallback is tomcat7
+if [[ $(apt-cache show tomcat9 2> /dev/null | egrep "Version: 9" | wc -l) -gt 0 ]]; then
+    TOMCAT="tomcat9"
+elif [[ $(apt-cache show tomcat8 2> /dev/null | egrep "Version: 8.[5-9]" | wc -l) -gt 0 ]]; then
     TOMCAT="tomcat8"
 else
     TOMCAT="tomcat7"
@@ -229,7 +251,7 @@ export DEBIAN_FRONTEND=noninteractive
 
 apt-get -y install build-essential libcairo2-dev ${JPEGTURBO} ${LIBPNG} libossp-uuid-dev libavcodec-dev libavutil-dev \
 libswscale-dev freerdp2-dev libpango1.0-dev libssh2-1-dev libtelnet-dev libvncserver-dev libpulse-dev libssl-dev \
-libvorbis-dev libwebp-dev ${MYSQL} ${JAVALIB} ${TOMCAT} freerdp2-x11 libtool-bin libwebsockets-dev \
+libvorbis-dev libwebp-dev ${MYSQL} ${LIBJAVA} ${TOMCAT} freerdp2-x11 libtool-bin libwebsockets-dev \
 ghostscript wget dpkg-dev &>> ${LOG}
 
 if [ $? -ne 0 ]; then
@@ -271,32 +293,45 @@ fi
 echo -e "${GREEN}Downloaded guacamole-auth-jdbc-${GUACVERSION}.tar.gz${NC}"
 
 # Download Guacamole authentication extensions
+
+# TOTP
 if [ "$installTOTP" = true ]; then
-    # TOTP
-	wget -q --show-progress -O guacamole-auth-totp-${GUACVERSION}.tar.gz ${SERVER}/binary/guacamole-auth-totp-${GUACVERSION}.tar.gz
-	if [ $? -ne 0 ]; then
-    	echo -e "${RED}Failed to download guacamole-auth-totp-${GUACVERSION}.tar.gz"
-    	echo -e "${SERVER}/binary/guacamole-auth-totp-${GUACVERSION}.tar.gz"
-    	exit 1
-	fi
-	echo -e "${GREEN}Downloaded guacamole-auth-totp-${GUACVERSION}.tar.gz${NC}"
-
-	echo -e "${GREEN}Downloading complete.${NC}"
-	tar -xzf guacamole-auth-totp-${GUACVERSION}.tar.gz
+    wget -q --show-progress -O guacamole-auth-totp-${GUACVERSION}.tar.gz ${SERVER}/binary/guacamole-auth-totp-${GUACVERSION}.tar.gz
+    if [ $? -ne 0 ]; then
+        echo -e "${RED}Failed to download guacamole-auth-totp-${GUACVERSION}.tar.gz"
+        echo -e "${SERVER}/binary/guacamole-auth-totp-${GUACVERSION}.tar.gz"
+        exit 1
+    fi
+    echo -e "${GREEN}Downloaded guacamole-auth-totp-${GUACVERSION}.tar.gz${NC}"
+    tar -xzf guacamole-auth-totp-${GUACVERSION}.tar.gz
 fi
+
+# Duo
 if [ "$installDuo" = true ]; then
-    # Duo
-	wget -q --show-progress -O guacamole-auth-duo-${GUACVERSION}.tar.gz ${SERVER}/binary/guacamole-auth-duo-${GUACVERSION}.tar.gz
-	if [ $? -ne 0 ]; then
-    	echo -e "${RED}Failed to download guacamole-auth-duo-${GUACVERSION}.tar.gz"
-    	echo -e "${SERVER}/binary/guacamole-auth-duo-${GUACVERSION}.tar.gz"
-    	exit 1
-	fi
-	echo -e "${GREEN}Downloaded guacamole-auth-duo-${GUACVERSION}.tar.gz${NC}"
-
-	echo -e "${GREEN}Downloading complete.${NC}"
-	tar -xzf guacamole-auth-duo-${GUACVERSION}.tar.gz
+    wget -q --show-progress -O guacamole-auth-duo-${GUACVERSION}.tar.gz ${SERVER}/binary/guacamole-auth-duo-${GUACVERSION}.tar.gz
+    if [ $? -ne 0 ]; then
+        echo -e "${RED}Failed to download guacamole-auth-duo-${GUACVERSION}.tar.gz"
+        echo -e "${SERVER}/binary/guacamole-auth-duo-${GUACVERSION}.tar.gz"
+        exit 1
+    fi
+    echo -e "${GREEN}Downloaded guacamole-auth-duo-${GUACVERSION}.tar.gz${NC}"
+    tar -xzf guacamole-auth-duo-${GUACVERSION}.tar.gz
 fi
+
+# Deal with Missing MySQL Connector/J
+if [[ -z $JAVALIB ]]; then
+    # Download MySQL Connector/J
+    wget -q --show-progress -O mysql-connector-java-${MCJVER}.tar.gz https://dev.mysql.com/get/Downloads/Connector-J/mysql-connector-java-${MCJVER}.tar.gz
+    if [ $? -ne 0 ]; then
+        echo -e "${RED}Failed to download mysql-connector-java-${MCJVER}.tar.gz"
+        echo -e "https://dev.mysql.com/get/Downloads/Connector-J/mysql-connector-java-${MCJVER}.tar.gz${NC}"
+        exit 1
+    fi
+    echo -e "${GREEN}Downloaded mysql-connector-java-${MCJVER}.tar.gz${NC}"
+    tar -xzf mysql-connector-java-${MCJVER}.tar.gz
+fi
+
+echo -e "${GREEN}Downloading complete.${NC}"
 
 # Extract Guacamole files
 tar -xzf guacamole-server-${GUACVERSION}.tar.gz
@@ -342,21 +377,28 @@ ldconfig
 systemctl enable guacd
 cd ..
 
-# Get build-folder
-BUILD_FOLDER=$(dpkg-architecture -qDEB_BUILD_GNU_TYPE)
-
 # Move files to correct locations
 mv guacamole-${GUACVERSION}.war /etc/guacamole/guacamole.war
-ln -s /etc/guacamole/guacamole.war /var/lib/${TOMCAT}/webapps/
-ln -s /usr/local/lib/freerdp/guac*.so /usr/lib/${BUILD_FOLDER}/freerdp/
-ln -s /usr/share/java/mysql-connector-java.jar /etc/guacamole/lib/
-cp guacamole-auth-jdbc-${GUACVERSION}/mysql/guacamole-auth-jdbc-mysql-${GUACVERSION}.jar /etc/guacamole/extensions/
+mv guacamole-auth-jdbc-${GUACVERSION}/mysql/guacamole-auth-jdbc-mysql-${GUACVERSION}.jar /etc/guacamole/extensions/
 
-if [ "$installTOTP" = true ]; then
-	cp guacamole-auth-totp-${GUACVERSION}/guacamole-auth-totp-${GUACVERSION}.jar /etc/guacamole/extensions/
+# Create Symbolic Link for Tomcat
+ln -s /etc/guacamole/guacamole.war /var/lib/${TOMCAT}/webapps/
+
+# Deal with MySQL Connector/J
+if [[ -z $JAVALIB ]]; then
+    mv mysql-connector-java-${MCJVER}/mysql-connector-java-${MCJVER}.jar /etc/guacamole/lib/mysql-connector-java.jar
+else
+    ln -s /usr/share/java/mysql-connector-java.jar /etc/guacamole/lib/
 fi
+
+# Move TOTP Files
+if [ "$installTOTP" = true ]; then
+    mv guacamole-auth-totp-${GUACVERSION}/guacamole-auth-totp-${GUACVERSION}.jar /etc/guacamole/extensions/
+fi
+
+# Move Duo Files
 if [ "$installDuo" = true ]; then
-	cp guacamole-auth-duo-${GUACVERSION}/guacamole-auth-duo-${GUACVERSION}.jar /etc/guacamole/extensions/
+    mv guacamole-auth-duo-${GUACVERSION}/guacamole-auth-duo-${GUACVERSION}.jar /etc/guacamole/extensions/
 fi
 
 # Configure guacamole.properties
@@ -369,12 +411,12 @@ echo "mysql-username: ${guacUser}" >> /etc/guacamole/guacamole.properties
 echo "mysql-password: ${guacPwd}" >> /etc/guacamole/guacamole.properties
 
 # Output Duo configuration settings but comment them out for now
-echo "# duo-api-hostname: " >> /etc/guacamole/guacamole.properties
-echo "# duo-integration-key: " >> /etc/guacamole/guacamole.properties
-echo "# duo-secret-key: " >> /etc/guacamole/guacamole.properties
-echo "# duo-application-key: " >> /etc/guacamole/guacamole.properties
 if [ "$installDuo" = true ]; then
-    echo -e "${YELLOW}Duo is installed, it will need to be configured via guacamole.properties!${NC}"
+    echo "# duo-api-hostname: " >> /etc/guacamole/guacamole.properties
+    echo "# duo-integration-key: " >> /etc/guacamole/guacamole.properties
+    echo "# duo-secret-key: " >> /etc/guacamole/guacamole.properties
+    echo "# duo-application-key: " >> /etc/guacamole/guacamole.properties
+    echo -e "${YELLOW}Duo is installed, it will need to be configured via guacamole.properties${NC}"
 fi
 
 # restart tomcat
@@ -425,18 +467,14 @@ service guacd start
 
 # Cleanup
 echo -e "${BLUE}Cleanup install files...${NC}"
-
 rm -rf guacamole-*
-if [ $? -ne 0 ]; then
-    echo -e "${RED}Failed${NC}"
-    exit 1
-else
-    echo -e "${GREEN}OK${NC}"
-fi
+rm -rf mysql-connector-java-*
+
 unset MYSQL_PWD
 
+# Done
 echo -e "${BLUE}Installation Complete\nhttp://localhost:8080/guacamole/\nDefault login guacadmin:guacadmin\nBe sure to change the password.${NC}"
 
 if [[ ! -z $installDuo ]]; then
-    echo -e "${BLUE}Don't forget to configure Duo in guacamole.properties\nhttps://guacamole.apache.org/doc/${GUACVERSION}/gug/duo-auth.html${NC}"
+    echo -e "${YELLOW}Don't forget to configure Duo in guacamole.properties. You will not be able to login otherwise.\nhttps://guacamole.apache.org/doc/${GUACVERSION}/gug/duo-auth.html${NC}"
 fi
