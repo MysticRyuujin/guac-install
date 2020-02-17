@@ -58,7 +58,7 @@ fi
 
 if [ -n "$mysqlRootPwd" ]; then
     export MYSQL_PWD=${mysqlRootPwd}
-    mysql -u root -D ${guacDb} -h ${mysqlHost} -P ${mysqlPort} -e"quit" || exit
+    mysql -u root -D ${guacDb} -h ${mysqlHost} -P ${mysqlPort} -e"quit" || exit 1
 else
     # Get MySQL root password
     echo
@@ -93,15 +93,17 @@ apt-get -qq update
 apt-get -y install freerdp2-dev freerdp2-x11 libtool-bin libwebsockets-dev
 
 # Download Guacamole server
-wget -O guacamole-server-${GUACVERSION}.tar.gz ${SERVER}/source/guacamole-server-${GUACVERSION}.tar.gz
+wget -q --show-progress -O guacamole-server-${GUACVERSION}.tar.gz ${SERVER}/source/guacamole-server-${GUACVERSION}.tar.gz
 if [ $? -ne 0 ]; then
     echo "Failed to download guacamole-server-${GUACVERSION}.tar.gz"
     echo "${SERVER}/source/guacamole-server-${GUACVERSION}.tar.gz"
     exit
+else
+    tar -xzf guacamole-server-${GUACVERSION}.tar.gz
 fi
 
 # Download Guacamole client
-wget -O guacamole-${GUACVERSION}.war ${SERVER}/binary/guacamole-${GUACVERSION}.war
+wget -q --show-progress -O guacamole-${GUACVERSION}.war ${SERVER}/binary/guacamole-${GUACVERSION}.war
 if [ $? -ne 0 ]; then
     echo "Failed to download guacamole-${GUACVERSION}.war"
     echo "${SERVER}/binary/guacamole-${GUACVERSION}.war"
@@ -109,15 +111,18 @@ if [ $? -ne 0 ]; then
 fi
 
 # Download SQL components
-wget -O guacamole-auth-jdbc-${GUACVERSION}.tar.gz ${SERVER}/binary/guacamole-auth-jdbc-${GUACVERSION}.tar.gz
+wget -q --show-progress -O guacamole-auth-jdbc-${GUACVERSION}.tar.gz ${SERVER}/binary/guacamole-auth-jdbc-${GUACVERSION}.tar.gz
 if [ $? -ne 0 ]; then
     echo "Failed to download guacamole-auth-jdbc-${GUACVERSION}.tar.gz"
     echo "${SERVER}/binary/guacamole-auth-jdbc-${GUACVERSION}.tar.gz"
     exit
+else
+    tar -xzf guacamole-auth-jdbc-${GUACVERSION}.tar.gz
+    rm /etc/guacamole/extensions/guacamole-auth-jdbc-*.jar
+    cp guacamole-auth-jdbc-${GUACVERSION}/mysql/guacamole-auth-jdbc-mysql-${GUACVERSION}.jar /etc/guacamole/extensions/
 fi
 
 # Upgrade Guacamole Server
-tar -xzf guacamole-server-${GUACVERSION}.tar.gz
 cd guacamole-server-${GUACVERSION}
 ./configure --with-init-dir=/etc/init.d
 make
@@ -129,10 +134,6 @@ cd ..
 
 # Upgrade Guacamole Client
 mv guacamole-${GUACVERSION}.war /etc/guacamole/guacamole.war
-
-# Upgrade SQL Components
-tar -xzf guacamole-auth-jdbc-${GUACVERSION}.tar.gz
-cp guacamole-auth-jdbc-${GUACVERSION}/mysql/guacamole-auth-jdbc-mysql-${GUACVERSION}.jar /etc/guacamole/extensions/
 
 # Get list of SQL Upgrade Files
 UPGRADEFILES=($(ls -1 guacamole-auth-jdbc-${GUACVERSION}/mysql/schema/upgrade/ | sort -V))
@@ -160,12 +161,9 @@ for file in /etc/guacamole/extensions/guacamole-auth-totp*.jar; do
             exit 1
         fi
         echo -e "${GREEN}Downloaded guacamole-auth-totp-${GUACVERSION}.tar.gz${NC}"
-
-        echo -e "${GREEN}Downloading complete.${NC}"
         tar -xzf guacamole-auth-totp-${GUACVERSION}.tar.gz
         cp guacamole-auth-totp-${GUACVERSION}/guacamole-auth-totp-${GUACVERSION}.jar /etc/guacamole/extensions/
         echo -e "${GREEN}TOTP copied to extensions.${NC}"
-
         break
     fi
 done
@@ -182,8 +180,6 @@ for file in /etc/guacamole/extensions/guacamole-auth-duo*.jar; do
             exit 1
         fi
         echo -e "${GREEN}Downloaded guacamole-auth-duo-${GUACVERSION}.tar.gz${NC}"
-
-        echo -e "${GREEN}Downloading complete.${NC}"
         tar -xzf guacamole-auth-duo-${GUACVERSION}.tar.gz
         cp guacamole-auth-duo-${GUACVERSION}/guacamole-auth-duo-${GUACVERSION}.jar /etc/guacamole/extensions/
         echo -e "${GREEN}Duo copied to extensions.${NC}"
