@@ -188,7 +188,7 @@ if [[ "${NAME}" == "Ubuntu" ]]; then
 elif [[ "${NAME}" == *"Debian"* ]] || [[ "${NAME}" == *"Raspbian GNU/Linux"* ]]; then
     JPEGTURBO="libjpeg62-turbo-dev"
     JAVALIB="libmysql-java"
-    if [[ "${PRETTY_NAME}" == *"stretch"* ]]; then
+    if [[ "${PRETTY_NAME}" == *"stretch"* ]] || [[ "${PRETTY_NAME}" == *"buster"* ]]; then
         LIBPNG="libpng-dev"
     else
         LIBPNG="libpng12-dev"
