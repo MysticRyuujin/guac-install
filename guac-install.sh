@@ -200,7 +200,7 @@ if [[ "${NAME}" == "Ubuntu" ]]; then
     if [ "$installMySQL" = true ]; then
         MYSQL="mysql-server mysql-client mysql-common mysql-utilities"
     # Checking if (any kind of) mysql-client or compatible command installed. This is useful for existing mariadb server
-    elif hash mysql 2>/dev/null; then
+    elif type "mysql" > /dev/null; then
 	MYSQL=""
     else
         MYSQL="mysql-client"
