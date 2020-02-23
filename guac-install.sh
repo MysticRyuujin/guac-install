@@ -200,7 +200,7 @@ if [[ "${NAME}" == "Ubuntu" ]]; then
     if [ "$installMySQL" = true ]; then
         MYSQL="mysql-server mysql-client mysql-common mysql-utilities"
     # Checking if (any kind of) mysql-client or compatible command installed. This is useful for existing mariadb server
-    elif type "mysql" > /dev/null; then
+    elif [ -x "$(command -v mysql)" ]; then
 	MYSQL=""
     else
         MYSQL="mysql-client"
@@ -214,6 +214,9 @@ elif [[ "${NAME}" == *"Debian"* ]] || [[ "${NAME}" == *"Raspbian GNU/Linux"* ]];
     fi
     if [ "$installMySQL" = true ]; then
         MYSQL="default-mysql-server default-mysql-client mysql-common"
+    # Checking if (any kind of) mysql-client or compatible command installed. This is useful for existing mariadb server
+    elif [ -x "$(command -v mysql)" ]; then
+	MYSQL=""
     else
         MYSQL="default-mysql-client"
     fi
