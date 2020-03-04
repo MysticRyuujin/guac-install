@@ -2,7 +2,7 @@
 
 # guac-install
 
-Script for installing Guacamole 1.1.0 on Ubuntu 16.04 or newer (with MySQL, or remote MySQL). It should also work on pure Debian or Raspbian. I have tested this with Debian 10.3.0 (Buster). **If other versions don't work please open an issue.** It is likely due to a required library having a different name.
+Script for installing Guacamole 1.1.0 on Ubuntu 16.04 or newer (with MySQL, or remote MySQL). It should also work on pure [Debian](https://www.debian.org/), [Raspbian](https://www.raspberrypi.org/downloads/raspbian/) or [Kali Linux](https://www.kali.org/). I have tested this with Debian 10.3.0 (Buster). **If other versions don't work please open an issue.** It is likely due to a required library having a different name.
 
 Run script, enter MySQL Root Password and Guacamole User password. Guacamole User is used to connect to the Guacamole Database.
 
@@ -42,6 +42,7 @@ Once installation is done you can access Guacamole by browsing to: http://<host_
 The default credentials are guacadmin as both username and password. Please change them or disable guacadmin after install!
 
 # guac-upgrade
+
 Script for upgrading currently installed Guacamole instance (previously installed via this script/guide).  This will also now update the TOTP or Duo extensions if used.
 
 If looks for the tomcat folder in /etc/ (E.G. `/etc/tomcat7` or `/etc/tomcat8`) hopefully that works to identify the correct tomcat version/path :smile: I'm open to suggestions/pull requests for a cleaner method.
