@@ -83,17 +83,11 @@ while [ "$1" != "" ]; do
     shift
 done
 
-# We can't install TOTP and Duo at the same time...
-if [[ ! -z $installTOTP ]] && [[ ! -z $installDuo ]]; then
-    echo "${RED}The script does not support installing TOTP and Duo at the same time.${NC}"
-    exit 1
-fi
-
-if [[ -z $installTOTP ]] && [[ -z $installDuo ]]; then
+if [[ -z "$installTOTP" ]] && [[ "$installDuo" != true ]]; then
     # Prompt the user if they would like to install TOTP MFA, default of no
-    echo -e -n "${CYAN}Would you like to install TOTP? (y/N): ${NC}"
+    echo -e -n "${CYAN}MFA: Would you like to install TOTP? (y/N): ${NC}"
     read PROMPT
-    if [[ $PROMPT =~ ^[Yy]$ ]]; then 
+    if [[ $PROMPT =~ ^[Yy]$ ]]; then
         installTOTP=true
         installDuo=false
     else
@@ -101,9 +95,9 @@ if [[ -z $installTOTP ]] && [[ -z $installDuo ]]; then
     fi
 fi
 
-if [[ -z $installDuo ]] && [[ -z $installTOTP ]]; then
+if [[ -z "$installDuo" ]] && [[ "$installTOTP" != true ]]; then
     # Prompt the user if they would like to install Duo MFA, default of no
-    echo -e -n "${CYAN}Would you like to install Duo (configuration values must be set after install in guacamole.properties)? (y/N): ${NC}"
+    echo -e -n "${CYAN}MFA: Would you like to install Duo (configuration values must be set after install in /etc/guacamole/guacamole.properties)? (y/N): ${NC}"
     read PROMPT
     if [[ $PROMPT =~ ^[Yy]$ ]]; then
         installDuo=true
@@ -113,9 +107,16 @@ if [[ -z $installDuo ]] && [[ -z $installTOTP ]]; then
     fi
 fi
 
+# We can't install TOTP and Duo at the same time...
+if [[ "$installTOTP" = true ]] && [ "$installDuo" = true ]; then
+    echo -e "${RED}MFA: The script does not support installing TOTP and Duo at the same time.${NC}"
+    exit 1
+fi
+echo
+
 if [[ -z $installMySQL ]]; then
     # Prompt the user to see if they would like to install MySQL, default of yes
-    echo -e "MySQL is required for installation, if you're using a remote MySQL Server select 'N/n'"
+    echo "MySQL is required for installation, if you're using a remote MySQL Server select 'n'"
     echo -e -n "${CYAN}Would you like to install MySQL? (Y/n): ${NC}"
     read PROMPT
     if [[ $PROMPT =~ ^[Nn]$ ]]; then
@@ -131,37 +132,6 @@ if [ "$installMySQL" = false ]; then
     read -p "Enter MySQL server port [3306]: " mysqlPort
     read -p "Enter Guacamole database name [guacamole_db]: " guacDb
     read -p "Enter Guacamole user [guacamole_user]: " guacUser
-fi
-
-# Get MySQL Root password and Guacamole User password
-echo
-while true
-do
-    read -s -p "Enter a MySQL ROOT Password: " mysqlRootPwd
-    echo
-    read -s -p "Confirm MySQL ROOT Password: " PROMPT2
-    echo
-    [ "$mysqlRootPwd" = "$PROMPT2" ] && break
-    echo "Passwords don't match. Please try again."
-    echo
-done
-echo
-while true
-do
-    read -s -p "Enter a Guacamole User Database Password: " guacPwd
-    echo
-    read -s -p "Confirm Guacamole User Database Password: " PROMPT2
-    echo
-    [ "$guacPwd" = "$PROMPT2" ] && break
-    echo "Passwords don't match. Please try again."
-    echo
-done
-echo
-
-if [ "$installMySQL" = true ]; then
-    # Seed MySQL install values
-    debconf-set-selections <<< "mysql-server mysql-server/root_password password $mysqlRootPwd"
-    debconf-set-selections <<< "mysql-server mysql-server/root_password_again password $mysqlRootPwd"
 fi
 
 # Checking if mysql host given
@@ -184,10 +154,40 @@ if [ -z "$guacDb" ]; then
     guacDb="guacamole_db"
 fi
 
-# Ubuntu > 18.04 does not include universe repo by default
+# Get MySQL "Root" and "Guacamole User" password
+while true; do
+    echo
+    read -s -p "Enter ${mysqlHost}'s MySQL root password: " mysqlRootPwd
+    echo
+    read -s -p "Confirm ${mysqlHost}'s MySQL root password: " PROMPT2
+    echo
+    [ "$mysqlRootPwd" = "$PROMPT2" ] && break
+    echo "Passwords don't match. Please try again."
+done
+echo
+
+while true; do
+    echo -e "${BLUE}A new MySQL user will be created (${guacUser})${NC}"
+    read -s -p "Enter ${mysqlHost}'s MySQL guacamole user password: " guacPwd
+    echo
+    read -s -p "Confirm ${mysqlHost}'s MySQL guacamole user password: " PROMPT2
+    echo
+    [ "$guacPwd" = "$PROMPT2" ] && break
+    echo "Passwords don't match. Please try again."
+    echo
+done
+echo
+
+if [ "$installMySQL" = true ]; then
+    # Seed MySQL install values
+    debconf-set-selections <<< "mysql-server mysql-server/root_password password $mysqlRootPwd"
+    debconf-set-selections <<< "mysql-server mysql-server/root_password_again password $mysqlRootPwd"
+fi
+
 # Different version of Ubuntu and Debian have different package names...
 source /etc/os-release
 if [[ "${NAME}" == "Ubuntu" ]]; then
+    # Ubuntu > 18.04 does not include universe repo by default
     # Add the "Universe" repo, don't update
     add-apt-repository -yn universe
     # Set package names depending on version
@@ -205,9 +205,9 @@ if [[ "${NAME}" == "Ubuntu" ]]; then
     else
         MYSQL="mysql-client"
     fi
-elif [[ "${NAME}" == *"Debian"* ]] || [[ "${NAME}" == *"Raspbian GNU/Linux"* ]]; then
+elif [[ "${NAME}" == *"Debian"* ]] || [[ "${NAME}" == *"Raspbian GNU/Linux"* ]] || [[ "${NAME}" == *"Kali GNU/Linux"* ]]; then
     JPEGTURBO="libjpeg62-turbo-dev"
-    if [[ "${PRETTY_NAME}" == *"stretch"* ]] || [[ "${PRETTY_NAME}" == *"buster"* ]]; then
+    if [[ "${PRETTY_NAME}" == *"stretch"* ]] || [[ "${PRETTY_NAME}" == *"buster"* ]] || [[ "${PRETTY_NAME}" == *"Kali GNU/Linux Rolling"* ]]; then
         LIBPNG="libpng-dev"
     else
         LIBPNG="libpng12-dev"
@@ -221,7 +221,7 @@ elif [[ "${NAME}" == *"Debian"* ]] || [[ "${NAME}" == *"Raspbian GNU/Linux"* ]];
         MYSQL="default-mysql-client"
     fi
 else
-    echo "Unsupported Distro - Ubuntu, Debian, or Raspbian Only"
+    echo "Unsupported Distro - Ubuntu, Debian, Kali or Raspbian Only"
     exit 1
 fi
 
@@ -236,6 +236,7 @@ else
     LIBJAVA=""
     echo -e "${YELLOW}libmysql-java not available. Will download ${MCJVER} and install manually${NC}"
 fi
+echo
 
 # tomcat9 is the latest version
 # tomcat8.0 is end of life, but tomcat8.5 is current
@@ -252,15 +253,19 @@ fi
 #TOMCAT=""
 
 # Install features
-echo -e "${BLUE}Installing dependencies. This might take a few minutes...${NC}"
+echo -e "${BLUE}Installing packages. This might take a few minutes...${NC}"
 
+# Don't prompt during install
 export DEBIAN_FRONTEND=noninteractive
 
+# Required packages
 apt-get -y install build-essential libcairo2-dev ${JPEGTURBO} ${LIBPNG} libossp-uuid-dev libavcodec-dev libavutil-dev \
 libswscale-dev freerdp2-dev libpango1.0-dev libssh2-1-dev libtelnet-dev libvncserver-dev libpulse-dev libssl-dev \
-libvorbis-dev libwebp-dev ${MYSQL} ${LIBJAVA} ${TOMCAT} freerdp2-x11 libtool-bin libwebsockets-dev \
-ghostscript wget dpkg-dev &>> ${LOG}
+libvorbis-dev libwebp-dev libwebsockets-dev wget \
+freerdp2-x11 libtool-bin ghostscript dpkg-dev \
+${MYSQL} ${LIBJAVA} ${TOMCAT} &>> ${LOG}
 
+# If apt fails to run completely the rest of this isn't going to work...
 if [ $? -ne 0 ]; then
     echo -e "${RED}Failed. See ${LOG}${NC}"
     exit 1
@@ -270,7 +275,7 @@ fi
 
 # Set SERVER to be the preferred download server from the Apache CDN
 SERVER="http://apache.org/dyn/closer.cgi?action=download&filename=guacamole/${GUACVERSION}"
-echo -e "${BLUE}Downloading Files...${NC}"
+echo -e "${BLUE}Downloading files...${NC}"
 
 # Download Guacamole Server
 wget -q --show-progress -O guacamole-server-${GUACVERSION}.tar.gz ${SERVER}/source/guacamole-server-${GUACVERSION}.tar.gz
@@ -279,6 +284,7 @@ if [ $? -ne 0 ]; then
     echo -e "${SERVER}/source/guacamole-server-${GUACVERSION}.tar.gz${NC}"
     exit 1
 else
+    # Extract Guacamole Files
     tar -xzf guacamole-server-${GUACVERSION}.tar.gz
 fi
 echo -e "${GREEN}Downloaded guacamole-server-${GUACVERSION}.tar.gz${NC}"
@@ -344,19 +350,20 @@ if [[ -z $JAVALIB ]]; then
     fi
     echo -e "${GREEN}Downloaded mysql-connector-java-${MCJVER}.tar.gz${NC}"
 fi
-
 echo -e "${GREEN}Downloading complete.${NC}"
+echo
 
 # Make directories
+rm -rf /etc/guacamole/extensions
 mkdir -p /etc/guacamole/lib
 mkdir -p /etc/guacamole/extensions
 
-# Install guacd
+# Install guacd (Guacamole-server)
 cd guacamole-server-${GUACVERSION}
 
-echo -e "${BLUE}Building Guacamole with GCC $(gcc --version | head -n1 | grep -oP '\)\K.*' | awk '{print $1}') ${NC}"
+echo -e "${BLUE}Building Guacamole-Server with GCC $(gcc --version | head -n1 | grep -oP '\)\K.*' | awk '{print $1}') ${NC}"
 
-echo -e "${BLUE}Configuring. This might take a minute...${NC}"
+echo -e "${BLUE}Configuring Guacamole-Server. This might take a minute...${NC}"
 ./configure --with-init-dir=/etc/init.d  &>> ${LOG}
 if [ $? -ne 0 ]; then
     echo -e "${RED}Failed. See ${LOG}${NC}"
@@ -365,7 +372,7 @@ else
     echo -e "${GREEN}OK${NC}"
 fi
 
-echo -e "${BLUE}Running Make. This might take a few minutes...${NC}"
+echo -e "${BLUE}Running Make on Guacamole-Server. This might take a few minutes...${NC}"
 make &>> ${LOG}
 if [ $? -ne 0 ]; then
     echo -e "${RED}Failed. See ${LOG}${NC}"
@@ -374,7 +381,7 @@ else
     echo -e "${GREEN}OK${NC}"
 fi
 
-echo -e "${BLUE}Running Make Install...${NC}"
+echo -e "${BLUE}Running Make Install on Guacamole-Server...${NC}"
 make install &>> ${LOG}
 if [ $? -ne 0 ]; then
     echo -e "${RED}Failed. See ${LOG}${NC}"
@@ -382,17 +389,16 @@ if [ $? -ne 0 ]; then
 else
     echo -e "${GREEN}OK${NC}"
 fi
-
 ldconfig
-systemctl enable guacd
-cd ..
+echo
 
-# Move files to correct locations
+# Move files to correct locations (guacamole-client & Guacamole authentication extensions)
+cd ..
 mv guacamole-${GUACVERSION}.war /etc/guacamole/guacamole.war
 mv guacamole-auth-jdbc-${GUACVERSION}/mysql/guacamole-auth-jdbc-mysql-${GUACVERSION}.jar /etc/guacamole/extensions/
 
 # Create Symbolic Link for Tomcat
-ln -s /etc/guacamole/guacamole.war /var/lib/${TOMCAT}/webapps/
+ln -sf /etc/guacamole/guacamole.war /var/lib/${TOMCAT}/webapps/
 
 # Deal with MySQL Connector/J
 if [[ -z $JAVALIB ]]; then
@@ -430,14 +436,31 @@ if [ "$installDuo" = true ]; then
 fi
 
 # restart tomcat
-echo -e "${BLUE}Restarting tomcat...${NC}"
-
+echo -e "${BLUE}Restarting tomcat service & enable at boot...${NC}"
 service ${TOMCAT} restart
 if [ $? -ne 0 ]; then
     echo -e "${RED}Failed${NC}"
     exit 1
 else
     echo -e "${GREEN}OK${NC}"
+fi
+# Start at boot
+systemctl enable ${TOMCAT}
+echo
+
+if [ "$installMySQL" = true ]; then
+    # restart mysql
+    echo -e "${BLUE}Restarting MySQL service & enable at boot...${NC}"
+    service mysql restart
+    if [ $? -ne 0 ]; then
+        echo -e "${RED}Failed${NC}"
+        exit 1
+    else
+        echo -e "${GREEN}OK${NC}"
+    fi
+    # Start at boot
+    systemctl enable mysql
+    echo
 fi
 
 # Create $guacDb and grant $guacUser permissions to it
@@ -450,19 +473,51 @@ if [[ "$mysqlHost" != "localhost" ]]; then
     echo -e "${YELLOW}MySQL Guacamole user is set to accept login from any host, please change this for security reasons if possible.${NC}"
 fi
 
+# Set MySQL password
+export MYSQL_PWD=${mysqlRootPwd}
+
+# Check for $guacDb already being there
+echo -e "${BLUE}Checking MySQL for existing database (${guacDb})${NC}"
 SQLCODE="
-create database ${guacDb};
+SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME='${guacDb}';"
+
+# Execute SQL code
+MYSQL_RESULT=$( echo ${SQLCODE} | mysql -u root -D information_schema -h ${mysqlHost} -P ${mysqlPort} )
+if [[ $MYSQL_RESULT != "" ]]; then
+    echo -e "${RED}It appears there is already a MySQL database (${guacDb}) on ${mysqlHost}${NC}"
+    echo -e "${RED}Try:    mysql -e 'drop database ${guacDb}'${NC}"
+    exit 1
+else
+    echo -e "${GREEN}OK${NC}"
+fi
+
+# Check for $guacUser already being there
+echo -e "${BLUE}Checking MySQL for existing user (${guacUser})${NC}"
+SQLCODE="
+SELECT COUNT(*) FROM mysql.user WHERE user = '${guacUser}';"
+
+# Execute SQL code
+MYSQL_RESULT=$( echo ${SQLCODE} | mysql -u root -h ${mysqlHost} -P ${mysqlPort} | grep '0' )
+if [[ $MYSQL_RESULT == "" ]]; then
+    echo -e "${RED}It appears there is already a MySQL user (${guacUser}) on ${mysqlHost}${NC}"
+    echo -e "${RED}Try:    mysql -e \"DROP USER '${guacUser}'@'${guacUserHost}';\"${NC}"
+    exit 1
+else
+    echo -e "${GREEN}OK${NC}"
+fi
+
+# Create database & user, then set permissions
+SQLCODE="
+CREATE DATABASE IF NOT EXISTS ${guacDb};
 create user if not exists '${guacUser}'@'${guacUserHost}' identified by \"${guacPwd}\";
 GRANT SELECT,INSERT,UPDATE,DELETE ON ${guacDb}.* TO '${guacUser}'@'${guacUserHost}';
 flush privileges;"
-
-export MYSQL_PWD=${mysqlRootPwd}
 
 # Execute SQL code
 echo ${SQLCODE} | mysql -u root -h ${mysqlHost} -P ${mysqlPort}
 
 # Add Guacamole schema to newly created database
-echo -e "Adding db tables..."
+echo -e "${BLUE}Adding database tables...${NC}"
 cat guacamole-auth-jdbc-${GUACVERSION}/mysql/schema/*.sql | mysql -u root -D ${guacDb} -h ${mysqlHost} -P ${mysqlPort}
 if [ $? -ne 0 ]; then
     echo -e "${RED}Failed${NC}"
@@ -470,21 +525,24 @@ if [ $? -ne 0 ]; then
 else
     echo -e "${GREEN}OK${NC}"
 fi
+echo
 
 # Ensure guacd is started
-echo -e "${BLUE}Starting guacamole...${NC}"
+echo -e "${BLUE}Starting guacamole service & enable at boot...${NC}"
 service guacd start
+systemctl enable guacd
+echo
 
 # Cleanup
 echo -e "${BLUE}Cleanup install files...${NC}"
 rm -rf guacamole-*
 rm -rf mysql-connector-java-*
-
 unset MYSQL_PWD
+echo
 
 # Done
-echo -e "${BLUE}Installation Complete\nhttp://localhost:8080/guacamole/\nDefault login guacadmin:guacadmin\nBe sure to change the password.${NC}"
+echo -e "${BLUE}Installation Complete\n- Visit: http://localhost:8080/guacamole/\n- Default login (username/password): guacadmin/guacadmin\n***Be sure to change the password***.${NC}"
 
-if [[ ! -z $installDuo ]]; then
-    echo -e "${YELLOW}Don't forget to configure Duo in guacamole.properties. You will not be able to login otherwise.\nhttps://guacamole.apache.org/doc/${GUACVERSION}/gug/duo-auth.html${NC}"
+if [ "$installDuo" = true ]; then
+    echo -e "${YELLOW}\nDon't forget to configure Duo in guacamole.properties. You will not be able to login otherwise.\nhttps://guacamole.apache.org/doc/${GUACVERSION}/gug/duo-auth.html${NC}"
 fi
