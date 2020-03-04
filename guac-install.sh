@@ -205,9 +205,9 @@ if [[ "${NAME}" == "Ubuntu" ]]; then
     else
         MYSQL="mysql-client"
     fi
-elif [[ "${NAME}" == *"Debian"* ]] || [[ "${NAME}" == *"Raspbian GNU/Linux"* ]]; then
+elif [[ "${NAME}" == *"Debian"* ]] || [[ "${NAME}" == *"Raspbian GNU/Linux"* ]] || [[ "${NAME}" == *"Kali GNU/Linux"* ]]; then
     JPEGTURBO="libjpeg62-turbo-dev"
-    if [[ "${PRETTY_NAME}" == *"stretch"* ]] || [[ "${PRETTY_NAME}" == *"buster"* ]]; then
+    if [[ "${PRETTY_NAME}" == *"stretch"* ]] || [[ "${PRETTY_NAME}" == *"buster"* ]] || [[ "${PRETTY_NAME}" == *"Kali GNU/Linux Rolling"* ]]; then
         LIBPNG="libpng-dev"
     else
         LIBPNG="libpng12-dev"
@@ -392,7 +392,7 @@ mv guacamole-${GUACVERSION}.war /etc/guacamole/guacamole.war
 mv guacamole-auth-jdbc-${GUACVERSION}/mysql/guacamole-auth-jdbc-mysql-${GUACVERSION}.jar /etc/guacamole/extensions/
 
 # Create Symbolic Link for Tomcat
-ln -s /etc/guacamole/guacamole.war /var/lib/${TOMCAT}/webapps/
+ln -sf /etc/guacamole/guacamole.war /var/lib/${TOMCAT}/webapps/
 
 # Deal with MySQL Connector/J
 if [[ -z $JAVALIB ]]; then
@@ -433,6 +433,18 @@ fi
 echo -e "${BLUE}Restarting tomcat...${NC}"
 
 service ${TOMCAT} restart
+if [ $? -ne 0 ]; then
+    echo -e "${RED}Failed${NC}"
+    exit 1
+else
+    echo -e "${GREEN}OK${NC}"
+fi
+
+
+# restart mysql
+echo -e "${BLUE}Restarting mysql...${NC}"
+
+service mysql restart
 if [ $? -ne 0 ]; then
     echo -e "${RED}Failed${NC}"
     exit 1
