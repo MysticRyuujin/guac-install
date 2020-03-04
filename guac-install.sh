@@ -392,7 +392,7 @@ mv guacamole-${GUACVERSION}.war /etc/guacamole/guacamole.war
 mv guacamole-auth-jdbc-${GUACVERSION}/mysql/guacamole-auth-jdbc-mysql-${GUACVERSION}.jar /etc/guacamole/extensions/
 
 # Create Symbolic Link for Tomcat
-ln -s /etc/guacamole/guacamole.war /var/lib/${TOMCAT}/webapps/
+ln -sf /etc/guacamole/guacamole.war /var/lib/${TOMCAT}/webapps/
 
 # Deal with MySQL Connector/J
 if [[ -z $JAVALIB ]]; then
