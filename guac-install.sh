@@ -440,6 +440,18 @@ else
     echo -e "${GREEN}OK${NC}"
 fi
 
+
+# restart mysql
+echo -e "${BLUE}Restarting mysql...${NC}"
+
+service mysql restart
+if [ $? -ne 0 ]; then
+    echo -e "${RED}Failed${NC}"
+    exit 1
+else
+    echo -e "${GREEN}OK${NC}"
+fi
+
 # Create $guacDb and grant $guacUser permissions to it
 
 # SQL code
