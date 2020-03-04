@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Check if user is root or sudo
+if ! [ $(id -u) = 0 ]; then echo "Please run this script as sudo or root"; exit 1 ; fi
+
 # Version number of Guacamole to install
 GUACVERSION="1.1.0"
 
@@ -23,7 +26,7 @@ if [ -n "$mysqlpwd" ] && [ -n "$guacpwd" ]; then
         mysqlrootpassword=$mysqlpwd
         guacdbuserpassword=$guacpwd
 else
-    echo 
+    echo
     while true
     do
         read -s -p "Enter a MySQL ROOT Password: " mysqlrootpassword
@@ -48,7 +51,7 @@ else
     echo
 fi
 
-#Install Stuff
+# Install Stuff
 apt-get update
 apt-get -y install docker-ce mysql-client wget
 
@@ -75,9 +78,9 @@ sleep 30
 # Create the Guacamole database and the user account
 # SQL Code
 SQLCODE="
-create database guacamole_db; 
-create user 'guacamole_user'@'%' identified by '$guacdbuserpassword'; 
-GRANT SELECT,INSERT,UPDATE,DELETE ON guacamole_db.* TO 'guacamole_user'@'%'; 
+create database guacamole_db;
+create user 'guacamole_user'@'%' identified by '$guacdbuserpassword';
+GRANT SELECT,INSERT,UPDATE,DELETE ON guacamole_db.* TO 'guacamole_user'@'%';
 flush privileges;"
 
 # Execute SQL Code

@@ -1,12 +1,18 @@
 #!/bin/bash
 
+# Check if user is root or sudo
+if ! [ $(id -u) = 0 ]; then echo "Please run this script as sudo or root"; exit 1 ; fi
+
 # Version number of Guacamole to install
 GUACVERSION="1.1.0"
 
-# Ubuntu and Debian have different names of the libjpeg-turbo library for some reason...
+# Different version of Ubuntu and Debian have different package names...
 source /etc/os-release
-if [[ "${NAME}" == "Ubuntu" ]]
-then
+if [[ "${NAME}" == "Ubuntu" ]]; then
+    # Ubuntu > 18.04 does not include universe repo by default
+    # Add the "Universe" repo, don't update
+    add-apt-repository -yn universe
+    # Set package names depending on version
     JPEGTURBO="libjpeg-turbo8-dev"
     if [[ "${VERSION_ID}" == "16.04" ]]
     then
@@ -14,30 +20,28 @@ then
     else
         LIBPNG="libpng-dev"
     fi
-elif [[ "${NAME}" == *"Debian"* ]]
-then
+elif [[ "${NAME}" == *"Debian"* ]] || [[ "${NAME}" == *"Raspbian GNU/Linux"* ]] || [[ "${NAME}" == *"Kali GNU/Linux"* ]]; then
     JPEGTURBO="libjpeg62-turbo-dev"
-    if [[ "${PRETTY_NAME}" == *"stretch"* ]]
-    then
+    if [[ "${PRETTY_NAME}" == *"stretch"* ]] || [[ "${PRETTY_NAME}" == *"buster"* ]] || [[ "${PRETTY_NAME}" == *"Kali GNU/Linux Rolling"* ]]; then
         LIBPNG="libpng-dev"
     else
         LIBPNG="libpng12-dev"
     fi
 else
-    echo "Unsupported Distro - Ubuntu or Debian Only"
-    exit
+    echo "Unsupported Distro - Ubuntu, Debian, Kali or Raspbian Only"
+    exit 1
 fi
 
 # Install Server Features
-apt update
-apt -y install build-essential libcairo2-dev ${JPEGTURBO} ${LIBPNG} libossp-uuid-dev libavcodec-dev libavutil-dev \
+apt-get -qq update
+export DEBIAN_FRONTEND=noninteractive
+apt-get -y install build-essential libcairo2-dev ${JPEGTURBO} ${LIBPNG} libossp-uuid-dev libavcodec-dev libavutil-dev \
 libswscale-dev freerdp2-dev libpango1.0-dev libssh2-1-dev libtelnet-dev libvncserver-dev libpulse-dev libssl-dev \
-libvorbis-dev libwebp-dev jq curl wget libtool-bin libwebsockets-dev
+libvorbis-dev libwebp-dev libwebsockets-dev wget libtool-bin
 
 # If apt fails to run completely the rest of this isn't going to work...
-if [ $? != 0 ]
-then
-    echo "apt failed to install all required dependencies."
+if [ $? != 0 ]; then
+    echo "apt-get failed to install all required dependencies."
     exit
 fi
 
@@ -50,15 +54,15 @@ if [ $? -ne 0 ]; then
     echo "Failed to download guacamole-server-${GUACVERSION}.tar.gz"
     echo "${SERVER}/source/guacamole-server-${GUACVERSION}.tar.gz"
     exit
+else
+    # Extract Guacamole Files
+    tar -xzf guacamole-server-${GUACVERSION}.tar.gz
 fi
 
-# Extract Guacamole Files
-tar -xzf guacamole-server-${GUACVERSION}.tar.gz
-
 # Make Directories
-mkdir /etc/guacamole
+mkdir -p /etc/guacamole
 
-# Install guacd
+# Install guacd (Guacamole-server)
 cd guacamole-server-${GUACVERSION}
 ./configure --with-init-dir=/etc/init.d
 make
@@ -73,8 +77,8 @@ echo "bind_host = 0.0.0.0" >> /etc/guacamole/guacd.conf
 echo "bind_port = 4822" >> /etc/guacamole/guacd.conf
 
 # Configure startup
-systemctl enable guacd
 systemctl start guacd
+systemctl enable guacd
 
 # Cleanup
 rm -rf guacamole-*
