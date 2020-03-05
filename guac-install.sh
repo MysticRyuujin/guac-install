@@ -70,7 +70,7 @@ while [ "$1" != "" ]; do
             ;;
         -gp | --guacpwd )
             shift
-            guacpwd="$1"
+            guacPwd="$1"
             ;;
 
         # MFA selection
@@ -79,6 +79,11 @@ while [ "$1" != "" ]; do
             ;;
         -d | --duo )
             installDuo=true
+            ;;
+        -o | --nomfa )
+            installTOTP=false
+            installDuo=false
+            ;;
     esac
     shift
 done
@@ -154,28 +159,36 @@ if [ -z "$guacDb" ]; then
     guacDb="guacamole_db"
 fi
 
-# Get MySQL "Root" and "Guacamole User" password
-while true; do
-    echo
-    read -s -p "Enter ${mysqlHost}'s MySQL root password: " mysqlRootPwd
-    echo
-    read -s -p "Confirm ${mysqlHost}'s MySQL root password: " PROMPT2
-    echo
-    [ "$mysqlRootPwd" = "$PROMPT2" ] && break
-    echo "Passwords don't match. Please try again."
-done
+if [ -z "${mysqlRootPwd}" ]; then
+    # Get MySQL "Root" and "Guacamole User" password
+    while true; do
+        echo
+        read -s -p "Enter ${mysqlHost}'s MySQL root password: " mysqlRootPwd
+        echo
+        read -s -p "Confirm ${mysqlHost}'s MySQL root password: " PROMPT2
+        echo
+        [ "$mysqlRootPwd" = "$PROMPT2" ] && break
+        echo "Passwords don't match. Please try again."
+    done
+else
+    echo -e "${BLUE}Read MySQL password from command line argument${NC}"
+fi
 echo
 
-while true; do
-    echo -e "${BLUE}A new MySQL user will be created (${guacUser})${NC}"
-    read -s -p "Enter ${mysqlHost}'s MySQL guacamole user password: " guacPwd
-    echo
-    read -s -p "Confirm ${mysqlHost}'s MySQL guacamole user password: " PROMPT2
-    echo
-    [ "$guacPwd" = "$PROMPT2" ] && break
-    echo "Passwords don't match. Please try again."
-    echo
-done
+if [ -z "${guacPwd}" ]; then
+    while true; do
+        echo -e "${BLUE}A new MySQL user will be created (${guacUser})${NC}"
+        read -s -p "Enter ${mysqlHost}'s MySQL guacamole user password: " guacPwd
+        echo
+        read -s -p "Confirm ${mysqlHost}'s MySQL guacamole user password: " PROMPT2
+        echo
+        [ "$guacPwd" = "$PROMPT2" ] && break
+        echo "Passwords don't match. Please try again."
+        echo
+    done
+else
+    echo -e "${BLUE}Read MySQL password from command line argument${NC}"
+fi
 echo
 
 if [ "$installMySQL" = true ]; then
