@@ -1,13 +1,17 @@
 #!/bin/bash
 
 # Check if user is root or sudo
-if ! [ $(id -u) = 0 ]; then echo "Please run this script as sudo or root"; exit 1 ; fi
+if ! [ $(id -u) = 0 ]; then echo "Please run this script as sudo or root" 1>&2 ; exit 1 ; fi
+
+# Check to see if any old files left over
+if [ "$( find . -maxdepth 1 \( -name 'guacamole-*' -o -name 'mysql-connector-java-*' \) )" != "" ]; then echo "Possible temp files detected. Please review 'guacamole-*' & 'mysql-connector-java-*'" 1>&2 ; exit 1 ; fi
 
 # Version number of Guacamole to install
+# Homepage ~ https://guacamole.apache.org/releases/
 GUACVERSION="1.1.0"
 
-# Latest Version of MySQL Connector/J if manuall install is required
-# Manuall install is required if libmysql-java is not available via apt
+# Latest Version of MySQL Connector/J if manual install is required (if libmariadb-java/libmysql-java is not available via apt)
+# Homepage ~ https://dev.mysql.com/downloads/connector/j/
 MCJVER="8.0.19"
 
 # Colors to use for output
@@ -133,10 +137,14 @@ fi
 
 if [ "$installMySQL" = false ]; then
     # We need to get additional values
-    read -p "Enter MySQL server hostname or IP: " mysqlHost
-    read -p "Enter MySQL server port [3306]: " mysqlPort
-    read -p "Enter Guacamole database name [guacamole_db]: " guacDb
-    read -p "Enter Guacamole user [guacamole_user]: " guacUser
+    [ -z "$mysqlHost" ] \
+      && read -p "Enter MySQL server hostname or IP: " mysqlHost
+    [ -z "$mysqlPort" ] \
+      && read -p "Enter MySQL server port [3306]: " mysqlPort
+    [ -z "$guacDb" ] \
+      && read -p "Enter Guacamole database name [guacamole_db]: " guacDb
+    [ -z "$guacUser" ] \
+      && read -p "Enter Guacamole user [guacamole_user]: " guacUser
 fi
 
 # Checking if mysql host given
@@ -234,25 +242,29 @@ elif [[ "${NAME}" == *"Debian"* ]] || [[ "${NAME}" == *"Raspbian GNU/Linux"* ]] 
         MYSQL="default-mysql-client"
     fi
 else
-    echo "Unsupported Distro - Ubuntu, Debian, Kali or Raspbian Only"
+    echo "Unsupported distribution - Ubuntu, Debian, Kali or Raspbian only"
     exit 1
 fi
 
-# Update apt so we can search apt-cache for newest tomcat version supported & libmysql-java
+# Update apt so we can search apt-cache for newest Tomcat version supported & libmariadb-java/libmysql-java
 echo -e "${BLUE}Updating apt...${NC}"
 apt-get -qq update
 
-# Check if libmysql-java is available
+# Check if libmariadb-java/libmysql-java is available
 # Debian 10 >= ~ https://packages.debian.org/search?keywords=libmariadb-java
 if [[ $(apt-cache show libmariadb-java 2> /dev/null | egrep "Version:" | wc -l) -gt 0 ]]; then
-    echo -e "${YELLOW}Found libmariadb-java package (known issues). Will download mysql-connector-java-${MCJVER}.tar.gz and install manually${NC}"
+    # When something higer than 1.1.0 is out ~ https://issues.apache.org/jira/browse/GUACAMOLE-852
+    #echo -e "${BLUE}Found libmariadb-java package...${NC}"
+    #LIBJAVA="libmariadb-java"
+    # For v1.1.0 and lower
+    echo -e "${YELLOW}Found libmariadb-java package (known issues). Will download libmysql-java ${MCJVER} and install manually${NC}"
     LIBJAVA=""
 # Debian 9 <=  ~ https://packages.debian.org/search?keywords=libmysql-java
 elif [[ $(apt-cache show libmysql-java 2> /dev/null | egrep "Version:" | wc -l) -gt 0 ]]; then
     echo -e "${BLUE}Found libmysql-java package...${NC}"
     LIBJAVA="libmysql-java"
 else
-    echo -e "${YELLOW}libmysql-java not available. Will download mysql-connector-java-${MCJVER}.tar.gz and install manually${NC}"
+    echo -e "${YELLOW}lib{mariadb,mysql}-java not available. Will download mysql-connector-java-${MCJVER}.tar.gz and install manually${NC}"
     LIBJAVA=""
 fi
 
@@ -269,11 +281,11 @@ elif [[ $(apt-cache show tomcat7 2> /dev/null | egrep "Version: 8.[5-9]" | wc -l
     echo -e "${BLUE}Found tomcat7 package...${NC}"
     TOMCAT="tomcat8"
 else
-    echo -e "${RED}Failed. Can't find tomcat package${NC}" 1>&2
+    echo -e "${RED}Failed. Can't find Tomcat package${NC}" 1>&2
     exit 1
 fi
 
-# Uncomment to manually force a tomcat version
+# Uncomment to manually force a Tomcat version
 #TOMCAT=""
 
 # Install features
@@ -379,9 +391,10 @@ echo -e "${GREEN}Downloading complete.${NC}"
 echo
 
 # Make directories
-rm -rf /etc/guacamole/extensions
-mkdir -p /etc/guacamole/lib
-mkdir -p /etc/guacamole/extensions
+rm -rf /etc/guacamole/lib/
+rm -rf /etc/guacamole/extensions/
+mkdir -p /etc/guacamole/lib/
+mkdir -p /etc/guacamole/extensions/
 
 # Install guacd (Guacamole-server)
 cd guacamole-server-${GUACVERSION}
@@ -419,8 +432,8 @@ echo
 
 # Move files to correct locations (guacamole-client & Guacamole authentication extensions)
 cd ..
-mv guacamole-${GUACVERSION}.war /etc/guacamole/guacamole.war
-mv guacamole-auth-jdbc-${GUACVERSION}/mysql/guacamole-auth-jdbc-mysql-${GUACVERSION}.jar /etc/guacamole/extensions/
+mv -f guacamole-${GUACVERSION}.war /etc/guacamole/guacamole.war
+mv -f guacamole-auth-jdbc-${GUACVERSION}/mysql/guacamole-auth-jdbc-mysql-${GUACVERSION}.jar /etc/guacamole/extensions/
 
 # Create Symbolic Link for Tomcat
 ln -sf /etc/guacamole/guacamole.war /var/lib/${TOMCAT}/webapps/
@@ -428,24 +441,30 @@ ln -sf /etc/guacamole/guacamole.war /var/lib/${TOMCAT}/webapps/
 # Deal with MySQL Connector/J
 if [[ -z $LIBJAVA ]]; then
     echo -e "${BLUE}Moving mysql-connector-java-${MCJVER}.jar (/etc/guacamole/lib/mysql-connector-java.jar)...${NC}"
-    mv mysql-connector-java-${MCJVER}/mysql-connector-java-${MCJVER}.jar /etc/guacamole/lib/mysql-connector-java.jar
+    mv -f mysql-connector-java-${MCJVER}/mysql-connector-java-${MCJVER}.jar /etc/guacamole/lib/mysql-connector-java.jar
+elif [ -e /usr/share/java/mariadb-java-client.jar ]; then
+    echo -e "${BLUE}Linking mariadb-java-client.jar  (/etc/guacamole/lib/mariadb-java-client.jar)...${NC}"
+    ln -sf /usr/share/java/mariadb-java-client.jar /etc/guacamole/lib/mariadb-java-client.jar
+elif [ -e /usr/share/java/mysql-connector-java.jar ]; then
+    echo -e "${BLUE}Linking mysql-connector-java.jar  (/etc/guacamole/lib/mysql-connector-java.jar)...${NC}"
+    ln -sf /usr/share/java/mysql-connector-java.jar /etc/guacamole/lib/mysql-connector-java.jar
 else
-    echo -e "${BLUE}Linking mysql-connector-java.jar (/etc/guacamole/lib/mysql-connector-java.jar)...${NC}"
-    ln -s /usr/share/java/mysql-connector-java.jar /etc/guacamole/lib/mysql-connector-java.jar
+    echo -e "${RED}Can't find *.jar file${NC}" 1>&2
+    exit 1
 fi
 echo
 
 # Move TOTP Files
 if [ "$installTOTP" = true ]; then
     echo -e "${BLUE}Moving guacamole-auth-totp-${GUACVERSION}.jar (/etc/guacamole/extensions/)...${NC}"
-    mv guacamole-auth-totp-${GUACVERSION}/guacamole-auth-totp-${GUACVERSION}.jar /etc/guacamole/extensions/
+    mv -f guacamole-auth-totp-${GUACVERSION}/guacamole-auth-totp-${GUACVERSION}.jar /etc/guacamole/extensions/
     echo
 fi
 
 # Move Duo Files
 if [ "$installDuo" = true ]; then
     echo -e "${BLUE}Moving guacamole-auth-duo-${GUACVERSION}.jar (/etc/guacamole/extensions/)...${NC}"
-    mv guacamole-auth-duo-${GUACVERSION}/guacamole-auth-duo-${GUACVERSION}.jar /etc/guacamole/extensions/
+    mv -f guacamole-auth-duo-${GUACVERSION}/guacamole-auth-duo-${GUACVERSION}.jar /etc/guacamole/extensions/
     echo
 fi
 
@@ -467,8 +486,8 @@ if [ "$installDuo" = true ]; then
     echo -e "${YELLOW}Duo is installed, it will need to be configured via guacamole.properties${NC}"
 fi
 
-# restart tomcat
-echo -e "${BLUE}Restarting tomcat service & enable at boot...${NC}"
+# Restart Tomcat
+echo -e "${BLUE}Restarting Tomcat service & enable at boot...${NC}"
 service ${TOMCAT} restart
 if [ $? -ne 0 ]; then
     echo -e "${RED}Failed${NC}" 1>&2
@@ -530,7 +549,7 @@ MYSQL_RESULT=$( echo ${SQLCODE} | mysql -u root -D information_schema -h ${mysql
 if [[ $MYSQL_RESULT != "" ]]; then
     echo -e "${RED}It appears there is already a MySQL database (${guacDb}) on ${mysqlHost}${NC}" 1>&2
     echo -e "${RED}Try:    mysql -e 'DROP DATABASE ${guacDb}'${NC}" 1>&2
-    exit 1
+    #exit 1
 else
     echo -e "${GREEN}OK${NC}"
 fi
@@ -544,18 +563,19 @@ SELECT COUNT(*) FROM mysql.user WHERE user = '${guacUser}';"
 MYSQL_RESULT=$( echo ${SQLCODE} | mysql -u root -h ${mysqlHost} -P ${mysqlPort} | grep '0' )
 if [[ $MYSQL_RESULT == "" ]]; then
     echo -e "${RED}It appears there is already a MySQL user (${guacUser}) on ${mysqlHost}${NC}" 1>&2
-    echo -e "${RED}Try:    mysql -e \"DROP USER '${guacUser}'@'${guacUserHost}'; flush privileges;\"${NC}" 1>&2
-    exit 1
+    echo -e "${RED}Try:    mysql -e \"DROP USER '${guacUser}'@'${guacUserHost}'; FLUSH PRIVILEGES;\"${NC}" 1>&2
+    #exit 1
 else
     echo -e "${GREEN}OK${NC}"
 fi
 
 # Create database & user, then set permissions
 SQLCODE="
+DROP DATABASE IF EXISTS ${guacDb};
 CREATE DATABASE IF NOT EXISTS ${guacDb};
-create user if not exists '${guacUser}'@'${guacUserHost}' identified by \"${guacPwd}\";
+CREATE USER IF NOT EXISTS '${guacUser}'@'${guacUserHost}' IDENTIFIED BY \"${guacPwd}\";
 GRANT SELECT,INSERT,UPDATE,DELETE ON ${guacDb}.* TO '${guacUser}'@'${guacUserHost}';
-flush privileges;"
+FLUSH PRIVILEGES;"
 
 # Execute SQL code
 echo ${SQLCODE} | mysql -u root -h ${mysqlHost} -P ${mysqlPort}
@@ -573,6 +593,7 @@ echo
 
 # Ensure guacd is started
 echo -e "${BLUE}Starting guacamole service & enable at boot...${NC}"
+service guacd stop 2>/dev/null
 service guacd start
 systemctl enable guacd
 echo
