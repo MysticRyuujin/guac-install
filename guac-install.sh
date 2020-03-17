@@ -245,14 +245,14 @@ apt-get -qq update
 # Check if libmysql-java is available
 # Debian 10 >= ~ https://packages.debian.org/search?keywords=libmariadb-java
 if [[ $(apt-cache show libmariadb-java 2> /dev/null | egrep "Version:" | wc -l) -gt 0 ]]; then
-    echo -e "${YELLOW}Found libmariadb-java package (known issues). Will download libmysql-java ${MCJVER} and install manually${NC}"
+    echo -e "${YELLOW}Found libmariadb-java package (known issues). Will download mysql-connector-java-${MCJVER}.tar.gz and install manually${NC}"
     LIBJAVA=""
 # Debian 9 <=  ~ https://packages.debian.org/search?keywords=libmysql-java
 elif [[ $(apt-cache show libmysql-java 2> /dev/null | egrep "Version:" | wc -l) -gt 0 ]]; then
     echo -e "${BLUE}Found libmysql-java package...${NC}"
     LIBJAVA="libmysql-java"
 else
-    echo -e "${YELLOW}libmysql-java not available. Will download ${MCJVER} and install manually${NC}"
+    echo -e "${YELLOW}libmysql-java not available. Will download mysql-connector-java-${MCJVER}.tar.gz and install manually${NC}"
     LIBJAVA=""
 fi
 
