@@ -114,7 +114,7 @@ fi
 
 # We can't install TOTP and Duo at the same time...
 if [[ "$installTOTP" = true ]] && [ "$installDuo" = true ]; then
-    echo -e "${RED}MFA: The script does not support installing TOTP and Duo at the same time.${NC}"
+    echo -e "${RED}MFA: The script does not support installing TOTP and Duo at the same time.${NC}" 1>&2
     exit 1
 fi
 echo
@@ -168,10 +168,10 @@ if [ -z "${mysqlRootPwd}" ]; then
         read -s -p "Confirm ${mysqlHost}'s MySQL root password: " PROMPT2
         echo
         [ "$mysqlRootPwd" = "$PROMPT2" ] && break
-        echo "Passwords don't match. Please try again."
+        echo -e "${RED}Passwords don't match. Please try again.${NC}" 1>&2
     done
 else
-    echo -e "${BLUE}Read MySQL password from command line argument${NC}"
+    echo -e "${BLUE}Read MySQL root's password from command line argument${NC}"
 fi
 echo
 
@@ -183,11 +183,11 @@ if [ -z "${guacPwd}" ]; then
         read -s -p "Confirm ${mysqlHost}'s MySQL guacamole user password: " PROMPT2
         echo
         [ "$guacPwd" = "$PROMPT2" ] && break
-        echo "Passwords don't match. Please try again."
+        echo -e "${RED}Passwords don't match. Please try again.${NC}" 1>&2
         echo
     done
 else
-    echo -e "${BLUE}Read MySQL password from command line argument${NC}"
+    echo -e "${BLUE}Read MySQL ${guacUser}'s password from command line argument${NC}"
 fi
 echo
 
@@ -243,23 +243,34 @@ echo -e "${BLUE}Updating apt...${NC}"
 apt-get -qq update
 
 # Check if libmysql-java is available
-if [[ $(apt-cache show libmysql-java 2> /dev/null | egrep "Version:" | wc -l) -gt 0 ]]; then
+# Debian 10 >= ~ https://packages.debian.org/search?keywords=libmariadb-java
+if [[ $(apt-cache show libmariadb-java 2> /dev/null | egrep "Version:" | wc -l) -gt 0 ]]; then
+    echo -e "${YELLOW}Found libmariadb-java package (known issues). Will download libmysql-java ${MCJVER} and install manually${NC}"
+    LIBJAVA=""
+# Debian 9 <=  ~ https://packages.debian.org/search?keywords=libmysql-java
+elif [[ $(apt-cache show libmysql-java 2> /dev/null | egrep "Version:" | wc -l) -gt 0 ]]; then
+    echo -e "${BLUE}Found libmysql-java package...${NC}"
     LIBJAVA="libmysql-java"
 else
-    LIBJAVA=""
     echo -e "${YELLOW}libmysql-java not available. Will download ${MCJVER} and install manually${NC}"
+    LIBJAVA=""
 fi
-echo
 
 # tomcat9 is the latest version
 # tomcat8.0 is end of life, but tomcat8.5 is current
 # fallback is tomcat7
 if [[ $(apt-cache show tomcat9 2> /dev/null | egrep "Version: 9" | wc -l) -gt 0 ]]; then
+    echo -e "${BLUE}Found tomcat9 package...${NC}"
     TOMCAT="tomcat9"
 elif [[ $(apt-cache show tomcat8 2> /dev/null | egrep "Version: 8.[5-9]" | wc -l) -gt 0 ]]; then
+    echo -e "${BLUE}Found tomcat8 package...${NC}"
+    TOMCAT="tomcat8"
+elif [[ $(apt-cache show tomcat7 2> /dev/null | egrep "Version: 8.[5-9]" | wc -l) -gt 0 ]]; then
+    echo -e "${BLUE}Found tomcat7 package...${NC}"
     TOMCAT="tomcat8"
 else
-    TOMCAT="tomcat7"
+    echo -e "${RED}Failed. Can't find tomcat package${NC}" 1>&2
+    exit 1
 fi
 
 # Uncomment to manually force a tomcat version
@@ -280,11 +291,12 @@ ${MYSQL} ${LIBJAVA} ${TOMCAT} &>> ${LOG}
 
 # If apt fails to run completely the rest of this isn't going to work...
 if [ $? -ne 0 ]; then
-    echo -e "${RED}Failed. See ${LOG}${NC}"
+    echo -e "${RED}Failed. See ${LOG}${NC}" 1>&2
     exit 1
 else
     echo -e "${GREEN}OK${NC}"
 fi
+echo
 
 # Set SERVER to be the preferred download server from the Apache CDN
 SERVER="http://apache.org/dyn/closer.cgi?action=download&filename=guacamole/${GUACVERSION}"
@@ -293,7 +305,7 @@ echo -e "${BLUE}Downloading files...${NC}"
 # Download Guacamole Server
 wget -q --show-progress -O guacamole-server-${GUACVERSION}.tar.gz ${SERVER}/source/guacamole-server-${GUACVERSION}.tar.gz
 if [ $? -ne 0 ]; then
-    echo -e "${RED}Failed to download guacamole-server-${GUACVERSION}.tar.gz"
+    echo -e "${RED}Failed to download guacamole-server-${GUACVERSION}.tar.gz" 1>&2
     echo -e "${SERVER}/source/guacamole-server-${GUACVERSION}.tar.gz${NC}"
     exit 1
 else
@@ -305,7 +317,7 @@ echo -e "${GREEN}Downloaded guacamole-server-${GUACVERSION}.tar.gz${NC}"
 # Download Guacamole Client
 wget -q --show-progress -O guacamole-${GUACVERSION}.war ${SERVER}/binary/guacamole-${GUACVERSION}.war
 if [ $? -ne 0 ]; then
-    echo -e "${RED}Failed to download guacamole-${GUACVERSION}.war"
+    echo -e "${RED}Failed to download guacamole-${GUACVERSION}.war" 1>&2
     echo -e "${SERVER}/binary/guacamole-${GUACVERSION}.war${NC}"
     exit 1
 fi
@@ -314,7 +326,7 @@ echo -e "${GREEN}Downloaded guacamole-${GUACVERSION}.war${NC}"
 # Download Guacamole authentication extensions (Database)
 wget -q --show-progress -O guacamole-auth-jdbc-${GUACVERSION}.tar.gz ${SERVER}/binary/guacamole-auth-jdbc-${GUACVERSION}.tar.gz
 if [ $? -ne 0 ]; then
-    echo -e "${RED}Failed to download guacamole-auth-jdbc-${GUACVERSION}.tar.gz"
+    echo -e "${RED}Failed to download guacamole-auth-jdbc-${GUACVERSION}.tar.gz" 1>&2
     echo -e "${SERVER}/binary/guacamole-auth-jdbc-${GUACVERSION}.tar.gz"
     exit 1
 else
@@ -328,7 +340,7 @@ echo -e "${GREEN}Downloaded guacamole-auth-jdbc-${GUACVERSION}.tar.gz${NC}"
 if [ "$installTOTP" = true ]; then
     wget -q --show-progress -O guacamole-auth-totp-${GUACVERSION}.tar.gz ${SERVER}/binary/guacamole-auth-totp-${GUACVERSION}.tar.gz
     if [ $? -ne 0 ]; then
-        echo -e "${RED}Failed to download guacamole-auth-totp-${GUACVERSION}.tar.gz"
+        echo -e "${RED}Failed to download guacamole-auth-totp-${GUACVERSION}.tar.gz" 1>&2
         echo -e "${SERVER}/binary/guacamole-auth-totp-${GUACVERSION}.tar.gz"
         exit 1
     else
@@ -341,7 +353,7 @@ fi
 if [ "$installDuo" = true ]; then
     wget -q --show-progress -O guacamole-auth-duo-${GUACVERSION}.tar.gz ${SERVER}/binary/guacamole-auth-duo-${GUACVERSION}.tar.gz
     if [ $? -ne 0 ]; then
-        echo -e "${RED}Failed to download guacamole-auth-duo-${GUACVERSION}.tar.gz"
+        echo -e "${RED}Failed to download guacamole-auth-duo-${GUACVERSION}.tar.gz" 1>&2
         echo -e "${SERVER}/binary/guacamole-auth-duo-${GUACVERSION}.tar.gz"
         exit 1
     else
@@ -351,11 +363,11 @@ if [ "$installDuo" = true ]; then
 fi
 
 # Deal with Missing MySQL Connector/J
-if [[ -z $JAVALIB ]]; then
+if [[ -z $LIBJAVA ]]; then
     # Download MySQL Connector/J
     wget -q --show-progress -O mysql-connector-java-${MCJVER}.tar.gz https://dev.mysql.com/get/Downloads/Connector-J/mysql-connector-java-${MCJVER}.tar.gz
     if [ $? -ne 0 ]; then
-        echo -e "${RED}Failed to download mysql-connector-java-${MCJVER}.tar.gz"
+        echo -e "${RED}Failed to download mysql-connector-java-${MCJVER}.tar.gz" 1>&2
         echo -e "https://dev.mysql.com/get/Downloads/Connector-J/mysql-connector-java-${MCJVER}.tar.gz${NC}"
         exit 1
     else
@@ -379,7 +391,7 @@ echo -e "${BLUE}Building Guacamole-Server with GCC $(gcc --version | head -n1 | 
 echo -e "${BLUE}Configuring Guacamole-Server. This might take a minute...${NC}"
 ./configure --with-init-dir=/etc/init.d  &>> ${LOG}
 if [ $? -ne 0 ]; then
-    echo -e "${RED}Failed. See ${LOG}${NC}"
+    echo -e "${RED}Failed. See ${LOG}${NC}" 1>&2
     exit 1
 else
     echo -e "${GREEN}OK${NC}"
@@ -388,7 +400,7 @@ fi
 echo -e "${BLUE}Running Make on Guacamole-Server. This might take a few minutes...${NC}"
 make &>> ${LOG}
 if [ $? -ne 0 ]; then
-    echo -e "${RED}Failed. See ${LOG}${NC}"
+    echo -e "${RED}Failed. See ${LOG}${NC}" 1>&2
     exit 1
 else
     echo -e "${GREEN}OK${NC}"
@@ -397,7 +409,7 @@ fi
 echo -e "${BLUE}Running Make Install on Guacamole-Server...${NC}"
 make install &>> ${LOG}
 if [ $? -ne 0 ]; then
-    echo -e "${RED}Failed. See ${LOG}${NC}"
+    echo -e "${RED}Failed. See ${LOG}${NC}" 1>&2
     exit 1
 else
     echo -e "${GREEN}OK${NC}"
@@ -414,20 +426,27 @@ mv guacamole-auth-jdbc-${GUACVERSION}/mysql/guacamole-auth-jdbc-mysql-${GUACVERS
 ln -sf /etc/guacamole/guacamole.war /var/lib/${TOMCAT}/webapps/
 
 # Deal with MySQL Connector/J
-if [[ -z $JAVALIB ]]; then
+if [[ -z $LIBJAVA ]]; then
+    echo -e "${BLUE}Moving mysql-connector-java-${MCJVER}.jar (/etc/guacamole/lib/mysql-connector-java.jar)...${NC}"
     mv mysql-connector-java-${MCJVER}/mysql-connector-java-${MCJVER}.jar /etc/guacamole/lib/mysql-connector-java.jar
 else
-    ln -s /usr/share/java/mysql-connector-java.jar /etc/guacamole/lib/
+    echo -e "${BLUE}Linking mysql-connector-java.jar (/etc/guacamole/lib/mysql-connector-java.jar)...${NC}"
+    ln -s /usr/share/java/mysql-connector-java.jar /etc/guacamole/lib/mysql-connector-java.jar
 fi
+echo
 
 # Move TOTP Files
 if [ "$installTOTP" = true ]; then
+    echo -e "${BLUE}Moving guacamole-auth-totp-${GUACVERSION}.jar (/etc/guacamole/extensions/)...${NC}"
     mv guacamole-auth-totp-${GUACVERSION}/guacamole-auth-totp-${GUACVERSION}.jar /etc/guacamole/extensions/
+    echo
 fi
 
 # Move Duo Files
 if [ "$installDuo" = true ]; then
+    echo -e "${BLUE}Moving guacamole-auth-duo-${GUACVERSION}.jar (/etc/guacamole/extensions/)...${NC}"
     mv guacamole-auth-duo-${GUACVERSION}/guacamole-auth-duo-${GUACVERSION}.jar /etc/guacamole/extensions/
+    echo
 fi
 
 # Configure guacamole.properties
@@ -452,7 +471,7 @@ fi
 echo -e "${BLUE}Restarting tomcat service & enable at boot...${NC}"
 service ${TOMCAT} restart
 if [ $? -ne 0 ]; then
-    echo -e "${RED}Failed${NC}"
+    echo -e "${RED}Failed${NC}" 1>&2
     exit 1
 else
     echo -e "${GREEN}OK${NC}"
@@ -466,7 +485,7 @@ if [ "$installMySQL" = true ]; then
     echo -e "${BLUE}Restarting MySQL service & enable at boot...${NC}"
     service mysql restart
     if [ $? -ne 0 ]; then
-        echo -e "${RED}Failed${NC}"
+        echo -e "${RED}Failed${NC}" 1>&2
         exit 1
     else
         echo -e "${GREEN}OK${NC}"
@@ -478,11 +497,11 @@ fi
 
 
 # restart mysql
-echo -e "${BLUE}Restarting mysql...${NC}"
+echo -e "${BLUE}Restarting MySQL service...${NC}"
 
 service mysql restart
 if [ $? -ne 0 ]; then
-    echo -e "${RED}Failed${NC}"
+    echo -e "${RED}Failed${NC}" 1>&2
     exit 1
 else
     echo -e "${GREEN}OK${NC}"
@@ -509,8 +528,8 @@ SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME='${guacDb}
 # Execute SQL code
 MYSQL_RESULT=$( echo ${SQLCODE} | mysql -u root -D information_schema -h ${mysqlHost} -P ${mysqlPort} )
 if [[ $MYSQL_RESULT != "" ]]; then
-    echo -e "${RED}It appears there is already a MySQL database (${guacDb}) on ${mysqlHost}${NC}"
-    echo -e "${RED}Try:    mysql -e 'drop database ${guacDb}'${NC}"
+    echo -e "${RED}It appears there is already a MySQL database (${guacDb}) on ${mysqlHost}${NC}" 1>&2
+    echo -e "${RED}Try:    mysql -e 'DROP DATABASE ${guacDb}'${NC}" 1>&2
     exit 1
 else
     echo -e "${GREEN}OK${NC}"
@@ -524,8 +543,8 @@ SELECT COUNT(*) FROM mysql.user WHERE user = '${guacUser}';"
 # Execute SQL code
 MYSQL_RESULT=$( echo ${SQLCODE} | mysql -u root -h ${mysqlHost} -P ${mysqlPort} | grep '0' )
 if [[ $MYSQL_RESULT == "" ]]; then
-    echo -e "${RED}It appears there is already a MySQL user (${guacUser}) on ${mysqlHost}${NC}"
-    echo -e "${RED}Try:    mysql -e \"DROP USER '${guacUser}'@'${guacUserHost}';\"${NC}"
+    echo -e "${RED}It appears there is already a MySQL user (${guacUser}) on ${mysqlHost}${NC}" 1>&2
+    echo -e "${RED}Try:    mysql -e \"DROP USER '${guacUser}'@'${guacUserHost}'; flush privileges;\"${NC}" 1>&2
     exit 1
 else
     echo -e "${GREEN}OK${NC}"
@@ -545,7 +564,7 @@ echo ${SQLCODE} | mysql -u root -h ${mysqlHost} -P ${mysqlPort}
 echo -e "${BLUE}Adding database tables...${NC}"
 cat guacamole-auth-jdbc-${GUACVERSION}/mysql/schema/*.sql | mysql -u root -D ${guacDb} -h ${mysqlHost} -P ${mysqlPort}
 if [ $? -ne 0 ]; then
-    echo -e "${RED}Failed${NC}"
+    echo -e "${RED}Failed${NC}" 1>&2
     exit 1
 else
     echo -e "${GREEN}OK${NC}"
