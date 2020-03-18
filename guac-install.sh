@@ -1,10 +1,16 @@
 #!/bin/bash
 
 # Check if user is root or sudo
-if ! [ $( id -u ) = 0 ]; then echo "Please run this script as sudo or root" 1>&2 ; exit 1 ; fi
+if ! [ $( id -u ) = 0 ]; then
+    echo "Please run this script as sudo or root" 1>&2
+    exit 1
+fi
 
 # Check to see if any old files left over
-if [ "$( find . -maxdepth 1 \( -name 'guacamole-*' -o -name 'mysql-connector-java-*' \) )" != "" ]; then echo "Possible temp files detected. Please review 'guacamole-*' & 'mysql-connector-java-*'" 1>&2 ; exit 1 ; fi
+if [ "$( find . -maxdepth 1 \( -name 'guacamole-*' -o -name 'mysql-connector-java-*' \) )" != "" ]; then
+    echo "Possible temp files detected. Please review 'guacamole-*' & 'mysql-connector-java-*'" 1>&2
+    exit 1
+fi
 
 # Version number of Guacamole to install
 # Homepage ~ https://guacamole.apache.org/releases/
@@ -252,7 +258,7 @@ apt-get -qq update
 
 # Check if libmariadb-java/libmysql-java is available
 # Debian 10 >= ~ https://packages.debian.org/search?keywords=libmariadb-java
-if [[ $( apt-cache show libmariadb-java 2> /dev/null | egrep "Version:" | wc -l ) -gt 0 ]]; then
+if [[ $( apt-cache show libmariadb-java 2> /dev/null | wc -l ) -gt 0 ]]; then
     # When something higher than 1.1.0 is out ~ https://issues.apache.org/jira/browse/GUACAMOLE-852
     #echo -e "${BLUE}Found libmariadb-java package...${NC}"
     #LIBJAVA="libmariadb-java"
@@ -260,7 +266,7 @@ if [[ $( apt-cache show libmariadb-java 2> /dev/null | egrep "Version:" | wc -l 
     echo -e "${YELLOW}Found libmariadb-java package (known issues). Will download libmysql-java ${MCJVER} and install manually${NC}"
     LIBJAVA=""
 # Debian 9 <= ~ https://packages.debian.org/search?keywords=libmysql-java
-elif [[ $( apt-cache show libmysql-java 2> /dev/null | egrep "Version:" | wc -l ) -gt 0 ]]; then
+elif [[ $( apt-cache show libmysql-java 2> /dev/null | wc -l ) -gt 0 ]]; then
     echo -e "${BLUE}Found libmysql-java package...${NC}"
     LIBJAVA="libmysql-java"
 else
@@ -275,9 +281,9 @@ if [[ $( apt-cache show tomcat9 2> /dev/null | egrep "Version: 9" | wc -l ) -gt 
     echo -e "${BLUE}Found tomcat9 package...${NC}"
     TOMCAT="tomcat9"
 elif [[ $( apt-cache show tomcat8 2> /dev/null | egrep "Version: 8.[5-9]" | wc -l ) -gt 0 ]]; then
-    echo -e "${BLUE}Found tomcat8 package...${NC}"
+    echo -e "${BLUE}Found tomcat8.5+ package...${NC}"
     TOMCAT="tomcat8"
-elif [[ $( apt-cache show tomcat7 2> /dev/null | egrep "Version: 8.[5-9]" | wc -l ) -gt 0 ]]; then
+elif [[ $( apt-cache show tomcat7 2> /dev/null | egrep "Version: 7" | wc -l ) -gt 0 ]]; then
     echo -e "${BLUE}Found tomcat7 package...${NC}"
     TOMCAT="tomcat8"
 else
