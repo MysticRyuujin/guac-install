@@ -509,6 +509,19 @@ systemctl enable ${TOMCAT}
 echo
 
 if [ "${installMySQL}" = true ]; then
+    # Restart MySQL service
+    echo -e "${BLUE}Restarting MySQL service & enable at boot...${NC}"
+    service mysql restart
+    if [ $? -ne 0 ]; then
+        echo -e "${RED}Failed${NC}" 1>&2
+        exit 1
+    else
+        echo -e "${GREEN}OK${NC}"
+    fi
+    # Start at boot
+    systemctl enable mysql
+    echo
+
     # Default locations of MySQL config file
     for x in /etc/mysql/mariadb.conf.d/50-server.cnf \
              /etc/mysql/mysql.conf.d/mysqld.cnf \
@@ -539,35 +552,12 @@ if [ "${installMySQL}" = true ]; then
             fi
             echo -e "${YELLOW}Setting timezone as ${timezone}${NC}"
             # Fix for https://issues.apache.org/jira/browse/GUACAMOLE-760
-            crudini --set ${mysqlconfig} mysqld default_time_zone "${timezone}"
             mysql_tzinfo_to_sql /usr/share/zoneinfo | mysql -u root -D mysql -h ${mysqlHost} -P ${mysqlPort}
+            crudini --set ${mysqlconfig} mysqld default_time_zone "${timezone}"
+            # Restart to apply
+            service mysql restart
         fi
     fi
-
-    # Restart MySQL service
-    echo -e "${BLUE}Restarting MySQL service & enable at boot...${NC}"
-    service mysql restart
-    if [ $? -ne 0 ]; then
-        echo -e "${RED}Failed${NC}" 1>&2
-        exit 1
-    else
-        echo -e "${GREEN}OK${NC}"
-    fi
-    # Start at boot
-    systemctl enable mysql
-    echo
-fi
-
-
-# restart mysql
-echo -e "${BLUE}Restarting MySQL service...${NC}"
-
-service mysql restart
-if [ $? -ne 0 ]; then
-    echo -e "${RED}Failed${NC}" 1>&2
-    exit 1
-else
-    echo -e "${GREEN}OK${NC}"
 fi
 
 # Create ${guacDb} and grant ${guacUser} permissions to it
