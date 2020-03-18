@@ -175,7 +175,7 @@ if [ -z "${mysqlRootPwd}" ]; then
         echo
         read -s -p "Confirm ${mysqlHost}'s MySQL root password: " PROMPT2
         echo
-        [ "${mysqlRootPwd}" = "${PROMPT}2" ] && break
+        [ "${mysqlRootPwd}" = "${PROMPT2}" ] && break
         echo -e "${RED}Passwords don't match. Please try again.${NC}" 1>&2
     done
 else
@@ -190,7 +190,7 @@ if [ -z "${guacPwd}" ]; then
         echo
         read -s -p "Confirm ${mysqlHost}'s MySQL guacamole user password: " PROMPT2
         echo
-        [ "${guacPwd}" = "${PROMPT}2" ] && break
+        [ "${guacPwd}" = "${PROMPT2}" ] && break
         echo -e "${RED}Passwords don't match. Please try again.${NC}" 1>&2
         echo
     done
@@ -297,8 +297,9 @@ export DEBIAN_FRONTEND=noninteractive
 # Required packages
 apt-get -y install build-essential libcairo2-dev ${JPEGTURBO} ${LIBPNG} libossp-uuid-dev libavcodec-dev libavutil-dev \
 libswscale-dev freerdp2-dev libpango1.0-dev libssh2-1-dev libtelnet-dev libvncserver-dev libpulse-dev libssl-dev \
-libvorbis-dev libwebp-dev libwebsockets-dev wget \
+libvorbis-dev libwebp-dev libwebsockets-dev \
 freerdp2-x11 libtool-bin ghostscript dpkg-dev \
+wget crudini \
 ${MYSQL} ${LIBJAVA} ${TOMCAT} &>> ${LOG}
 
 # If apt fails to run completely the rest of this isn't going to work...
@@ -502,12 +503,40 @@ systemctl enable ${TOMCAT}
 echo
 
 if [ "${installMySQL}" = true ]; then
+    # Default locations of MySQL config file
+    for x in /etc/mysql/mariadb.conf.d/50-server.cnf \
+             /etc/mysql/mysql.conf.d/mysqld.cnf \
+             /etc/mysql/my.cnf \
+             ; do
+        # Check the path exists
+        if [ -e "${x}" ]; then
+            # Does it have the necessary section
+            if grep -q '^\[mysqld\]$' "${x}"; then
+                mysqlconfig="${x}"
+                # no point keep checking!
+                break
+            fi
+        fi
+    done
 
-    if [ -e /etc/mysql/mariadb.conf.d/50-server.cnf ]; then
-    elif [ -e /etc/mysql/mariadb.conf.d/50-server.cnf ]; then
+    if [ -z "${mysqlconfig}" ]; then
+        echo -e "${YELLOW}Couldn't detect MySQL config file - you may need to manually enter timezone settings${NC}"
     else
+        # Is there already a value?
+        if grep -q "^default_time_zone[[:space:]]?=" "${mysqlconfig}"; then
+            echo -e "${YELLOW}Timezone already defined in ${mysqlconfig}${NC}"
+        else
+            timezone="$( cat /etc/timezone )"
+            if [ -z "${timezone}" ]; then
+                echo -e "${YELLOW}Couldn't find timezone, using UTC${NC}"
+                timezone="UTC"
+            fi
+            echo -e "${YELLOW}Setting timezone as ${timezone}${NC}"
+            # Fix for https://issues.apache.org/jira/browse/GUACAMOLE-760
+            crudini --set ${mysqlconfig} mysqld default_time_zone "${timezone}"
+            mysql_tzinfo_to_sql /usr/share/zoneinfo | mysql -u root -D mysql -h ${mysqlHost} -P ${mysqlPort}
+        fi
     fi
-
 
     # Restart MySQL service
     echo -e "${BLUE}Restarting MySQL service & enable at boot...${NC}"
@@ -569,7 +598,7 @@ SQLCODE="
 SELECT COUNT(*) FROM mysql.user WHERE user = '${guacUser}';"
 
 # Execute SQL code
-MYSQL_RESULT=$( echo ${SQLCODE} | mysql -u root -h ${mysqlHost} -P ${mysqlPort} | grep '0' )
+MYSQL_RESULT=$( echo ${SQLCODE} | mysql -u root -D mysql -h ${mysqlHost} -P ${mysqlPort} | grep '0' )
 if [[ $MYSQL_RESULT == "" ]]; then
     echo -e "${RED}It appears there is already a MySQL user (${guacUser}) on ${mysqlHost}${NC}" 1>&2
     echo -e "${RED}Try:    mysql -e \"DROP USER '${guacUser}'@'${guacUserHost}'; FLUSH PRIVILEGES;\"${NC}" 1>&2
@@ -587,7 +616,7 @@ GRANT SELECT,INSERT,UPDATE,DELETE ON ${guacDb}.* TO '${guacUser}'@'${guacUserHos
 FLUSH PRIVILEGES;"
 
 # Execute SQL code
-echo ${SQLCODE} | mysql -u root -h ${mysqlHost} -P ${mysqlPort}
+echo ${SQLCODE} | mysql -u root -D mysql -h ${mysqlHost} -P ${mysqlPort}
 
 # Add Guacamole schema to newly created database
 echo -e "${BLUE}Adding database tables...${NC}"
