@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Check if user is root or sudo
-if ! [ $(id -u) = 0 ]; then echo "Please run this script as sudo or root" 1>&2 ; exit 1 ; fi
+if ! [ $( id -u ) = 0 ]; then echo "Please run this script as sudo or root" 1>&2 ; exit 1 ; fi
 
 # Check to see if any old files left over
 if [ "$( find . -maxdepth 1 \( -name 'guacamole-*' -o -name 'mysql-connector-java-*' \) )" != "" ]; then echo "Possible temp files detected. Please review 'guacamole-*' & 'mysql-connector-java-*'" 1>&2 ; exit 1 ; fi
@@ -92,11 +92,11 @@ while [ "$1" != "" ]; do
     shift
 done
 
-if [[ -z "$installTOTP" ]] && [[ "$installDuo" != true ]]; then
+if [[ -z "${installTOTP}" ]] && [[ "${installDuo}" != true ]]; then
     # Prompt the user if they would like to install TOTP MFA, default of no
     echo -e -n "${CYAN}MFA: Would you like to install TOTP? (y/N): ${NC}"
     read PROMPT
-    if [[ $PROMPT =~ ^[Yy]$ ]]; then
+    if [[ ${PROMPT} =~ ^[Yy]$ ]]; then
         installTOTP=true
         installDuo=false
     else
@@ -104,11 +104,11 @@ if [[ -z "$installTOTP" ]] && [[ "$installDuo" != true ]]; then
     fi
 fi
 
-if [[ -z "$installDuo" ]] && [[ "$installTOTP" != true ]]; then
+if [[ -z "${installDuo}" ]] && [[ "${installTOTP}" != true ]]; then
     # Prompt the user if they would like to install Duo MFA, default of no
     echo -e -n "${CYAN}MFA: Would you like to install Duo (configuration values must be set after install in /etc/guacamole/guacamole.properties)? (y/N): ${NC}"
     read PROMPT
-    if [[ $PROMPT =~ ^[Yy]$ ]]; then
+    if [[ ${PROMPT} =~ ^[Yy]$ ]]; then
         installDuo=true
         installTOTP=false
     else
@@ -117,53 +117,53 @@ if [[ -z "$installDuo" ]] && [[ "$installTOTP" != true ]]; then
 fi
 
 # We can't install TOTP and Duo at the same time...
-if [[ "$installTOTP" = true ]] && [ "$installDuo" = true ]; then
+if [[ "${installTOTP}" = true ]] && [ "${installDuo}" = true ]; then
     echo -e "${RED}MFA: The script does not support installing TOTP and Duo at the same time.${NC}" 1>&2
     exit 1
 fi
 echo
 
-if [[ -z $installMySQL ]]; then
+if [[ -z ${installMySQL} ]]; then
     # Prompt the user to see if they would like to install MySQL, default of yes
     echo "MySQL is required for installation, if you're using a remote MySQL Server select 'n'"
     echo -e -n "${CYAN}Would you like to install MySQL? (Y/n): ${NC}"
     read PROMPT
-    if [[ $PROMPT =~ ^[Nn]$ ]]; then
+    if [[ ${PROMPT} =~ ^[Nn]$ ]]; then
         installMySQL=false
     else
         installMySQL=true
     fi
 fi
 
-if [ "$installMySQL" = false ]; then
+if [ "${installMySQL}" = false ]; then
     # We need to get additional values
-    [ -z "$mysqlHost" ] \
+    [ -z "${mysqlHost}" ] \
       && read -p "Enter MySQL server hostname or IP: " mysqlHost
-    [ -z "$mysqlPort" ] \
+    [ -z "${mysqlPort}" ] \
       && read -p "Enter MySQL server port [3306]: " mysqlPort
-    [ -z "$guacDb" ] \
+    [ -z "${guacDb}" ] \
       && read -p "Enter Guacamole database name [guacamole_db]: " guacDb
-    [ -z "$guacUser" ] \
+    [ -z "${guacUser}" ] \
       && read -p "Enter Guacamole user [guacamole_user]: " guacUser
 fi
 
 # Checking if mysql host given
-if [ -z "$mysqlHost" ]; then
+if [ -z "${mysqlHost}" ]; then
     mysqlHost="localhost"
 fi
 
 # Checking if mysql port given
-if [ -z "$mysqlPort" ]; then
+if [ -z "${mysqlPort}" ]; then
     mysqlPort="3306"
 fi
 
 # Checking if mysql user given
-if [ -z "$guacUser" ]; then
+if [ -z "${guacUser}" ]; then
     guacUser="guacamole_user"
 fi
 
 # Checking if database name given
-if [ -z "$guacDb" ]; then
+if [ -z "${guacDb}" ]; then
     guacDb="guacamole_db"
 fi
 
@@ -175,7 +175,7 @@ if [ -z "${mysqlRootPwd}" ]; then
         echo
         read -s -p "Confirm ${mysqlHost}'s MySQL root password: " PROMPT2
         echo
-        [ "$mysqlRootPwd" = "$PROMPT2" ] && break
+        [ "${mysqlRootPwd}" = "${PROMPT}2" ] && break
         echo -e "${RED}Passwords don't match. Please try again.${NC}" 1>&2
     done
 else
@@ -190,7 +190,7 @@ if [ -z "${guacPwd}" ]; then
         echo
         read -s -p "Confirm ${mysqlHost}'s MySQL guacamole user password: " PROMPT2
         echo
-        [ "$guacPwd" = "$PROMPT2" ] && break
+        [ "${guacPwd}" = "${PROMPT}2" ] && break
         echo -e "${RED}Passwords don't match. Please try again.${NC}" 1>&2
         echo
     done
@@ -199,10 +199,10 @@ else
 fi
 echo
 
-if [ "$installMySQL" = true ]; then
+if [ "${installMySQL}" = true ]; then
     # Seed MySQL install values
-    debconf-set-selections <<< "mysql-server mysql-server/root_password password $mysqlRootPwd"
-    debconf-set-selections <<< "mysql-server mysql-server/root_password_again password $mysqlRootPwd"
+    debconf-set-selections <<< "mysql-server mysql-server/root_password password ${mysqlRootPwd}"
+    debconf-set-selections <<< "mysql-server mysql-server/root_password_again password ${mysqlRootPwd}"
 fi
 
 # Different version of Ubuntu and Debian have different package names...
@@ -218,10 +218,10 @@ if [[ "${NAME}" == "Ubuntu" ]]; then
     else
         LIBPNG="libpng-dev"
     fi
-    if [ "$installMySQL" = true ]; then
+    if [ "${installMySQL}" = true ]; then
         MYSQL="mysql-server mysql-client mysql-common mysql-utilities"
     # Checking if (any kind of) mysql-client or compatible command installed. This is useful for existing mariadb server
-    elif [ -x "$(command -v mysql)" ]; then
+    elif [ -x "$( command -v mysql )" ]; then
         MYSQL=""
     else
         MYSQL="mysql-client"
@@ -233,16 +233,16 @@ elif [[ "${NAME}" == *"Debian"* ]] || [[ "${NAME}" == *"Raspbian GNU/Linux"* ]] 
     else
         LIBPNG="libpng12-dev"
     fi
-    if [ "$installMySQL" = true ]; then
+    if [ "${installMySQL}" = true ]; then
         MYSQL="default-mysql-server default-mysql-client mysql-common"
     # Checking if (any kind of) mysql-client or compatible command installed. This is useful for existing mariadb server
-    elif [ -x "$(command -v mysql)" ]; then
+    elif [ -x "$( command -v mysql )" ]; then
         MYSQL=""
     else
         MYSQL="default-mysql-client"
     fi
 else
-    echo "Unsupported distribution - Ubuntu, Debian, Kali or Raspbian only"
+    echo "Unsupported distribution - Debian, Kali, Raspbian or Ubuntu only"
     exit 1
 fi
 
@@ -252,15 +252,15 @@ apt-get -qq update
 
 # Check if libmariadb-java/libmysql-java is available
 # Debian 10 >= ~ https://packages.debian.org/search?keywords=libmariadb-java
-if [[ $(apt-cache show libmariadb-java 2> /dev/null | egrep "Version:" | wc -l) -gt 0 ]]; then
-    # When something higer than 1.1.0 is out ~ https://issues.apache.org/jira/browse/GUACAMOLE-852
+if [[ $( apt-cache show libmariadb-java 2> /dev/null | egrep "Version:" | wc -l ) -gt 0 ]]; then
+    # When something higher than 1.1.0 is out ~ https://issues.apache.org/jira/browse/GUACAMOLE-852
     #echo -e "${BLUE}Found libmariadb-java package...${NC}"
     #LIBJAVA="libmariadb-java"
     # For v1.1.0 and lower
     echo -e "${YELLOW}Found libmariadb-java package (known issues). Will download libmysql-java ${MCJVER} and install manually${NC}"
     LIBJAVA=""
-# Debian 9 <=  ~ https://packages.debian.org/search?keywords=libmysql-java
-elif [[ $(apt-cache show libmysql-java 2> /dev/null | egrep "Version:" | wc -l) -gt 0 ]]; then
+# Debian 9 <= ~ https://packages.debian.org/search?keywords=libmysql-java
+elif [[ $( apt-cache show libmysql-java 2> /dev/null | egrep "Version:" | wc -l ) -gt 0 ]]; then
     echo -e "${BLUE}Found libmysql-java package...${NC}"
     LIBJAVA="libmysql-java"
 else
@@ -271,13 +271,13 @@ fi
 # tomcat9 is the latest version
 # tomcat8.0 is end of life, but tomcat8.5 is current
 # fallback is tomcat7
-if [[ $(apt-cache show tomcat9 2> /dev/null | egrep "Version: 9" | wc -l) -gt 0 ]]; then
+if [[ $( apt-cache show tomcat9 2> /dev/null | egrep "Version: 9" | wc -l ) -gt 0 ]]; then
     echo -e "${BLUE}Found tomcat9 package...${NC}"
     TOMCAT="tomcat9"
-elif [[ $(apt-cache show tomcat8 2> /dev/null | egrep "Version: 8.[5-9]" | wc -l) -gt 0 ]]; then
+elif [[ $( apt-cache show tomcat8 2> /dev/null | egrep "Version: 8.[5-9]" | wc -l ) -gt 0 ]]; then
     echo -e "${BLUE}Found tomcat8 package...${NC}"
     TOMCAT="tomcat8"
-elif [[ $(apt-cache show tomcat7 2> /dev/null | egrep "Version: 8.[5-9]" | wc -l) -gt 0 ]]; then
+elif [[ $( apt-cache show tomcat7 2> /dev/null | egrep "Version: 8.[5-9]" | wc -l ) -gt 0 ]]; then
     echo -e "${BLUE}Found tomcat7 package...${NC}"
     TOMCAT="tomcat8"
 else
@@ -349,7 +349,7 @@ echo -e "${GREEN}Downloaded guacamole-auth-jdbc-${GUACVERSION}.tar.gz${NC}"
 # Download Guacamole authentication extensions
 
 # TOTP
-if [ "$installTOTP" = true ]; then
+if [ "${installTOTP}" = true ]; then
     wget -q --show-progress -O guacamole-auth-totp-${GUACVERSION}.tar.gz ${SERVER}/binary/guacamole-auth-totp-${GUACVERSION}.tar.gz
     if [ $? -ne 0 ]; then
         echo -e "${RED}Failed to download guacamole-auth-totp-${GUACVERSION}.tar.gz" 1>&2
@@ -362,7 +362,7 @@ if [ "$installTOTP" = true ]; then
 fi
 
 # Duo
-if [ "$installDuo" = true ]; then
+if [ "${installDuo}" = true ]; then
     wget -q --show-progress -O guacamole-auth-duo-${GUACVERSION}.tar.gz ${SERVER}/binary/guacamole-auth-duo-${GUACVERSION}.tar.gz
     if [ $? -ne 0 ]; then
         echo -e "${RED}Failed to download guacamole-auth-duo-${GUACVERSION}.tar.gz" 1>&2
@@ -374,7 +374,7 @@ if [ "$installDuo" = true ]; then
     echo -e "${GREEN}Downloaded guacamole-auth-duo-${GUACVERSION}.tar.gz${NC}"
 fi
 
-# Deal with Missing MySQL Connector/J
+# Deal with missing MySQL Connector/J
 if [[ -z $LIBJAVA ]]; then
     # Download MySQL Connector/J
     wget -q --show-progress -O mysql-connector-java-${MCJVER}.tar.gz https://dev.mysql.com/get/Downloads/Connector-J/mysql-connector-java-${MCJVER}.tar.gz
@@ -386,6 +386,8 @@ if [[ -z $LIBJAVA ]]; then
         tar -xzf mysql-connector-java-${MCJVER}.tar.gz
     fi
     echo -e "${GREEN}Downloaded mysql-connector-java-${MCJVER}.tar.gz${NC}"
+else
+    echo -e "${YELLOW}Skipping manually installing MySQL Connector/J${NC}"
 fi
 echo -e "${GREEN}Downloading complete.${NC}"
 echo
@@ -397,9 +399,9 @@ mkdir -p /etc/guacamole/lib/
 mkdir -p /etc/guacamole/extensions/
 
 # Install guacd (Guacamole-server)
-cd guacamole-server-${GUACVERSION}
+cd guacamole-server-${GUACVERSION}/
 
-echo -e "${BLUE}Building Guacamole-Server with GCC $(gcc --version | head -n1 | grep -oP '\)\K.*' | awk '{print $1}') ${NC}"
+echo -e "${BLUE}Building Guacamole-Server with GCC $( gcc --version | head -n1 | grep -oP '\)\K.*' | awk '{print $1}' ) ${NC}"
 
 echo -e "${BLUE}Configuring Guacamole-Server. This might take a minute...${NC}"
 ./configure --with-init-dir=/etc/init.d  &>> ${LOG}
@@ -455,14 +457,14 @@ fi
 echo
 
 # Move TOTP Files
-if [ "$installTOTP" = true ]; then
+if [ "${installTOTP}" = true ]; then
     echo -e "${BLUE}Moving guacamole-auth-totp-${GUACVERSION}.jar (/etc/guacamole/extensions/)...${NC}"
     mv -f guacamole-auth-totp-${GUACVERSION}/guacamole-auth-totp-${GUACVERSION}.jar /etc/guacamole/extensions/
     echo
 fi
 
 # Move Duo Files
-if [ "$installDuo" = true ]; then
+if [ "${installDuo}" = true ]; then
     echo -e "${BLUE}Moving guacamole-auth-duo-${GUACVERSION}.jar (/etc/guacamole/extensions/)...${NC}"
     mv -f guacamole-auth-duo-${GUACVERSION}/guacamole-auth-duo-${GUACVERSION}.jar /etc/guacamole/extensions/
     echo
@@ -478,7 +480,7 @@ echo "mysql-username: ${guacUser}" >> /etc/guacamole/guacamole.properties
 echo "mysql-password: ${guacPwd}" >> /etc/guacamole/guacamole.properties
 
 # Output Duo configuration settings but comment them out for now
-if [ "$installDuo" = true ]; then
+if [ "${installDuo}" = true ]; then
     echo "# duo-api-hostname: " >> /etc/guacamole/guacamole.properties
     echo "# duo-integration-key: " >> /etc/guacamole/guacamole.properties
     echo "# duo-secret-key: " >> /etc/guacamole/guacamole.properties
@@ -499,8 +501,15 @@ fi
 systemctl enable ${TOMCAT}
 echo
 
-if [ "$installMySQL" = true ]; then
-    # restart mysql
+if [ "${installMySQL}" = true ]; then
+
+    if [ -e /etc/mysql/mariadb.conf.d/50-server.cnf ]; then
+    elif [ -e /etc/mysql/mariadb.conf.d/50-server.cnf ]; then
+    else
+    fi
+
+
+    # Restart MySQL service
     echo -e "${BLUE}Restarting MySQL service & enable at boot...${NC}"
     service mysql restart
     if [ $? -ne 0 ]; then
@@ -526,12 +535,12 @@ else
     echo -e "${GREEN}OK${NC}"
 fi
 
-# Create $guacDb and grant $guacUser permissions to it
+# Create ${guacDb} and grant ${guacUser} permissions to it
 
 # SQL code
 guacUserHost="localhost"
 
-if [[ "$mysqlHost" != "localhost" ]]; then
+if [[ "${mysqlHost}" != "localhost" ]]; then
     guacUserHost="%"
     echo -e "${YELLOW}MySQL Guacamole user is set to accept login from any host, please change this for security reasons if possible.${NC}"
 fi
@@ -539,7 +548,7 @@ fi
 # Set MySQL password
 export MYSQL_PWD=${mysqlRootPwd}
 
-# Check for $guacDb already being there
+# Check for ${guacDb} already being there
 echo -e "${BLUE}Checking MySQL for existing database (${guacDb})${NC}"
 SQLCODE="
 SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME='${guacDb}';"
@@ -554,7 +563,7 @@ else
     echo -e "${GREEN}OK${NC}"
 fi
 
-# Check for $guacUser already being there
+# Check for ${guacUser} already being there
 echo -e "${BLUE}Checking MySQL for existing user (${guacUser})${NC}"
 SQLCODE="
 SELECT COUNT(*) FROM mysql.user WHERE user = '${guacUser}';"
@@ -592,7 +601,7 @@ fi
 echo
 
 # Ensure guacd is started
-echo -e "${BLUE}Starting guacamole service & enable at boot...${NC}"
+echo -e "${BLUE}Starting guacd service & enable at boot...${NC}"
 service guacd stop 2>/dev/null
 service guacd start
 systemctl enable guacd
@@ -608,6 +617,9 @@ echo
 # Done
 echo -e "${BLUE}Installation Complete\n- Visit: http://localhost:8080/guacamole/\n- Default login (username/password): guacadmin/guacadmin\n***Be sure to change the password***.${NC}"
 
-if [ "$installDuo" = true ]; then
+if [ "${installDuo}" = true ]; then
     echo -e "${YELLOW}\nDon't forget to configure Duo in guacamole.properties. You will not be able to login otherwise.\nhttps://guacamole.apache.org/doc/${GUACVERSION}/gug/duo-auth.html${NC}"
 fi
+
+sleep 2s
+xdg-open http://localhost:8080/guacamole/
