@@ -1,4 +1,5 @@
 #!/bin/bash
+# Something isn't working? # tail -f /var/log/messages /var/log/syslog /var/log/tomcat*/*.out /var/log/mysql/*.log
 
 # Check if user is root or sudo
 if ! [ $( id -u ) = 0 ]; then
@@ -552,10 +553,11 @@ if [ "${installMySQL}" = true ]; then
             fi
             echo -e "${YELLOW}Setting timezone as ${timezone}${NC}"
             # Fix for https://issues.apache.org/jira/browse/GUACAMOLE-760
-            mysql_tzinfo_to_sql /usr/share/zoneinfo | mysql -u root -D mysql -h ${mysqlHost} -P ${mysqlPort}
+            mysql_tzinfo_to_sql /usr/share/zoneinfo 2>/dev/null | mysql -u root -D mysql -h ${mysqlHost} -P ${mysqlPort}
             crudini --set ${mysqlconfig} mysqld default_time_zone "${timezone}"
             # Restart to apply
             service mysql restart
+            echo
         fi
     fi
 fi
@@ -645,6 +647,3 @@ echo -e "${BLUE}Installation Complete\n- Visit: http://localhost:8080/guacamole/
 if [ "${installDuo}" = true ]; then
     echo -e "${YELLOW}\nDon't forget to configure Duo in guacamole.properties. You will not be able to login otherwise.\nhttps://guacamole.apache.org/doc/${GUACVERSION}/gug/duo-auth.html${NC}"
 fi
-
-sleep 2s
-xdg-open http://localhost:8080/guacamole/
