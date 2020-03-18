@@ -286,7 +286,7 @@ elif [[ $( apt-cache show tomcat8 2> /dev/null | egrep "Version: 8.[5-9]" | wc -
     TOMCAT="tomcat8"
 elif [[ $( apt-cache show tomcat7 2> /dev/null | egrep "Version: 7" | wc -l ) -gt 0 ]]; then
     echo -e "${BLUE}Found tomcat7 package...${NC}"
-    TOMCAT="tomcat8"
+    TOMCAT="tomcat7"
 else
     echo -e "${RED}Failed. Can't find Tomcat package${NC}" 1>&2
     exit 1
