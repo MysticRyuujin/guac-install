@@ -1,5 +1,12 @@
 # guac-install
 
+## NOTE: The version of FreeRDP2 that comes in the official repo for Ubuntu 18.04 is broken. If you are using Ubuntu 18.04 and RDP is not working / crashing run the following before or after install:
+```
+sudo add-apt-repository ppa:remmina-ppa-team/freerdp-daily
+sudo apt-get update
+sudo apt-get install freerdp2-dev freerdp2-x11
+```
+
 Script for installing Guacamole 1.1.0 on Ubuntu 16.04 or newer (with MySQL, or remote MySQL). It should also work on pure [Debian](https://www.debian.org/), [Raspbian](https://www.raspberrypi.org/downloads/raspbian/) or [Kali Linux](https://www.kali.org/). I have tested this with Debian 10.3.0 (Buster). **If other versions don't work please open an issue.** It is likely due to a required library having a different name.
 
 Run script, enter MySQL Root Password and Guacamole User password. Guacamole User is used to connect to the Guacamole Database.
@@ -11,6 +18,10 @@ If you're looking to also have NGINX / Let's Encrypt / HTTPS click [HERE](https:
 ## MFA/2FA
 
 By default the script will not install MFA support (QR code for Google/Microsoft Authenticator, Duo Mobile, etc. or Duo Push), if you do want MFA support you can use the `-t` or `--totp` or for Duo `-d` or `--duo` flags on the command line. Or modify the script variables `installTOTP=true` or `installDuo=true`. **Do not install both**
+
+## FYI
+
+Here's a cool PowerShell module for using the Guacamole API: https://github.com/UpperM/guacamole-powershell
 
 ## How to Run:
 
