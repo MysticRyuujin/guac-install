@@ -509,9 +509,10 @@ fi
 systemctl enable ${TOMCAT}
 echo
 
+# Set MySQL password
+export MYSQL_PWD=${mysqlRootPwd}
+
 if [ "${installMySQL}" = true ]; then
-    # Set MySQL password
-    export MYSQL_PWD=${mysqlRootPwd}
 
     # Restart MySQL service
     echo -e "${BLUE}Restarting MySQL service & enable at boot...${NC}"
