@@ -509,7 +509,11 @@ fi
 systemctl enable ${TOMCAT}
 echo
 
+# Set MySQL password
+export MYSQL_PWD=${mysqlRootPwd}
+
 if [ "${installMySQL}" = true ]; then
+
     # Restart MySQL service
     echo -e "${BLUE}Restarting MySQL service & enable at boot...${NC}"
     service mysql restart
@@ -571,9 +575,6 @@ if [[ "${mysqlHost}" != "localhost" ]]; then
     guacUserHost="%"
     echo -e "${YELLOW}MySQL Guacamole user is set to accept login from any host, please change this for security reasons if possible.${NC}"
 fi
-
-# Set MySQL password
-export MYSQL_PWD=${mysqlRootPwd}
 
 # Check for ${guacDb} already being there
 echo -e "${BLUE}Checking MySQL for existing database (${guacDb})${NC}"
