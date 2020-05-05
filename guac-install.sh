@@ -226,7 +226,7 @@ if [[ "${NAME}" == "Ubuntu" ]]; then
         LIBPNG="libpng-dev"
     fi
     if [ "${installMySQL}" = true ]; then
-        MYSQL="mysql-server mysql-client mysql-common mysql-utilities"
+        MYSQL="mysql-server mysql-client mysql-common"
     # Checking if (any kind of) mysql-client or compatible command installed. This is useful for existing mariadb server
     elif [ -x "$( command -v mysql )" ]; then
         MYSQL=""
