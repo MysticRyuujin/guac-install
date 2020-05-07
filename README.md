@@ -23,7 +23,7 @@ By default the script will not install MFA support (QR code for Google/Microsoft
 
 Here's a cool PowerShell module for using the Guacamole API: https://github.com/UpperM/guacamole-powershell
 
-Does not work if you have MFA turned on
+Does not work if you have MFA turned on (however, you can authenticate via the gui and get a token to use it that way)
 
 ## How to Run:
 
