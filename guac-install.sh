@@ -635,6 +635,36 @@ service guacd start
 systemctl enable guacd
 echo
 
+# Deal with ufw and/or iptables
+
+# Check if ufw is a valid command
+if [ -x "$( command -v ufw )" ]; then
+    # Check if ufw is active (active|inactive)
+    if [[ $(ufw status | grep inactive | wc -l) -eq 0 ]]; then
+        # Check if 8080 is not already allowed
+        if [[ $(ufw status | grep "8080/tcp" | grep "ALLOW" | grep "Anywhere" | wc -l) -eq 0 ]]; then
+            # ufw is running, but 8080 is not allowed, add it
+            ufw allow 8080/tcp comment 'allow tomcat'
+        fi
+    fi
+fi    
+
+# It's possible that someone is just running pure iptables...
+
+# Check if iptables is a valid running service
+systemctl is-active --quiet iptables
+if [ $? -eq 0 ]; then
+    # Check if 8080 is not already allowed
+    # FYI: This same command matches the rule added with ufw (-A ufw-user-input -p tcp -m tcp --dport 22 -j ACCEPT)
+    if [[ $(iptables --list-rules | grep -- "-p tcp" | grep -- "--dport 22" | grep -- "-j ACCEPT" | wc -l) -eq 0 ]]; then
+        # ALlow it
+        iptables -A INPUT -p tcp --dport 8080 --jump ACCEPT
+    fi
+fi
+
+# I think there is another service called firewalld that some people could be running instead
+# Unless someone opens an issue about it or submits a pull request, I'm going to ignore it for now
+
 # Cleanup
 echo -e "${BLUE}Cleanup install files...${NC}"
 rm -rf guacamole-*
