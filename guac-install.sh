@@ -656,7 +656,7 @@ systemctl is-active --quiet iptables
 if [ $? -eq 0 ]; then
     # Check if 8080 is not already allowed
     # FYI: This same command matches the rule added with ufw (-A ufw-user-input -p tcp -m tcp --dport 22 -j ACCEPT)
-    if [[ $(iptables --list-rules | grep -- "-p tcp" | grep -- "--dport 22" | grep -- "-j ACCEPT" | wc -l) -eq 0 ]]; then
+    if [[ $(iptables --list-rules | grep -- "-p tcp" | grep -- "--dport 8080" | grep -- "-j ACCEPT" | wc -l) -eq 0 ]]; then
         # ALlow it
         iptables -A INPUT -p tcp --dport 8080 --jump ACCEPT
     fi
