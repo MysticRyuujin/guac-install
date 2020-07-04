@@ -4,7 +4,7 @@
 if ! [ $(id -u) = 0 ]; then echo "Please run this script as sudo or root"; exit 1 ; fi
 
 # Version number of Guacamole to install
-GUACVERSION="1.1.0"
+GUACVERSION="1.2.0"
 
 # Colors to use for output
 YELLOW='\033[1;33m'
@@ -90,7 +90,7 @@ service guacd stop
 apt-get -qq update
 
 # Install additional packages if they do not exist yet
-apt-get -y install freerdp2-dev freerdp2-x11 libtool-bin libwebsockets-dev
+apt-get -y install freerdp2-dev freerdp2-x11 libtool-bin libwebsockets-dev libavformat-dev
 
 # Download Guacamole server
 wget -q --show-progress -O guacamole-server-${GUACVERSION}.tar.gz ${SERVER}/source/guacamole-server-${GUACVERSION}.tar.gz

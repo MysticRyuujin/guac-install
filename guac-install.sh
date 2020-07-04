@@ -15,7 +15,7 @@ fi
 
 # Version number of Guacamole to install
 # Homepage ~ https://guacamole.apache.org/releases/
-GUACVERSION="1.1.0"
+GUACVERSION="1.2.0"
 
 # Latest Version of MySQL Connector/J if manual install is required (if libmariadb-java/libmysql-java is not available via apt)
 # Homepage ~ https://dev.mysql.com/downloads/connector/j/
@@ -302,11 +302,9 @@ echo -e "${BLUE}Installing packages. This might take a few minutes...${NC}"
 export DEBIAN_FRONTEND=noninteractive
 
 # Required packages
-apt-get -y install build-essential libcairo2-dev ${JPEGTURBO} ${LIBPNG} libossp-uuid-dev libavcodec-dev libavutil-dev \
+apt-get -y install build-essential libcairo2-dev ${JPEGTURBO} ${LIBPNG} libossp-uuid-dev libavcodec-dev libavformat-dev libavutil-dev \
 libswscale-dev freerdp2-dev libpango1.0-dev libssh2-1-dev libtelnet-dev libvncserver-dev libpulse-dev libssl-dev \
-libvorbis-dev libwebp-dev libwebsockets-dev \
-freerdp2-x11 libtool-bin ghostscript dpkg-dev \
-wget crudini \
+libvorbis-dev libwebp-dev libwebsockets-dev freerdp2-x11 libtool-bin ghostscript dpkg-dev wget crudini \
 ${MYSQL} ${LIBJAVA} ${TOMCAT} &>> ${LOG}
 
 # If apt fails to run completely the rest of this isn't going to work...
