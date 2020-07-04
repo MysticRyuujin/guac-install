@@ -4,7 +4,7 @@
 if ! [ $(id -u) = 0 ]; then echo "Please run this script as sudo or root"; exit 1 ; fi
 
 # Version number of Guacamole to install
-GUACVERSION="1.1.0"
+GUACVERSION="1.2.0"
 
 # Different version of Ubuntu and Debian have different package names...
 source /etc/os-release
@@ -35,7 +35,7 @@ fi
 # Install Server Features
 apt-get -qq update
 export DEBIAN_FRONTEND=noninteractive
-apt-get -y install build-essential libcairo2-dev ${JPEGTURBO} ${LIBPNG} libossp-uuid-dev libavcodec-dev libavutil-dev \
+apt-get -y install build-essential libcairo2-dev ${JPEGTURBO} ${LIBPNG} libossp-uuid-dev libavcodec-dev libavformat-dev libavutil-dev \
 libswscale-dev freerdp2-dev libpango1.0-dev libssh2-1-dev libtelnet-dev libvncserver-dev libpulse-dev libssl-dev \
 libvorbis-dev libwebp-dev libwebsockets-dev wget libtool-bin
 

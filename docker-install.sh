@@ -4,7 +4,7 @@
 if ! [ $(id -u) = 0 ]; then echo "Please run this script as sudo or root"; exit 1 ; fi
 
 # Version number of Guacamole to install
-GUACVERSION="1.1.0"
+GUACVERSION="1.2.0"
 
 # Get script arguments for non-interactive mode
 while [ "$1" != "" ]; do
