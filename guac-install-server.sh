@@ -6,9 +6,9 @@ if ! [ $(id -u) = 0 ]; then echo "Please run this script as sudo or root"; exit 
 # Version number of Guacamole to install
 GUACVERSION="1.2.0"
 
-# Different version of Ubuntu and Debian have different package names...
+# Different version of Ubuntu/Linux Mint and Debian have different package names...
 source /etc/os-release
-if [[ "${NAME}" == "Ubuntu" ]]; then
+if [[ "${NAME}" == "Ubuntu" ]] || [[ "${NAME}" == "Linux Mint" ]]; then
     # Ubuntu > 18.04 does not include universe repo by default
     # Add the "Universe" repo, don't update
     add-apt-repository -yn universe
@@ -28,7 +28,7 @@ elif [[ "${NAME}" == *"Debian"* ]] || [[ "${NAME}" == *"Raspbian GNU/Linux"* ]] 
         LIBPNG="libpng12-dev"
     fi
 else
-    echo "Unsupported Distro - Ubuntu, Debian, Kali or Raspbian Only"
+    echo "Unsupported Distro - Ubuntu, Linux Mint, Debian, Kali or Raspbian Only"
     exit 1
 fi
 
