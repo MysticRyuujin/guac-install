@@ -212,9 +212,9 @@ if [ "${installMySQL}" = true ]; then
     debconf-set-selections <<< "mysql-server mysql-server/root_password_again password ${mysqlRootPwd}"
 fi
 
-# Different version of Ubuntu and Debian have different package names...
+# Different version of Ubuntu/Linux Mint and Debian have different package names...
 source /etc/os-release
-if [[ "${NAME}" == "Ubuntu" ]]; then
+if [[ "${NAME}" == "Ubuntu" ]] || [[ "${NAME}" == "Linux Mint" ]]; then
     # Ubuntu > 18.04 does not include universe repo by default
     # Add the "Universe" repo, don't update
     add-apt-repository -yn universe
@@ -233,9 +233,9 @@ if [[ "${NAME}" == "Ubuntu" ]]; then
     else
         MYSQL="mysql-client"
     fi
-elif [[ "${NAME}" == *"Debian"* ]] || [[ "${NAME}" == *"Raspbian GNU/Linux"* ]] || [[ "${NAME}" == *"Kali GNU/Linux"* ]]; then
+elif [[ "${NAME}" == *"Debian"* ]] || [[ "${NAME}" == *"Raspbian GNU/Linux"* ]] || [[ "${NAME}" == *"Kali GNU/Linux"* ]] || [[ "${NAME}" == "LMDE" ]]; then
     JPEGTURBO="libjpeg62-turbo-dev"
-    if [[ "${PRETTY_NAME}" == *"stretch"* ]] || [[ "${PRETTY_NAME}" == *"buster"* ]] || [[ "${PRETTY_NAME}" == *"Kali GNU/Linux Rolling"* ]]; then
+    if [[ "${PRETTY_NAME}" == *"stretch"* ]] || [[ "${PRETTY_NAME}" == *"buster"* ]] || [[ "${PRETTY_NAME}" == *"Kali GNU/Linux Rolling"* ]] || [[ "${NAME}" == "LMDE" ]]; then
         LIBPNG="libpng-dev"
     else
         LIBPNG="libpng12-dev"
@@ -249,7 +249,7 @@ elif [[ "${NAME}" == *"Debian"* ]] || [[ "${NAME}" == *"Raspbian GNU/Linux"* ]] 
         MYSQL="default-mysql-client"
     fi
 else
-    echo "Unsupported distribution - Debian, Kali, Raspbian or Ubuntu only"
+    echo "Unsupported distribution - Debian, Kali, Raspbian, Linux Mint or Ubuntu only"
     exit 1
 fi
 
