@@ -7,7 +7,7 @@ sudo apt-get update
 sudo apt-get install freerdp2-dev freerdp2-x11
 ```
 
-Script for installing Guacamole 1.2.0 on Ubuntu 16.04 or newer (with MySQL, or remote MySQL). It should also work on pure [Debian](https://www.debian.org/), [Raspbian](https://www.raspberrypi.org/downloads/raspbian/), [Linux Mint](https://linuxmint.com/) (18/LMDE 4 or newer) or [Kali Linux](https://www.kali.org/). I have tested this with Debian 10.3.0 (Buster). **If other versions don't work please open an issue.** It is likely due to a required library having a different name.
+Script for installing Guacamole 1.3.0 on Ubuntu 16.04 or newer (with MySQL, or remote MySQL). It should also work on pure [Debian](https://www.debian.org/), [Raspbian](https://www.raspberrypi.org/downloads/raspbian/), [Linux Mint](https://linuxmint.com/) (18/LMDE 4 or newer) or [Kali Linux](https://www.kali.org/). I have tested this with Debian 10.3.0 (Buster). **If other versions don't work please open an issue.** It is likely due to a required library having a different name.
 
 Run script, enter MySQL Root Password and Guacamole User password. Guacamole User is used to connect to the Guacamole Database.
 
@@ -108,7 +108,7 @@ NOTE: Only the switches for MySQL Host, MySQL Port and Guacamole Database are av
 
 ## WARNING
 
-- Upgrading from 0.9.14 -> 1.2.0 has not been tested, only 1.1.0 -> 1.2.0.
+- Upgrading from 0.9.14 or 1.1.0 to 1.3.0 has not been tested, only 1.2.0 to 1.3.0 has been tested.
 - Switches have changed and additional ones have been added!
 
 ## How to Run:
