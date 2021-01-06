@@ -125,6 +125,15 @@ fi
 # Upgrade Guacamole Server
 cd guacamole-server-${GUACVERSION}
 ./configure --with-init-dir=/etc/init.d
+if [ $? -ne 0 ]; then
+    echo "Failed to configure guacamole-server"
+    echo "Trying again with --enable-allow-freerdp-snapshots"
+    ./configure --with-init-dir=/etc/init.d --enable-allow-freerdp-snapshots
+    if [ $? -ne 0 ]; then
+        echo "Failed to configure guacamole-server - again"
+        exit
+    fi
+fi
 make
 make install
 
