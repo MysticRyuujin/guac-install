@@ -419,7 +419,6 @@ if [ $? -ne 0 ]; then
         echo "Failed to configure guacamole-server - again"
         exit
     fi
-fi
 else
     echo -e "${GREEN}OK${NC}"
 fi
