@@ -412,8 +412,13 @@ echo -e "${BLUE}Building Guacamole-Server with GCC $( gcc --version | head -n1 |
 echo -e "${BLUE}Configuring Guacamole-Server. This might take a minute...${NC}"
 ./configure --with-init-dir=/etc/init.d  &>> ${LOG}
 if [ $? -ne 0 ]; then
-    echo -e "${RED}Failed. See ${LOG}${NC}" 1>&2
-    exit 1
+    echo "Failed to configure guacamole-server"
+    echo "Trying again with --enable-allow-freerdp-snapshots"
+    ./configure --with-init-dir=/etc/init.d --enable-allow-freerdp-snapshots
+    if [ $? -ne 0 ]; then
+        echo "Failed to configure guacamole-server - again"
+        exit
+    fi
 else
     echo -e "${GREEN}OK${NC}"
 fi
