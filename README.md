@@ -7,7 +7,7 @@ sudo apt-get update
 sudo apt-get install freerdp2-dev freerdp2-x11
 ```
 
-## NOTE: Debian 10 users having issues with RDP have reported the following fix:
+## NOTE: Debian users having issues with RDP have reported the following fix:
 ```
 sudo bash -c 'echo "deb http://deb.debian.org/debian buster-backports main" >> /etc/apt/sources.list.d/backports.list'
 sudo apt update
