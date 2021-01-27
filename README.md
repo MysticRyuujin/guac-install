@@ -1,6 +1,6 @@
 # guac-install
 
-## NOTE: The version of FreeRDP2 that comes in the official repo for Ubuntu 18.04 is broken. If you are using Ubuntu 18.04 and RDP is not working / crashing run the following before or after install:
+## NOTE: Ubuntu users having issues with RDP have reported the following fix:
 ```
 sudo add-apt-repository ppa:remmina-ppa-team/freerdp-daily
 sudo apt-get update
