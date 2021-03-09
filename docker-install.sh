@@ -53,7 +53,7 @@ fi
 
 # Install Stuff
 apt-get update
-apt-get -y install docker-ce mysql-client wget
+apt-get -y install docker-ce docker-ce-cli containerd.io mysql-client wget
 
 # Set SERVER to be the preferred download server from the Apache CDN
 SERVER="http://apache.org/dyn/closer.cgi?action=download&filename=guacamole/${GUACVERSION}"
@@ -69,11 +69,13 @@ fi
 tar -xzf guacamole-auth-jdbc-${GUACVERSION}.tar.gz
 
 # Start MySQL
-docker run --restart=always --detach --name=mysql --env="MYSQL_ROOT_PASSWORD=$mysqlrootpassword" --publish 3306:3306 mysql
+docker run --restart=always --detach --name=mysql --env="MYSQL_ROOT_PASSWORD=$mysqlrootpassword" --publish 3306:3306 healthcheck/mysql
 
-# Sleep to let MySQL load (there's probably a better way to do this)
-echo "Waiting 30 seconds for MySQL to load"
-sleep 30
+# Wait for the MySQL Health Check equal "healthy"
+echo "Waiting for MySQL to be healthy"
+until [ "`/usr/bin/docker inspect -f {{.State.Health.Status}} mysql`"=="healthy" ]; do
+    sleep 0.1;
+done;
 
 # Create the Guacamole database and the user account
 # SQL Code
@@ -88,7 +90,7 @@ echo $SQLCODE | mysql -h 127.0.0.1 -P 3306 -u root -p$mysqlrootpassword
 
 cat guacamole-auth-jdbc-${GUACVERSION}/mysql/schema/*.sql | mysql -u root -p$mysqlrootpassword -h 127.0.0.1 -P 3306 guacamole_db
 
-docker run --restart=always --name guacd -d guacamole/guacd
-docker run --restart=always --name guacamole  --link mysql:mysql --link guacd:guacd -e MYSQL_HOSTNAME=127.0.0.1 -e MYSQL_DATABASE=guacamole_db -e MYSQL_USER=guacamole_user -e MYSQL_PASSWORD=$guacdbuserpassword --detach -p 8080:8080 guacamole/guacamole
+docker run --restart=always --name guacd --detach guacamole/guacd
+docker run --restart=always --name guacamole --detach --link mysql:mysql --link guacd:guacd -e MYSQL_HOSTNAME=127.0.0.1 -e MYSQL_DATABASE=guacamole_db -e MYSQL_USER=guacamole_user -e MYSQL_PASSWORD=$guacdbuserpassword -p 8080:8080 guacamole/guacamole
 
 rm -rf guacamole-auth-jdbc-${GUACVERSION}*
