@@ -37,7 +37,7 @@ apt-get -qq update
 export DEBIAN_FRONTEND=noninteractive
 apt-get -y install build-essential libcairo2-dev ${JPEGTURBO} ${LIBPNG} libossp-uuid-dev libavcodec-dev libavformat-dev libavutil-dev \
 libswscale-dev freerdp2-dev libpango1.0-dev libssh2-1-dev libtelnet-dev libvncserver-dev libpulse-dev libssl-dev \
-libvorbis-dev libwebp-dev libwebsockets-dev wget libtool-bin
+libvorbis-dev libwebp-dev libwebsockets-dev wget libtool-bin libc-bin
 
 # If apt fails to run completely the rest of this isn't going to work...
 if [ $? != 0 ]; then
