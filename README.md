@@ -1,5 +1,7 @@
 # guac-install
 
+I've maintained this script for quite a few years now with the help of the other contributors and it seems to be getting more and more fragmented as libraries and system OSes diverge in their package management. I plan to continue mantaining the install script, but, I do highly suggest that more people try to use the containerized (docker) version. As it should work on basically any OS with Docker support.
+
 ## NOTE: Ubuntu users having issues with RDP have reported the following fix:
 ```
 sudo add-apt-repository ppa:remmina-ppa-team/freerdp-daily
