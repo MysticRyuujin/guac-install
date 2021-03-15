@@ -53,13 +53,28 @@ fi
 
 # Install Stuff
 apt-get update
-apt-get -y install docker-ce docker-ce-cli containerd.io default-mysql-client wget
 
+# Install mysql-client and wget if they don't already have it
+apt-get -y install default-mysql-client wget
 if [ $? -ne 0 ]; then
-    echo "Failed to install apt prerequisites docker-ce docker-ce-cli containerd.io mysql-client wget"
+    echo "Failed to install apt prerequisites: default-mysql-client wget"
     echo "Try manually isntalling these prerequisites and try again"
-    echo "For docker try: curl -fsSL https://get.docker.com -o get-docker.sh"
     exit
+fi
+
+# Try to install docker from the official repo
+apt-get -y install docker-ce docker-ce-cli containerd.io
+if [ $? -ne 0 ]; then
+    echo "Failed to install docker via official apt repo"
+    echo "Trying to install docker from https://get.docker.com"
+    wget -O get-docker.sh https://get.docker.com
+    chmod +x ./get-docker.sh
+    ./get-docker.sh
+    if [ $? -ne 0 ]; then
+        echo "Failed to install docker from https://get.docker.com"
+        exit
+    fi
+    rm ./get-docker.sh
 fi
 
 # Set SERVER to be the preferred download server from the Apache CDN
