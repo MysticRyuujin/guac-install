@@ -53,7 +53,7 @@ fi
 
 # Install Stuff
 apt-get update
-apt-get -y install docker-ce docker-ce-cli containerd.io mysql-client wget
+apt-get -y install docker-ce docker-ce-cli containerd.io default-mysql-client wget
 
 if [ $? -ne 0 ]; then
     echo "Failed to install apt prerequisites docker-ce docker-ce-cli containerd.io mysql-client wget"
