@@ -58,6 +58,7 @@ apt-get -y install docker-ce docker-ce-cli containerd.io mysql-client wget
 if [ $? -ne 0 ]; then
     echo "Failed to install apt prerequisites docker-ce docker-ce-cli containerd.io mysql-client wget"
     echo "Try manually isntalling these prerequisites and try again"
+    echo "For docker try: curl -fsSL https://get.docker.com -o get-docker.sh"
     exit
 fi
 
