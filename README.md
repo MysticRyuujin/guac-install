@@ -1,6 +1,6 @@
 # guac-install
 
-I've maintained this script for quite a few years now with the help of the other contributors and it seems to be getting more and more fragmented as libraries and system OSes diverge in their package management. I plan to continue mantaining the install script, but, I do highly suggest that more people try to use the containerized (docker) version. As it should work on basically any OS with Docker support.
+I've maintained this script for quite a few years now with the help of the other contributors and it seems to be getting more and more fragmented as libraries and system OSes diverge in their package management. I plan to continue mantaining the install script, but, I do highly suggest that more people try to use the containerized (docker) version. As it should work on basically any 64bit OS with Docker support. (That mean it doesn't work on 32bit ARM/Rasp Pi)
 
 ## NOTE: Ubuntu users having issues with RDP have reported the following fix:
 ```
