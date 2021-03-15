@@ -55,6 +55,12 @@ fi
 apt-get update
 apt-get -y install docker-ce docker-ce-cli containerd.io mysql-client wget
 
+if [ $? -ne 0 ]; then
+    echo "Failed to install apt prerequisites docker-ce docker-ce-cli containerd.io mysql-client wget"
+    echo "Try manually isntalling these prerequisites and try again"
+    exit
+fi
+
 # Set SERVER to be the preferred download server from the Apache CDN
 SERVER="http://apache.org/dyn/closer.cgi?action=download&filename=guacamole/${GUACVERSION}"
 
