@@ -115,4 +115,10 @@ cat guacamole-auth-jdbc-${GUACVERSION}/mysql/schema/*.sql | mysql -u root -p$mys
 docker run --restart=always --name guacd --detach guacamole/guacd
 docker run --restart=always --name guacamole --detach --link mysql:mysql --link guacd:guacd -e MYSQL_HOSTNAME=127.0.0.1 -e MYSQL_DATABASE=guacamole_db -e MYSQL_USER=guacamole_user -e MYSQL_PASSWORD=$guacdbuserpassword -p 8080:8080 guacamole/guacamole
 
+# Cleanup
+echo -e "${BLUE}Cleanup install files...${NC}"
 rm -rf guacamole-auth-jdbc-${GUACVERSION}*
+echo
+
+# Done
+echo -e "Installation Complete\n- Visit: http://localhost:8080/guacamole/\n- Default login (username/password): guacadmin/guacadmin\n***Be sure to change the password***."
