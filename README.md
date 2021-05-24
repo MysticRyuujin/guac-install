@@ -4,7 +4,7 @@ I've maintained this script for quite a few years now with the help of the other
 
 ## NOTE: Ubuntu users having issues with RDP have reported the following fix:
 ```
-sudo add-apt-repository ppa:remmina-ppa-team/freerdp-daily
+sudo add-apt-repository ppa:remmina-ppa-team/remmina-next
 sudo apt-get update
 sudo apt-get install freerdp2-dev freerdp2-x11
 ```
