@@ -95,7 +95,7 @@ docker run --restart=always --detach --name=mysql --env="MYSQL_ROOT_PASSWORD=$my
 
 # Wait for the MySQL Health Check equal "healthy"
 echo "Waiting for MySQL to be healthy"
-until [ "`/usr/bin/docker inspect -f {{.State.Health.Status}} mysql`"=="healthy" ]; do
+until [ "$(/usr/bin/docker inspect -f {{.State.Health.Status}} mysql)" == "healthy" ]; do
     sleep 0.1;
 done;
 
