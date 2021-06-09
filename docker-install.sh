@@ -91,7 +91,7 @@ fi
 tar -xzf guacamole-auth-jdbc-${GUACVERSION}.tar.gz
 
 # Start MySQL
-docker run --restart=always --detach --name=mysql --env="MYSQL_ROOT_PASSWORD=$mysqlrootpassword" --publish 3306:3306 healthcheck/mysql
+docker run --restart=always --detach --name=mysql --env="MYSQL_ROOT_PASSWORD=$mysqlrootpassword" --publish 3306:3306 healthcheck/mysql --default-authentication-plugin=mysql_native_password
 
 # Wait for the MySQL Health Check equal "healthy"
 echo "Waiting for MySQL to be healthy"
