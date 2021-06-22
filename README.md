@@ -2,6 +2,8 @@
 
 I've maintained this script for quite a few years now with the help of the other contributors and it seems to be getting more and more fragmented as libraries and system OSes diverge in their package management. I plan to continue mantaining the install script, but, I do highly suggest that more people try to use the containerized (docker) version. As it should work on basically any 64bit OS with Docker support. (That mean it doesn't work on 32bit ARM/Rasp Pi)
 
+## NOTE: The fixes below are not to be used UNLESS you're having issues, don't run these for no reason, use the distro maintainers version unless there's a reason not to.
+
 ## NOTE: Ubuntu users having issues with RDP have reported the following fix:
 ```
 sudo add-apt-repository ppa:remmina-ppa-team/remmina-next
