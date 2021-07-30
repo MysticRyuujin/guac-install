@@ -217,7 +217,7 @@ source /etc/os-release
 if [[ "${NAME}" == "Ubuntu" ]] || [[ "${NAME}" == "Linux Mint" ]]; then
     # Ubuntu > 18.04 does not include universe repo by default
     # Add the "Universe" repo, don't update
-    add-apt-repository -yn universe
+    add-apt-repository -y universe
     # Set package names depending on version
     JPEGTURBO="libjpeg-turbo8-dev"
     if [[ "${VERSION_ID}" == "16.04" ]]; then
