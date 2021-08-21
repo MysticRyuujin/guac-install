@@ -64,7 +64,7 @@ mkdir -p /etc/guacamole
 
 # Install guacd (Guacamole-server)
 cd guacamole-server-${GUACVERSION}
-./configure --with-init-dir=/etc/init.d
+./configure --with-systemd-dir=/etc/systemd/system
 make
 make install
 
