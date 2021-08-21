@@ -410,11 +410,11 @@ cd guacamole-server-${GUACVERSION}/
 echo -e "${BLUE}Building Guacamole-Server with GCC $( gcc --version | head -n1 | grep -oP '\)\K.*' | awk '{print $1}' ) ${NC}"
 
 echo -e "${BLUE}Configuring Guacamole-Server. This might take a minute...${NC}"
-./configure --with-init-dir=/etc/init.d  &>> ${LOG}
+./configure --with-systemd-dir=/etc/systemd/system  &>> ${LOG}
 if [ $? -ne 0 ]; then
     echo "Failed to configure guacamole-server"
     echo "Trying again with --enable-allow-freerdp-snapshots"
-    ./configure --with-init-dir=/etc/init.d --enable-allow-freerdp-snapshots
+    ./configure --with-systemd-dir=/etc/systemd/system --enable-allow-freerdp-snapshots
     if [ $? -ne 0 ]; then
         echo "Failed to configure guacamole-server - again"
         exit
