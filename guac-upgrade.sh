@@ -124,11 +124,11 @@ fi
 
 # Upgrade Guacamole Server
 cd guacamole-server-${GUACVERSION}
-./configure --with-init-dir=/etc/init.d
+./configure --with-systemd-dir=/etc/systemd/system
 if [ $? -ne 0 ]; then
     echo "Failed to configure guacamole-server"
     echo "Trying again with --enable-allow-freerdp-snapshots"
-    ./configure --with-init-dir=/etc/init.d --enable-allow-freerdp-snapshots
+    ./configure --with-systemd-dir=/etc/systemd/system --enable-allow-freerdp-snapshots
     if [ $? -ne 0 ]; then
         echo "Failed to configure guacamole-server - again"
         exit
