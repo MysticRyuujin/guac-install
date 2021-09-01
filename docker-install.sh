@@ -9,12 +9,16 @@ GUACVERSION="1.3.0"
 # Initialize variable values
 installTOTP=""
 
-# This is where we'll store persistent data for mysql and guacamole
+# This is where we'll store persistent data for guacamole
 INSTALLFOLDER="/opt/guacamole"
 
+# This is where we'll store persistent data for mysql
+MYSQLDATAFOLDER="/opt/mysql"
+
+# Make folders!
 mkdir -p ${INSTALLFOLDER}/install_files
-mkdir -p ${INSTALLFOLDER}/extensions
-mkdir -p ${INSTALLFOLDER}/mysql
+mkdir ${INSTALLFOLDER}/extensions
+mkdir ${MYSQLDATAFOLDER}
 
 cd ${INSTALLFOLDER}/install_files
 
@@ -143,7 +147,7 @@ if [ "${installTOTP}" = true ]; then
 fi
 
 # Start MySQL
-docker run --restart=always --detach --name=mysql -v ${INSTALLFOLDER}/mysql:/var/lib/mysql --env="MYSQL_ROOT_PASSWORD=$mysqlrootpassword" --publish 3306:3306 healthcheck/mysql --default-authentication-plugin=mysql_native_password
+docker run --restart=always --detach --name=mysql -v ${MYSQLDATAFOLDER}:/var/lib/mysql --env="MYSQL_ROOT_PASSWORD=$mysqlrootpassword" --publish 3306:3306 healthcheck/mysql --default-authentication-plugin=mysql_native_password
 
 # Wait for the MySQL Health Check equal "healthy"
 echo "Waiting for MySQL to be healthy"
@@ -165,7 +169,7 @@ echo $SQLCODE | mysql -h 127.0.0.1 -P 3306 -u root -p$mysqlrootpassword
 cat guacamole-auth-jdbc-${GUACVERSION}/mysql/schema/*.sql | mysql -u root -p$mysqlrootpassword -h 127.0.0.1 -P 3306 guacamole_db
 
 docker run --restart=always --name guacd --detach guacamole/guacd:${GUACVERSION}
-docker run --restart=always --name guacamole --detach --link mysql:mysql --link guacd:guacd -v ${INSTALLFOLDER}/extensions:/etc/guacamole/extensions -e MYSQL_HOSTNAME=127.0.0.1 -e MYSQL_DATABASE=guacamole_db -e MYSQL_USER=guacamole_user -e MYSQL_PASSWORD=$guacdbuserpassword -e GUACAMOLE_HOME=/etc/guacamole -p 8080:8080 guacamole/guacamole:${GUACVERSION}
+docker run --restart=always --name guacamole --detach --link mysql:mysql --link guacd:guacd -v ${INSTALLFOLDER}:/etc/guacamole -e MYSQL_HOSTNAME=127.0.0.1 -e MYSQL_DATABASE=guacamole_db -e MYSQL_USER=guacamole_user -e MYSQL_PASSWORD=$guacdbuserpassword -e GUACAMOLE_HOME=/etc/guacamole -p 8080:8080 guacamole/guacamole:${GUACVERSION}
 
 # Done
 echo
