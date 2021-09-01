@@ -404,6 +404,10 @@ rm -rf /etc/guacamole/extensions/
 mkdir -p /etc/guacamole/lib/
 mkdir -p /etc/guacamole/extensions/
 
+# Fix for #196
+mkdir -p /usr/sbin/.config/freerdp
+chown daemon:daemon /usr/sbin/.config/freerdp
+
 # Install guacd (Guacamole-server)
 cd guacamole-server-${GUACVERSION}/
 
