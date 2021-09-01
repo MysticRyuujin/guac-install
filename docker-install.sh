@@ -6,6 +6,18 @@ if ! [ $(id -u) = 0 ]; then echo "Please run this script as sudo or root"; exit 
 # Version number of Guacamole to install
 GUACVERSION="1.3.0"
 
+# Initialize variable values
+installTOTP=""
+
+# This is where we'll store persistent data for mysql and guacamole
+INSTALLFOLDER="/opt/guacamole"
+
+mkdir -p ${INSTALLFOLDER}/install_files
+mkdir -p ${INSTALLFOLDER}/extensions
+mkdir -p ${INSTALLFOLDER}/mysql
+
+cd ${INSTALLFOLDER}/install_files
+
 # Get script arguments for non-interactive mode
 while [ "$1" != "" ]; do
     case $1 in
@@ -17,6 +29,8 @@ while [ "$1" != "" ]; do
             shift
             guacpwd="$1"
             ;;
+        -t | --totp )
+            installTOTP=true
     esac
     shift
 done
@@ -51,30 +65,52 @@ else
     echo
 fi
 
-# Install Stuff
-apt-get update
-
-# Install mysql-client and wget if they don't already have it
-apt-get -y install default-mysql-client wget
-if [ $? -ne 0 ]; then
-    echo "Failed to install apt prerequisites: default-mysql-client wget"
-    echo "Try manually isntalling these prerequisites and try again"
-    exit
+if [[ -z "${installTOTP}" ]]; then
+    # Prompt the user if they would like to install TOTP MFA, default of no
+    echo -e -n "${CYAN}MFA: Would you like to install TOTP? (y/N): ${NC}"
+    read PROMPT
+    if [[ ${PROMPT} =~ ^[Yy]$ ]]; then
+        installTOTP=true
+    else
+        installTOTP=false
+    fi
 fi
 
-# Try to install docker from the official repo
-apt-get -y install docker-ce docker-ce-cli containerd.io
-if [ $? -ne 0 ]; then
-    echo "Failed to install docker via official apt repo"
-    echo "Trying to install docker from https://get.docker.com"
-    wget -O get-docker.sh https://get.docker.com
-    chmod +x ./get-docker.sh
-    ./get-docker.sh
+# Update apt and install wget if it's missing
+apt-get update
+apt-get -y install wget
+
+# Check if mysql client already installed
+if [ -x "$(command -v mysql)" ]; then
+    echo "mysql detected!"
+else
+    # Install mysql-client
+    apt-get -y install default-mysql-client
     if [ $? -ne 0 ]; then
-        echo "Failed to install docker from https://get.docker.com"
+        echo "Failed to install apt prerequisites: default-mysql-client"
+        echo "Try manually isntalling this prerequisites and try again"
         exit
     fi
-    rm ./get-docker.sh
+fi
+
+# Check if docker already installed
+if [ -x "$(command -v docker)" ]; then
+    echo "docker detected!"
+else
+    echo "Installing docker"
+    # Try to install docker from the official repo
+    apt-get -y install docker-ce docker-ce-cli containerd.io
+    if [ $? -ne 0 ]; then
+        echo "Failed to install docker via official apt repo"
+        echo "Trying to install docker from https://get.docker.com"
+        wget -O get-docker.sh https://get.docker.com
+        chmod +x ./get-docker.sh
+        ./get-docker.sh
+        if [ $? -ne 0 ]; then
+            echo "Failed to install docker from https://get.docker.com"
+            exit
+        fi
+    fi
 fi
 
 # Set SERVER to be the preferred download server from the Apache CDN
@@ -90,8 +126,24 @@ fi
 
 tar -xzf guacamole-auth-jdbc-${GUACVERSION}.tar.gz
 
+# Download and install TOTP
+if [ "${installTOTP}" = true ]; then
+    wget -q --show-progress -O guacamole-auth-totp-${GUACVERSION}.tar.gz ${SERVER}/binary/guacamole-auth-totp-${GUACVERSION}.tar.gz
+    if [ $? -ne 0 ]; then
+        echo -e "${RED}Failed to download guacamole-auth-totp-${GUACVERSION}.tar.gz" 1>&2
+        echo -e "${SERVER}/binary/guacamole-auth-totp-${GUACVERSION}.tar.gz"
+        exit 1
+    else
+        echo -e "${GREEN}Downloaded guacamole-auth-totp-${GUACVERSION}.tar.gz${NC}"
+        tar -xzf guacamole-auth-totp-${GUACVERSION}.tar.gz
+        echo -e "${BLUE}Moving guacamole-auth-totp-${GUACVERSION}.jar (${INSTALLFOLDER}/extensions/)...${NC}"
+        cp -f guacamole-auth-totp-${GUACVERSION}/guacamole-auth-totp-${GUACVERSION}.jar ${INSTALLFOLDER}/extensions/
+        echo
+    fi
+fi
+
 # Start MySQL
-docker run --restart=always --detach --name=mysql --env="MYSQL_ROOT_PASSWORD=$mysqlrootpassword" --publish 3306:3306 healthcheck/mysql --default-authentication-plugin=mysql_native_password
+docker run --restart=always --detach --name=mysql -v ${INSTALLFOLDER}/mysql:/var/lib/mysql --env="MYSQL_ROOT_PASSWORD=$mysqlrootpassword" --publish 3306:3306 healthcheck/mysql --default-authentication-plugin=mysql_native_password
 
 # Wait for the MySQL Health Check equal "healthy"
 echo "Waiting for MySQL to be healthy"
@@ -113,12 +165,8 @@ echo $SQLCODE | mysql -h 127.0.0.1 -P 3306 -u root -p$mysqlrootpassword
 cat guacamole-auth-jdbc-${GUACVERSION}/mysql/schema/*.sql | mysql -u root -p$mysqlrootpassword -h 127.0.0.1 -P 3306 guacamole_db
 
 docker run --restart=always --name guacd --detach guacamole/guacd
-docker run --restart=always --name guacamole --detach --link mysql:mysql --link guacd:guacd -e MYSQL_HOSTNAME=127.0.0.1 -e MYSQL_DATABASE=guacamole_db -e MYSQL_USER=guacamole_user -e MYSQL_PASSWORD=$guacdbuserpassword -p 8080:8080 guacamole/guacamole
-
-# Cleanup
-echo -e "${BLUE}Cleanup install files...${NC}"
-rm -rf guacamole-auth-jdbc-${GUACVERSION}*
-echo
+docker run --restart=always --name guacamole --detach --link mysql:mysql --link guacd:guacd -v ${INSTALLFOLDER}/extensions:/etc/guacamole/extensions -e MYSQL_HOSTNAME=127.0.0.1 -e MYSQL_DATABASE=guacamole_db -e MYSQL_USER=guacamole_user -e MYSQL_PASSWORD=$guacdbuserpassword -e GUACAMOLE_HOME=/etc/guacamole -p 8080:8080 guacamole/guacamole
 
 # Done
+echo
 echo -e "Installation Complete\n- Visit: http://localhost:8080/guacamole/\n- Default login (username/password): guacadmin/guacadmin\n***Be sure to change the password***."
