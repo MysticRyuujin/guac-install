@@ -1,6 +1,6 @@
 # guac-install
 
-I've maintained this script for quite a few years now with the help of the other contributors and it seems to be getting more and more fragmented as libraries and system OSes diverge in their package management. I plan to continue mantaining the install script, but, I do highly suggest that more people try to use the containerized (docker) version. As it should work on basically any 64bit OS with Docker support. (That mean it doesn't work on 32bit ARM/Rasp Pi)
+I've maintained this script for quite a few years now with the help of the other contributors and it seems to be getting more and more fragmented as libraries and system OSes diverge in their package management. I plan to continue maintaining the install script, but, I do highly suggest that more people try to use the containerized (docker) version. As it should work on basically any 64bit OS with Docker support. (That means it doesn't work on 32bit ARM/Rasp Pi)
 
 ## NOTE: The fixes below are not to be used UNLESS you're having issues, don't run these for no reason, use the distro maintainers version unless there's a reason not to.
 
@@ -20,7 +20,7 @@ sudo apt -y -t buster-backports install freerdp2-dev libpulse-dev
 
 Script for installing Guacamole 1.3.0 on Ubuntu 16.04 or newer (with MySQL, or remote MySQL). It should also work on pure [Debian](https://www.debian.org/), [Raspbian](https://www.raspberrypi.org/downloads/raspbian/), [Linux Mint](https://linuxmint.com/) (18/LMDE 4 or newer) or [Kali Linux](https://www.kali.org/). I have tested this with Debian 10.3.0 (Buster). **If other versions don't work please open an issue.** It is likely due to a required library having a different name.
 
-Run script, enter MySQL Root Password and Guacamole User password. Guacamole User is used to connect to the Guacamole Database.
+Run script, enter MySQL Root Password and Guacamole User password. Guacamole User is used to connect to the Guacamole Database. Be sure to save these!
 
 The script attempts to install `tomcat9` by default (it will fall back on `tomcat8` **if the available version is 8.5.x or newer**, otherwise it will fall back to `tomcat7`). If you want to manually specify a tomcat version there's a commented out line you can modify. Have at it.
 
