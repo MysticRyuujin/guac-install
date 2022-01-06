@@ -15,7 +15,7 @@ fi
 
 # Version number of Guacamole to install
 # Homepage ~ https://guacamole.apache.org/releases/
-GUACVERSION="1.3.0"
+GUACVERSION="1.4.0"
 
 # Latest Version of MySQL Connector/J if manual install is required (if libmariadb-java/libmysql-java is not available via apt)
 # Homepage ~ https://dev.mysql.com/downloads/connector/j/
@@ -101,7 +101,7 @@ done
 
 if [[ -z "${installTOTP}" ]] && [[ "${installDuo}" != true ]]; then
     # Prompt the user if they would like to install TOTP MFA, default of no
-    echo -e -n "${CYAN}MFA: Would you like to install TOTP? (y/N): ${NC}"
+    echo -e -n "${CYAN}MFA: Would you like to install TOTP (choose 'N' if you want Duo)? (y/N): ${NC}"
     read PROMPT
     if [[ ${PROMPT} =~ ^[Yy]$ ]]; then
         installTOTP=true
