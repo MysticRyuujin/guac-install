@@ -678,7 +678,7 @@ fi
 
 # Create guacd.conf file required for 1.4.0
 echo -e "${BLUE}Create guacd.conf file...${NC}"
-cat> > /etc/guacamole/guacd.conf <<- "EOF"
+cat >> /etc/guacamole/guacd.conf <<- "EOF"
 [server]
 bind_host = 0.0.0.0
 bind_port = 4822
