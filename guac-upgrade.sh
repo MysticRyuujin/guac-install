@@ -199,10 +199,11 @@ done
 
 # Create guacd.conf file required for 1.4.0
 echo -e "${BLUE}Create guacd.conf file...${NC}"
-cat>/etc/guacamole/guacd.conf
-echo'[server]'>/etc/guacamole/guacd.conf
-echo'bind_host = 0.0.0.0'/etc/guacamole/guacd.conf
-echo'bind_port = 4822'/etc/guacamole/guacd.conf
+cat> > /etc/guacamole/guacd.conf <<- "EOF"
+[server]
+bind_host = 0.0.0.0
+bind_port = 4822
+EOF
 
 # Start tomcat and Guacamole
 echo -e "${BLUE}Starting tomcat and guacamole...${NC}"
