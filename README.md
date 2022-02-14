@@ -147,7 +147,7 @@ Non-Interactive (MySQL root password provided via cli):
 Make sure that you configure your reverse proxy (NGinx or Apache) as per the [Official Documentation](https://guacamole.apache.org/doc/0.9.7/gug/proxying-guacamole.html)
 
 For Nginx:
-
+```
 location /guacamole/ {
     proxy_pass http://HOSTNAME:8080/guacamole/;
     proxy_buffering off;
@@ -157,12 +157,13 @@ location /guacamole/ {
     proxy_set_header Connection $http_connection;
     access_log off;
 }
-
+```
 For Apache:
-
+```
 <Location /guacamole/>
     Order allow,deny
     Allow from all
     ProxyPass http://HOSTNAME:8080/guacamole/ flushpackets=on
     ProxyPassReverse http://HOSTNAME:8080/guacamole/
 </Location>
+```
