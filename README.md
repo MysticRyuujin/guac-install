@@ -141,3 +141,28 @@ Interactive (asks for passwords):
 Non-Interactive (MySQL root password provided via cli):
 
 `./guac-upgrade.sh --mysqlpwd password`
+
+## Post Installation - Reverse Proxies
+
+Make sure that you configure your reverse proxy (NGinx or Apache) as per the [Official Documentation](https://guacamole.apache.org/doc/0.9.7/gug/proxying-guacamole.html)
+
+For Nginx:
+
+location /guacamole/ {
+    proxy_pass http://HOSTNAME:8080/guacamole/;
+    proxy_buffering off;
+    proxy_http_version 1.1;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection $http_connection;
+    access_log off;
+}
+
+For Apache:
+
+<Location /guacamole/>
+    Order allow,deny
+    Allow from all
+    ProxyPass http://HOSTNAME:8080/guacamole/ flushpackets=on
+    ProxyPassReverse http://HOSTNAME:8080/guacamole/
+</Location>
