@@ -197,6 +197,14 @@ for file in /etc/guacamole/extensions/guacamole-auth-duo*.jar; do
     fi
 done
 
+# Fix for #196
+mkdir -p /usr/sbin/.config/freerdp
+chown daemon:daemon /usr/sbin/.config/freerdp
+
+# Fix for #197
+mkdir -p /var/guacamole
+chown daemon:daemon /var/guacamole
+
 # Start tomcat and Guacamole
 echo -e "${BLUE}Starting tomcat and guacamole...${NC}"
 service ${TOMCAT} start
