@@ -417,6 +417,9 @@ cd guacamole-server-${GUACVERSION}/
 
 echo -e "${BLUE}Building Guacamole-Server with GCC $( gcc --version | head -n1 | grep -oP '\)\K.*' | awk '{print $1}' ) ${NC}"
 
+# Fix for warnings #222
+export CFLAGS="-Wno-error"
+
 echo -e "${BLUE}Configuring Guacamole-Server. This might take a minute...${NC}"
 ./configure --with-systemd-dir=/etc/systemd/system  &>> ${LOG}
 if [ $? -ne 0 ]; then
