@@ -122,7 +122,7 @@ NOTE: Only the switches for MySQL Host, MySQL Port and Guacamole Database are av
 - Upgrading from 0.9.14 or 1.1.0 to 1.4.0 has not been tested, only 1.3.0 to 1.4.0 has been tested!
 - Switches have changed and additional ones have been added!
 
-## How to Run:
+## How to Upgrade:
 
 ### Download file directly from here:
 
@@ -167,3 +167,12 @@ For Apache:
     ProxyPassReverse http://HOSTNAME:8080/guacamole/
 </Location>
 ```
+
+## NOTE: SSH doesnt work with Ubuntu 22.04:
+
+Guacamole only supports ssh-dss and ssh-rsa, and both have been disabled in Ubuntu 22.04.
+
+In the meantime a workaround is adding ```HostKeyAlgorithms +ssh-rsa``` to the end of ``` /etc/ssh/sshd_config ``` on the Ubuntu machine and restart sshd. 
+
+###### :warning: use at your own risk! :warning:
+
