@@ -4,10 +4,11 @@
 if ! [ $(id -u) = 0 ]; then echo "Please run this script as sudo or root"; exit 1 ; fi
 
 # Version number of Guacamole to install
-GUACVERSION="1.3.0"
+GUACVERSION="1.4.0"
 
 # Initialize variable values
 installTOTP=""
+installDUO=""
 
 # This is where we'll store persistent data for guacamole
 INSTALLFOLDER="/opt/guacamole"
@@ -22,6 +23,14 @@ mkdir ${MYSQLDATAFOLDER}
 
 cd ${INSTALLFOLDER}/install_files
 
+# Colors to use for output
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+CYAN='\033[0;36m'
+NC='\033[0m' # No Color
+
 # Get script arguments for non-interactive mode
 while [ "$1" != "" ]; do
     case $1 in
@@ -35,11 +44,15 @@ while [ "$1" != "" ]; do
             ;;
         -t | --totp )
             installTOTP=true
+			;;
+        -d | --duo )
+            installDUO=true
+		
     esac
     shift
 done
 
-# Get MySQL root password and Guacamole User password
+# Get MySQLroot password and Guacamole User password
 if [ -n "$mysqlpwd" ] && [ -n "$guacpwd" ]; then
         mysqlrootpassword=$mysqlpwd
         guacdbuserpassword=$guacpwd
@@ -80,7 +93,25 @@ if [[ -z "${installTOTP}" ]]; then
     fi
 fi
 
-# Update apt and install wget if it's missing
+if [[ -z "${installDUO}" ]]; then
+    # Prompt the user if they would like to install DUO MFA, default of no
+    echo -e -n "${CYAN}MFA: Would you like to install DUO? (y/N): ${NC}"
+    read PROMPT
+    if [[ ${PROMPT} =~ ^[Yy]$ ]]; then
+        installDUO=true
+    else
+        installDUO=false
+    fi
+fi
+
+# We can't install TOTP and Duo at the same time...
+if [[ "${installTOTP}" = true ]] && [ "${installDuo}" = true ]; then
+    echo -e "${RED}MFA: The script does not support installing TOTP and Duo at the same time.${NC}" 1>&2
+    exit 1
+fi
+echo
+
+# Update install wget if it's missing
 apt-get update
 apt-get -y install wget
 
@@ -106,7 +137,7 @@ else
     apt-get -y install docker-ce docker-ce-cli containerd.io
     if [ $? -ne 0 ]; then
         echo "Failed to install docker via official apt repo"
-        echo "Trying to install docker from https://get.docker.com"
+       echo "Trying to install docker from https://get.docker.com"
         wget -O get-docker.sh https://get.docker.com
         chmod +x ./get-docker.sh
         ./get-docker.sh
@@ -130,6 +161,7 @@ fi
 
 tar -xzf guacamole-auth-jdbc-${GUACVERSION}.tar.gz
 
+
 # Download and install TOTP
 if [ "${installTOTP}" = true ]; then
     wget -q --show-progress -O guacamole-auth-totp-${GUACVERSION}.tar.gz ${SERVER}/binary/guacamole-auth-totp-${GUACVERSION}.tar.gz
@@ -145,6 +177,44 @@ if [ "${installTOTP}" = true ]; then
         echo
     fi
 fi
+
+
+# Download and install DUO
+
+if [ "${installDUO}" = true ]; then
+    wget -q --show-progress -O guacamole-auth-duo-${GUACVERSION}.tar.gz ${SERVER}/binary/guacamole-auth-duo-${GUACVERSION}.tar.gz
+    if [ $? -ne 0 ]; then
+        echo -e "${RED}Failed to download guacamole-auth-duo-${GUACVERSION}.tar.gz" 1>&2
+        echo -e "${SERVER}/binary/guacamole-auth-duo-${GUACVERSION}.tar.gz"
+        exit 1
+    else
+        echo -e "${GREEN}Downloaded guacamole-auth-duo-${GUACVERSION}.tar.gz${NC}"
+        tar -xzf guacamole-auth-duo-${GUACVERSION}.tar.gz
+        echo -e "${BLUE}Moving guacamole-auth-duo-${GUACVERSION}.jar (${INSTALLFOLDER}/extensions/)...${NC}"
+        cp -f guacamole-auth-duo-${GUACVERSION}/guacamole-auth-duo-${GUACVERSION}.jar ${INSTALLFOLDER}/extensions/
+        echo
+    fi
+fi
+
+
+# Configure guacamole.properties
+rm -f ${INSTALLFOLDER}/guacamole.properties
+touch ${INSTALLFOLDER}/guacamole.properties
+echo "mysql-hostname: 127.0.0.1" >> ${INSTALLFOLDER}/guacamole.properties
+echo "mysql-port: 3306" >> ${INSTALLFOLDER}/guacamole.properties
+echo "mysql-database: guacamole_db" >> ${INSTALLFOLDER}/guacamole.properties
+echo "mysql-username: guacamole_user" >> ${INSTALLFOLDER}/guacamole.properties
+echo "mysql-password: $guacdbuserpassword" >> ${INSTALLFOLDER}/guacamole.properties
+
+# Output Duo configuration settings but comment them out for now
+if [ "${installDUO}" = true ]; then
+    echo "# duo-api-hostname: " >> ${INSTALLFOLDER}/guacamole.properties
+    echo "# duo-integration-key: " >> ${INSTALLFOLDER}/guacamole.properties
+    echo "# duo-secret-key: " >> ${INSTALLFOLDER}/guacamole.properties
+    echo "# duo-application-key: " >> ${INSTALLFOLDER}/guacamole.properties
+    echo -e "${YELLOW}Duo is installed, it will need to be configured via guacamole.properties at ${INSTALLFOLDER}/guacamole.properties${NC}"
+fi
+
 
 # Start MySQL
 docker run --restart=always --detach --name=mysql -v ${MYSQLDATAFOLDER}:/var/lib/mysql --env="MYSQL_ROOT_PASSWORD=$mysqlrootpassword" --publish 3306:3306 healthcheck/mysql --default-authentication-plugin=mysql_native_password
@@ -173,4 +243,7 @@ docker run --restart=always --name guacamole --detach --link mysql:mysql --link 
 
 # Done
 echo
-echo -e "Installation Complete\n- Visit: http://localhost:8080/guacamole/\n- Default login (username/password): guacadmin/guacadmin\n***Be sure to change the password***."
+echo -e "${YELLOW}\nInstallation Complete\n- Visit: http://localhost:8080/guacamole/\n- Default login (username/password): guacadmin/guacadmin\n***Be sure to change the password***."
+if [ "${installDUO}" = true ]; then
+    echo -e "${YELLOW}\nDon't forget to configure Duo in guacamole.properties at ${INSTALLFOLDER}/. You will not be able to login otherwise.\nhttps://guacamole.apache.org/doc/${GUACVERSION}/gug/duo-auth.html${NC}"
+fi
