@@ -202,16 +202,36 @@ for file in /etc/guacamole/extensions/guacamole-auth-saml*.jar; do
     if [[ -f $file ]]; then
         # Upgrade SAML
         echo -e "${BLUE}SAML extension was found, upgrading...${NC}"
-        rm /etc/guacamole/extensions/guacamole-auth-saml*.jar
-        wget -q --show-progress -O guacamole-auth-saml-${GUACVERSION}.tar.gz ${SERVER}/binary/guacamole-auth-saml-${GUACVERSION}.tar.gz
+        rm /etc/guacamole/extensions/guacamole-auth-sso-saml*.jar
+        wget -q --show-progress -O guacamole-auth-sso-saml-${GUACVERSION}.tar.gz ${SERVER}/binary/guacamole-auth-sso-saml-${GUACVERSION}.tar.gz
         if [ $? -ne 0 ]; then
-            echo -e "${RED}Failed to download guacamole-auth-saml-${GUACVERSION}.tar.gz"
-            echo -e "${SERVER}/binary/guacamole-auth-saml-${GUACVERSION}.tar.gz"
+            echo -e "${RED}Failed to download guacamole-auth-sso-saml-${GUACVERSION}.tar.gz"
+            echo -e "${SERVER}/binary/guacamole-auth-sso-saml-${GUACVERSION}.tar.gz"
             exit 1
         fi
-        echo -e "${GREEN}Downloaded guacamole-auth-saml-${GUACVERSION}.tar.gz${NC}"
-        tar -xzf guacamole-auth-saml-${GUACVERSION}.tar.gz
-        cp guacamole-auth-saml-${GUACVERSION}/guacamole-auth-saml-${GUACVERSION}.jar /etc/guacamole/extensions/
+        echo -e "${GREEN}Downloaded guacamole-auth-sso-saml-${GUACVERSION}.tar.gz${NC}"
+        tar -xzf guacamole-auth-sso-saml-${GUACVERSION}.tar.gz
+        cp guacamole-auth-sso-saml-${GUACVERSION}/guacamole-auth-sso-saml-${GUACVERSION}.jar /etc/guacamole/extensions/
+        echo -e "${GREEN}SAML copied to extensions.${NC}"
+
+        break
+    fi
+done
+# Handle newer install/upgrade with different package name
+for file in /etc/guacamole/extensions/guacamole-auth-sso-saml*.jar; do
+    if [[ -f $file ]]; then
+        # Upgrade SAML
+        echo -e "${BLUE}SAML extension was found, upgrading...${NC}"
+        rm /etc/guacamole/extensions/guacamole-auth-sso-saml*.jar
+        wget -q --show-progress -O guacamole-auth-sso-saml-${GUACVERSION}.tar.gz ${SERVER}/binary/guacamole-auth-sso-saml-${GUACVERSION}.tar.gz
+        if [ $? -ne 0 ]; then
+            echo -e "${RED}Failed to download guacamole-auth-sso-saml-${GUACVERSION}.tar.gz"
+            echo -e "${SERVER}/binary/guacamole-auth-sso-saml-${GUACVERSION}.tar.gz"
+            exit 1
+        fi
+        echo -e "${GREEN}Downloaded guacamole-auth-sso-saml-${GUACVERSION}.tar.gz${NC}"
+        tar -xzf guacamole-auth-sso-saml-${GUACVERSION}.tar.gz
+        cp guacamole-auth-sso-saml-${GUACVERSION}/guacamole-auth-sso-saml-${GUACVERSION}.jar /etc/guacamole/extensions/
         echo -e "${GREEN}SAML copied to extensions.${NC}"
 
         break
