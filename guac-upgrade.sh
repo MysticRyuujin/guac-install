@@ -32,7 +32,7 @@ while [ "$1" != "" ]; do
             ;;
         -r | --mysqlpwd )
             shift
-            mysqlrootpwd="$1"
+            mysqlRootPwd="$1"
             ;;
     esac
     shift
