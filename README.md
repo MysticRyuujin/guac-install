@@ -1,6 +1,8 @@
 # guac-install
 
-I've maintained this script for quite a few years now with the help of the other contributors and it seems to be getting more and more fragmented as libraries and system OSes diverge in their package management. I plan to continue maintaining the install script, but, I do highly suggest that more people try to use the containerized (docker) version. As it should work on basically any 64-bit OS with Docker support. (That means it doesn't work on 32-bit ARM/Rasp Pi.)
+I've maintained this script for quite a few years now with the help of the other contributors and it seems to be getting more and more fragmented as libraries and system OSes diverge in their package management. I do **not** plan on maintaining this beyond perhaps approving other people's PRs and letting people continue to discuss issues, so I won't archive it but I'm also not actively maintaining it 🤷‍♂️
+
+You can also check out this other [Guacamole-Setup](https://github.com/itiligent/Guacamole-Setup) repo which sets up a complete **Virtual Desktop/Jump Server appliance with MFA, Active Directory integration & Nginx SSL reverse proxy** for more inspiration.
 
 ## NOTE: The fixes below are not to be used UNLESS you're having issues, don't run these for no reason, use the distro maintainers version unless there's a reason not to.
 
@@ -23,8 +25,6 @@ Script for installing Guacamole 1.4.0 on Ubuntu 16.04 or newer (with MySQL, or r
 Run script, enter MySQL Root Password and Guacamole User password. Guacamole User is used to connect to the Guacamole Database. Be sure to save these!
 
 The script attempts to install `tomcat9` by default (it will fall back on `tomcat8` **if the available version is 8.5.x or newer**, otherwise it will fall back to `tomcat7`). If you want to manually specify a tomcat version there's a commented out line you can modify. Have at it.
-
-If you're looking to also have NGINX / Let's Encrypt / HTTPS click [HERE](https://github.com/bigredthelogger/guacamole).
 
 ## MFA/2FA
 
