@@ -15,11 +15,11 @@ fi
 
 # Version number of Guacamole to install
 # Homepage ~ https://guacamole.apache.org/releases/
-GUACVERSION="1.5.1"
+GUACVERSION="1.5.2"
 
 # Latest Version of MySQL Connector/J if manual install is required (if libmariadb-java/libmysql-java is not available via apt)
 # Homepage ~ https://dev.mysql.com/downloads/connector/j/
-MCJVER="8.0.27"
+MCJVER="8.0.33"
 
 # Colors to use for output
 YELLOW='\033[1;33m'
@@ -383,15 +383,15 @@ fi
 # Deal with missing MySQL Connector/J
 if [[ -z $LIBJAVA ]]; then
     # Download MySQL Connector/J
-    wget -q --show-progress -O mysql-connector-java-${MCJVER}.tar.gz https://dev.mysql.com/get/Downloads/Connector-J/mysql-connector-java-${MCJVER}.tar.gz
+    wget -q --show-progress -O mysql-connector-j-${MCJVER}.tar.gz https://dev.mysql.com/get/Downloads/Connector-J/mysql-connector-j-${MCJVER}.tar.gz
     if [ $? -ne 0 ]; then
-        echo -e "${RED}Failed to download mysql-connector-java-${MCJVER}.tar.gz" 1>&2
-        echo -e "https://dev.mysql.com/get/Downloads/Connector-J/mysql-connector-java-${MCJVER}.tar.gz${NC}"
+        echo -e "${RED}Failed to download mysql-connector-j-${MCJVER}.tar.gz" 1>&2
+        echo -e "https://dev.mysql.com/get/Downloads/Connector-J/mysql-connector-j-${MCJVER}.tar.gz${NC}"
         exit 1
     else
-        tar -xzf mysql-connector-java-${MCJVER}.tar.gz
+        tar -xzf mysql-connector-j-${MCJVER}.tar.gz
     fi
-    echo -e "${GREEN}Downloaded mysql-connector-java-${MCJVER}.tar.gz${NC}"
+    echo -e "${GREEN}Downloaded mysql-connector-j-${MCJVER}.tar.gz${NC}"
 else
     echo -e "${YELLOW}Skipping manually installing MySQL Connector/J${NC}"
 fi
@@ -464,8 +464,8 @@ ln -sf /etc/guacamole/guacamole.war /var/lib/${TOMCAT}/webapps/
 
 # Deal with MySQL Connector/J
 if [[ -z $LIBJAVA ]]; then
-    echo -e "${BLUE}Moving mysql-connector-java-${MCJVER}.jar (/etc/guacamole/lib/mysql-connector-java.jar)...${NC}"
-    mv -f mysql-connector-java-${MCJVER}/mysql-connector-java-${MCJVER}.jar /etc/guacamole/lib/mysql-connector-java.jar
+    echo -e "${BLUE}Moving mysql-connector-j-${MCJVER}.jar (/etc/guacamole/lib/mysql-connector-java.jar)...${NC}"
+    mv -f mysql-connector-j-${MCJVER}/mysql-connector-j-${MCJVER}.jar /etc/guacamole/lib/mysql-connector-java.jar
 elif [ -e /usr/share/java/mariadb-java-client.jar ]; then
     echo -e "${BLUE}Linking mariadb-java-client.jar  (/etc/guacamole/lib/mariadb-java-client.jar)...${NC}"
     ln -sf /usr/share/java/mariadb-java-client.jar /etc/guacamole/lib/mariadb-java-client.jar
