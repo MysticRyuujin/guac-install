@@ -4,7 +4,7 @@
 if ! [ $(id -u) = 0 ]; then echo "Please run this script as sudo or root"; exit 1 ; fi
 
 # Version number of Guacamole to install
-GUACVERSION="1.5.1"
+GUACVERSION="1.5.3"
 
 # Different version of Ubuntu/Linux Mint and Debian have different package names...
 source /etc/os-release
