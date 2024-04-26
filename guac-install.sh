@@ -278,7 +278,10 @@ fi
 # tomcat9 is the latest version
 # tomcat8.0 is end of life, but tomcat8.5 is current
 # fallback is tomcat7
-if [[ $( apt-cache show tomcat9 2> /dev/null | egrep "Version: 9" | wc -l ) -gt 0 ]]; then
+if [[ $( apt-cache show tomcat10 2> /dev/null | egrep "Version: 10" | wc -l ) -gt 0 ]]; then
+    echo -e "${BLUE}Found tomcat10 package...${NC}"
+    TOMCAT="tomcat10"
+elif [[ $( apt-cache show tomcat9 2> /dev/null | egrep "Version: 9" | wc -l ) -gt 0 ]]; then
     echo -e "${BLUE}Found tomcat9 package...${NC}"
     TOMCAT="tomcat9"
 elif [[ $( apt-cache show tomcat8 2> /dev/null | egrep "Version: 8.[5-9]" | wc -l ) -gt 0 ]]; then
