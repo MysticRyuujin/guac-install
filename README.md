@@ -125,7 +125,7 @@ NOTE: Only the switches for MySQL Host, MySQL Port and Guacamole Database are av
 
 ### Download file directly from here:
 
-`wget https://raw.githubusercontent.com/TayloredSoftware/guac-install/master/guac-upgrade.sh`
+`wget https://raw.githubusercontent.com/MysticRyuujin/guac-install/master/guac-upgrade.sh`
 
 ### Make it executable:
 
