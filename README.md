@@ -38,15 +38,19 @@ Does not work if you have MFA turned on (however, you can authenticate via the g
 
 ## How to Run:
 
-### Download file directly from here:
+#### Download file directly from here (curl required):
 
-`wget https://git.io/fxZq5 -O guac-install.sh`
+`sudo bash -c "$(curl -fsSL https://rebrand.ly/83ytb5p)"`
 
-### Make it executable:
+### Or run it in seperate commands:
+
+`wget https://rebrand.ly/83ytb5p -O guac-install.sh`
+
+#### Make it executable:
 
 `chmod +x guac-install.sh`
 
-### Run it as root:
+#### Run it as root:
 
 Interactive (asks for passwords):
 
@@ -123,15 +127,19 @@ NOTE: Only the switches for MySQL Host, MySQL Port and Guacamole Database are av
 
 ## How to Upgrade:
 
-### Download file directly from here:
+#### Download file directly from here (curl required):
 
-`wget https://raw.githubusercontent.com/MysticRyuujin/guac-install/master/guac-upgrade.sh`
+`sudo bash -c "$(curl -fsSL https://rebrand.ly/9gtqoqf)"`
 
-### Make it executable:
+### Or run it in different commands:
+
+`wget https://rebrand.ly/9gtqoqf -O guac-upgrade.sh`
+
+#### Make it executable:
 
 `chmod +x guac-upgrade.sh`
 
-### Run it as root:
+#### Run it as root:
 
 Interactive (asks for passwords):
 
