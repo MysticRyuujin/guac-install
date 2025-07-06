@@ -1,54 +1,71 @@
-#!/bin/bash
+""﻿#!/bin/bash
+# Something isn't working? # tail -f /var/log/messages /var/log/syslog /var/log/tomcat*/*.out /var/log/mysql/*.log
 
-# Guacamole Install Script (Fully Patched with Interactive Prompts, FreeRDP 3.x, Webcam, Kerberos, FUSE3, libusb, CUPS, and JSON support)
-# Updated by Madelyn Tech
+# Check if user is root or sudo
+if ! [ $( id -u ) = 0 ]; then
+    echo "Please run this script as sudo or root" 1>&2
+    exit 1
+fi
 
-set -e
+# Check to see if any old files left over
+if [ "$( find . -maxdepth 1 \( -name 'guacamole-*' -o -name 'mysql-connector-java-*' \) )" != "" ]; then
+    echo "Possible temp files detected. Please review 'guacamole-*' & 'mysql-connector-java-*'" 1>&2
+    exit 1
+fi
 
-# Color codes for prompts
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-NC='\033[0m' # No Color
+# BEGIN MODIFIED SECTION: Inject FreeRDP 3.x webcam logic, dependencies, and prompts
 
 # Versions
-guac_version="1.6.0"
-freerdp_branch="3.2.0" # Stable FreeRDP release tag recommended
-mysql_connector_version="8.0.33"
+GUACVERSION="1.6.0"
+FREERDP_BRANCH="3.2.0"
+MCJVER="8.0.33"
 
-# Interactive prompts
-clear
-echo -e "${YELLOW}Welcome to the Madelyn Tech Guacamole installer with FreeRDP 3.x support.${NC}"
-echo ""
-echo -e "${GREEN}This script will install all components, including Webcam Redirection and Duo TOTP integration.${NC}"
-echo ""
-read -p "Do you want to install Duo TOTP for Guacamole? (y/n): " install_duo
-read -p "Do you want to install MySQL and set up the Guacamole database? (y/n): " install_mysql
+# Colors to use for output
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+CYAN='\033[0;36m'
+NC='\033[0m' # No Color
 
-# Install all required dependencies
+# Prompt for TOTP and Duo
+installTOTP=""
+installDuo=""
+echo -e -n "${CYAN}MFA: Would you like to install TOTP (choose 'N' if you want Duo)? (y/N): ${NC}"
+read PROMPT
+if [[ ${PROMPT} =~ ^[Yy]$ ]]; then
+    installTOTP=true
+    installDuo=false
+else
+    echo -e -n "${CYAN}MFA: Would you like to install Duo (configure after install)? (y/N): ${NC}"
+    read PROMPT
+    if [[ ${PROMPT} =~ ^[Yy]$ ]]; then
+        installDuo=true
+    fi
+fi
+
+# Install dependencies (including what's needed for FreeRDP 3.x, webcam, and missing pieces)
+echo -e "${BLUE}Installing dependencies...${NC}"
 apt-get update
-apt-get install -y build-essential libcairo2-dev libjpeg-turbo8-dev libpng-dev \
-libtool-bin libossp-uuid-dev libavcodec-dev libavformat-dev libavutil-dev \
-libswscale-dev libpango1.0-dev libssh2-1-dev libtelnet-dev libvncserver-dev \
-libpulse-dev libssl-dev libvorbis-dev libwebp-dev tomcat9 mysql-server \
-mysql-client wget nano cmake git libx11-dev libxkbfile-dev \
-libxext-dev libxinerama-dev libxcursor-dev libxv-dev libxi-dev libxrandr-dev \
-libasound2-dev libavcodec-dev libavutil-dev libswscale-dev \
-libkrb5-dev libjson-c-dev liburiparser-dev libsystemd-dev libcups2-dev \
-libfuse3-dev libusb-1.0-0-dev
+apt-get install -y build-essential libcairo2-dev libjpeg-turbo8-dev libpng-dev libtool-bin libossp-uuid-dev \
+libavcodec-dev libavformat-dev libavutil-dev libswscale-dev libpango1.0-dev libssh2-1-dev libtelnet-dev \
+libvncserver-dev libpulse-dev libssl-dev libvorbis-dev libwebp-dev tomcat9 mysql-server mysql-client \
+libkrb5-dev libjson-c-dev liburiparser-dev libsystemd-dev libcups2-dev libfuse3-dev libusb-1.0-0-dev \
+librhash0 cmake git libx11-dev libxkbfile-dev libxext-dev libxinerama-dev libxcursor-dev libxv-dev \
+libxi-dev libxrandr-dev libasound2-dev libwebkit2gtk-4.0-dev xsltproc pkg-config \
+libpkcs11-helper1 libgtk-3-dev
 
-# Purge old FreeRDP 2.x packages if present
+# Remove conflicting FreeRDP 2.x packages
 apt remove --purge -y freerdp2-dev libfreerdp2-* || true
 apt autoremove -y
 ldconfig
 
-# Build and install FreeRDP 3.x stable release
-if [ ! -d "$HOME/FreeRDP" ]; then
-  git clone https://github.com/FreeRDP/FreeRDP.git "$HOME/FreeRDP"
-fi
-cd "$HOME/FreeRDP"
+# Build FreeRDP 3.x
+cd /usr/src || exit 1
+git clone https://github.com/FreeRDP/FreeRDP.git || true
+cd FreeRDP || exit 1
 git fetch --tags
-git checkout $freerdp_branch
+git checkout ${FREERDP_BRANCH}
 git clean -xdf
 mkdir -p build && cd build
 cmake -DWITH_X11=ON -DWITH_PULSE=ON -DCMAKE_INSTALL_PREFIX=/usr/local ..
@@ -56,109 +73,51 @@ make -j"$(nproc)"
 make install
 ldconfig
 
-# Download Guacamole Server
-cd "$HOME"
-wget "https://archive.apache.org/dist/guacamole/$guac_version/source/guacamole-server-$guac_version.tar.gz"
-tar -xzf "guacamole-server-$guac_version.tar.gz"
-cd "guacamole-server-$guac_version"
+# Download and extract Guacamole
+cd /usr/src || exit 1
+wget https://archive.apache.org/dist/guacamole/${GUACVERSION}/source/guacamole-server-${GUACVERSION}.tar.gz
+wget https://archive.apache.org/dist/guacamole/${GUACVERSION}/binary/guacamole-auth-jdbc-${GUACVERSION}.tar.gz
+wget https://archive.apache.org/dist/guacamole/${GUACVERSION}/binary/guacamole-${GUACVERSION}.war -O /var/lib/tomcat9/webapps/guacamole.war
+wget https://dev.mysql.com/get/Downloads/Connector-J/mysql-connector-java-${MCJVER}.tar.gz
 
-# Build and install Guacamole Server
-./configure --with-init-dir=/etc/init.d
+tar -xzf guacamole-server-${GUACVERSION}.tar.gz
+cd guacamole-server-${GUACVERSION}
+./configure --with-init-dir=/etc/init.d --enable-allow-freerdp-snapshots
 make -j"$(nproc)"
 make install
 ldconfig
 
-# Setup Guacamole directories and MySQL extensions
-mkdir -p /etc/guacamole /usr/share/tomcat9/.guacamole/extensions /usr/share/tomcat9/.guacamole/lib
+# Setup directories
+tar -xzf ../guacamole-auth-jdbc-${GUACVERSION}.tar.gz
+tar -xzf ../mysql-connector-java-${MCJVER}.tar.gz
+mkdir -p /etc/guacamole/lib /etc/guacamole/extensions
+cp mysql-connector-java-${MCJVER}/mysql-connector-java-${MCJVER}.jar /etc/guacamole/lib/
+cp guacamole-auth-jdbc-${GUACVERSION}/mysql/guacamole-auth-jdbc-mysql-${GUACVERSION}.jar /etc/guacamole/extensions/
 
-# Download Guacamole Client
-cd "$HOME"
-wget "https://archive.apache.org/dist/guacamole/$guac_version/binary/guacamole-$guac_version.war" -O /var/lib/tomcat9/webapps/guacamole.war
+# Prompt for MySQL root password
+echo -e -n "${CYAN}Enter MySQL root password for webcam configuration: ${NC}"
+read -s mysqlRootPwd
 
-# Setup MySQL Authentication Extension
-cd "$HOME"
-wget "https://archive.apache.org/dist/guacamole/$guac_version/binary/guacamole-auth-jdbc-$guac_version.tar.gz"
-tar -xzf "guacamole-auth-jdbc-$guac_version.tar.gz"
-cp "guacamole-auth-jdbc-$guac_version/mysql/guacamole-auth-jdbc-mysql-$guac_version.jar" \
-  /usr/share/tomcat9/.guacamole/extensions/
-
-# Download MySQL Connector manually
-cd "$HOME"
-wget "https://dev.mysql.com/get/Downloads/Connector-J/mysql-connector-java-$mysql_connector_version.tar.gz"
-tar -xzf "mysql-connector-java-$mysql_connector_version.tar.gz"
-cp "mysql-connector-java-$mysql_connector_version/mysql-connector-java-$mysql_connector_version.jar" /usr/share/tomcat9/.guacamole/lib/mysql-connector-java.jar
-
-# Install Duo TOTP if requested
-if [[ "$install_duo" == "y" || "$install_duo" == "Y" ]]; then
-  echo -e "${YELLOW}Installing Duo TOTP extension...${NC}"
-  cd "$HOME"
-  wget "https://archive.apache.org/dist/guacamole/$guac_version/binary/guacamole-auth-totp-$guac_version.tar.gz"
-  tar -xzf "guacamole-auth-totp-$guac_version.tar.gz"
-  cp "guacamole-auth-totp-$guac_version/guacamole-auth-totp-$guac_version.jar" \
-    /usr/share/tomcat9/.guacamole/extensions/
-fi
-
-# Setup MySQL Database if requested
-if [[ "$install_mysql" == "y" || "$install_mysql" == "Y" ]]; then
-  echo -e "${YELLOW}Setting up MySQL Guacamole database...${NC}"
-  mysql -u root -p <<EOF
-CREATE DATABASE IF NOT EXISTS guacamole_db;
-CREATE USER IF NOT EXISTS 'guacamole_user'@'localhost' IDENTIFIED BY 'yourpassword';
-GRANT SELECT,INSERT,UPDATE,DELETE ON guacamole_db.* TO 'guacamole_user'@'localhost';
-FLUSH PRIVILEGES;
-EOF
-fi
-
-# Setup guacamole.properties
-cat > /etc/guacamole/guacamole.properties <<EOF
-guacd-hostname: localhost
-guacd-port: 4822
-mysql-hostname: localhost
-mysql-port: 3306
-mysql-database: guacamole_db
-mysql-username: guacamole_user
-mysql-password: yourpassword
-EOF
-
-# Permissions
-chown -R tomcat9:tomcat9 /etc/guacamole /usr/share/tomcat9/.guacamole
-
-# Prompt for MySQL root password to modify connection parameters
-echo ""
-echo -e "${GREEN}Webcam redirection setup:${NC}"
-read -sp "Enter MySQL root password for webcam configuration: " mysql_root_password
-echo ""
-
-# Enable Webcam Redirection for default connection
-mysql -u root -p"${mysql_root_password}" <<EOF
+# Insert webcam parameters
+echo "Configuring webcam redirection in database..."
+mysql -u root -p"${mysqlRootPwd}" <<EOF
 USE guacamole_db;
 SET @conn_id = (SELECT connection_id FROM guacamole_connection WHERE connection_name = 'Windows Server' LIMIT 1);
-INSERT INTO guacamole_connection_parameter (connection_id, parameter_name, parameter_value)
-SELECT @conn_id, 'enable-webcam', 'true'
-WHERE @conn_id IS NOT NULL;
-INSERT INTO guacamole_connection_parameter (connection_id, parameter_name, parameter_value)
-SELECT @conn_id, 'webcam-name', 'Integrated Webcam'
-WHERE @conn_id IS NOT NULL;
-INSERT INTO guacamole_connection_parameter (connection_id, parameter_name, parameter_value)
-SELECT @conn_id, 'webcam-fps', '15'
-WHERE @conn_id IS NOT NULL;
-INSERT INTO guacamole_connection_parameter (connection_id, parameter_name, parameter_value)
-SELECT @conn_id, 'webcam-width', '640'
-WHERE @conn_id IS NOT NULL;
-INSERT INTO guacamole_connection_parameter (connection_id, parameter_name, parameter_value)
-SELECT @conn_id, 'webcam-height', '480'
-WHERE @conn_id IS NOT NULL;
+INSERT INTO guacamole_connection_parameter (connection_id, parameter_name, parameter_value) SELECT @conn_id, 'enable-webcam', 'true' WHERE @conn_id IS NOT NULL;
+INSERT INTO guacamole_connection_parameter (connection_id, parameter_name, parameter_value) SELECT @conn_id, 'webcam-name', 'Integrated Webcam' WHERE @conn_id IS NOT NULL;
+INSERT INTO guacamole_connection_parameter (connection_id, parameter_name, parameter_value) SELECT @conn_id, 'webcam-fps', '15' WHERE @conn_id IS NOT NULL;
+INSERT INTO guacamole_connection_parameter (connection_id, parameter_name, parameter_value) SELECT @conn_id, 'webcam-width', '640' WHERE @conn_id IS NOT NULL;
+INSERT INTO guacamole_connection_parameter (connection_id, parameter_name, parameter_value) SELECT @conn_id, 'webcam-height', '480' WHERE @conn_id IS NOT NULL;
 EOF
 
 # Restart services
 systemctl restart guacd
 tomcat9
 
-# Done
-echo ""
+# Final output
 echo -e "${GREEN}Installation Complete${NC}"
-echo "- Visit: http://localhost:8080/guacamole/"
-echo "- Default login (username/password): guacadmin/guacadmin"
+echo -e "- Visit: http://localhost:8080/guacamole/"
+echo -e "- Default login (username/password): guacadmin/guacadmin"
 echo -e "${YELLOW}*** Be sure to change the password ***${NC}"
 
 exit 0
