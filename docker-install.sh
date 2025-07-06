@@ -4,7 +4,7 @@
 if ! [ $(id -u) = 0 ]; then echo "Please run this script as sudo or root"; exit 1 ; fi
 
 # Version number of Guacamole to install
-GUACVERSION="1.5.5"
+GUACVERSION="1.6.0"
 
 # Initialize variable values
 installTOTP=""
