@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Guacamole Install Script (Reworked for FreeRDP 3.x with Webcam Redirection and Fixed MySQL Connector)
+# Guacamole Install Script (Reworked for FreeRDP 3.x with Webcam Redirection, Kerberos, and JSON Support)
 # Updated by Madelyn Tech
 
 set -e
@@ -10,7 +10,7 @@ guac_version="1.6.0"
 freerdp_branch="master" # Adjust this to a stable 3.x tag if needed
 mysql_connector_version="8.0.33"
 
-# Install dependencies (excluding freerdp2-dev and deprecated libmysql-java)
+# Install dependencies (including Kerberos, JSON, URI parser)
 apt-get update
 apt-get install -y build-essential libcairo2-dev libjpeg-turbo8-dev libpng-dev \
 libtool-bin libossp-uuid-dev libavcodec-dev libavformat-dev libavutil-dev \
@@ -18,7 +18,8 @@ libswscale-dev libpango1.0-dev libssh2-1-dev libtelnet-dev libvncserver-dev \
 libpulse-dev libssl-dev libvorbis-dev libwebp-dev tomcat9 mysql-server \
 mysql-client wget nano cmake git libx11-dev libxkbfile-dev \
 libxext-dev libxinerama-dev libxcursor-dev libxv-dev libxi-dev libxrandr-dev \
-libasound2-dev libavcodec-dev libavutil-dev libswscale-dev
+libasound2-dev libavcodec-dev libavutil-dev libswscale-dev \
+libkrb5-dev libjson-c-dev liburiparser-dev libsystemd-dev
 
 # Purge any existing FreeRDP 2.x packages to avoid conflicts
 apt remove --purge -y freerdp2-dev libfreerdp2-* || true
