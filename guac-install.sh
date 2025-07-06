@@ -1,16 +1,31 @@
 #!/bin/bash
 
-# Guacamole Install Script (Reworked for FreeRDP 3.x with Webcam Redirection, Kerberos, and JSON Support)
+# Guacamole Install Script (Fully Patched with Interactive Prompts, FreeRDP 3.x, Webcam, Kerberos, FUSE3, libusb, CUPS, and JSON support)
 # Updated by Madelyn Tech
 
 set -e
 
+# Color codes for prompts
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m' # No Color
+
 # Versions
 guac_version="1.6.0"
-freerdp_branch="master" # Adjust this to a stable 3.x tag if needed
+freerdp_branch="3.2.0" # Stable FreeRDP release tag recommended
 mysql_connector_version="8.0.33"
 
-# Install dependencies (including Kerberos, JSON, URI parser)
+# Interactive prompts
+clear
+echo -e "${YELLOW}Welcome to the Madelyn Tech Guacamole installer with FreeRDP 3.x support.${NC}"
+echo ""
+echo -e "${GREEN}This script will install all components, including Webcam Redirection and Duo TOTP integration.${NC}"
+echo ""
+read -p "Do you want to install Duo TOTP for Guacamole? (y/n): " install_duo
+read -p "Do you want to install MySQL and set up the Guacamole database? (y/n): " install_mysql
+
+# Install all required dependencies
 apt-get update
 apt-get install -y build-essential libcairo2-dev libjpeg-turbo8-dev libpng-dev \
 libtool-bin libossp-uuid-dev libavcodec-dev libavformat-dev libavutil-dev \
@@ -19,14 +34,15 @@ libpulse-dev libssl-dev libvorbis-dev libwebp-dev tomcat9 mysql-server \
 mysql-client wget nano cmake git libx11-dev libxkbfile-dev \
 libxext-dev libxinerama-dev libxcursor-dev libxv-dev libxi-dev libxrandr-dev \
 libasound2-dev libavcodec-dev libavutil-dev libswscale-dev \
-libkrb5-dev libjson-c-dev liburiparser-dev libsystemd-dev
+libkrb5-dev libjson-c-dev liburiparser-dev libsystemd-dev libcups2-dev \
+libfuse3-dev libusb-1.0-0-dev
 
-# Purge any existing FreeRDP 2.x packages to avoid conflicts
+# Purge old FreeRDP 2.x packages if present
 apt remove --purge -y freerdp2-dev libfreerdp2-* || true
 apt autoremove -y
 ldconfig
 
-# Build and install FreeRDP 3.x
+# Build and install FreeRDP 3.x stable release
 if [ ! -d "$HOME/FreeRDP" ]; then
   git clone https://github.com/FreeRDP/FreeRDP.git "$HOME/FreeRDP"
 fi
@@ -72,6 +88,27 @@ wget "https://dev.mysql.com/get/Downloads/Connector-J/mysql-connector-java-$mysq
 tar -xzf "mysql-connector-java-$mysql_connector_version.tar.gz"
 cp "mysql-connector-java-$mysql_connector_version/mysql-connector-java-$mysql_connector_version.jar" /usr/share/tomcat9/.guacamole/lib/mysql-connector-java.jar
 
+# Install Duo TOTP if requested
+if [[ "$install_duo" == "y" || "$install_duo" == "Y" ]]; then
+  echo -e "${YELLOW}Installing Duo TOTP extension...${NC}"
+  cd "$HOME"
+  wget "https://archive.apache.org/dist/guacamole/$guac_version/binary/guacamole-auth-totp-$guac_version.tar.gz"
+  tar -xzf "guacamole-auth-totp-$guac_version.tar.gz"
+  cp "guacamole-auth-totp-$guac_version/guacamole-auth-totp-$guac_version.jar" \
+    /usr/share/tomcat9/.guacamole/extensions/
+fi
+
+# Setup MySQL Database if requested
+if [[ "$install_mysql" == "y" || "$install_mysql" == "Y" ]]; then
+  echo -e "${YELLOW}Setting up MySQL Guacamole database...${NC}"
+  mysql -u root -p <<EOF
+CREATE DATABASE IF NOT EXISTS guacamole_db;
+CREATE USER IF NOT EXISTS 'guacamole_user'@'localhost' IDENTIFIED BY 'yourpassword';
+GRANT SELECT,INSERT,UPDATE,DELETE ON guacamole_db.* TO 'guacamole_user'@'localhost';
+FLUSH PRIVILEGES;
+EOF
+fi
+
 # Setup guacamole.properties
 cat > /etc/guacamole/guacamole.properties <<EOF
 guacd-hostname: localhost
@@ -87,7 +124,10 @@ EOF
 chown -R tomcat9:tomcat9 /etc/guacamole /usr/share/tomcat9/.guacamole
 
 # Prompt for MySQL root password to modify connection parameters
+echo ""
+echo -e "${GREEN}Webcam redirection setup:${NC}"
 read -sp "Enter MySQL root password for webcam configuration: " mysql_root_password
+echo ""
 
 # Enable Webcam Redirection for default connection
 mysql -u root -p"${mysql_root_password}" <<EOF
@@ -116,9 +156,9 @@ tomcat9
 
 # Done
 echo ""
-echo "Installation Complete"
+echo -e "${GREEN}Installation Complete${NC}"
 echo "- Visit: http://localhost:8080/guacamole/"
 echo "- Default login (username/password): guacadmin/guacadmin"
-echo "*** Be sure to change the password ***."
+echo -e "${YELLOW}*** Be sure to change the password ***${NC}"
 
 exit 0
