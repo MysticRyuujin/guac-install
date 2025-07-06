@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# Guacamole Install Script (Reworked for FreeRDP 3.x)
-# Updated by Madelyn Tech to support webcam redirection (RDPECAM)
+# Guacamole Install Script (Reworked for FreeRDP 3.x with Webcam Redirection)
+# Updated by Madelyn Tech
 
 set -e
 
@@ -12,12 +12,12 @@ freerdp_branch="master" # Adjust this to a stable 3.x tag if needed
 # Install dependencies (excluding freerdp2-dev)
 apt-get update
 apt-get install -y build-essential libcairo2-dev libjpeg-turbo8-dev libpng-dev \
-  libtool-bin libossp-uuid-dev libavcodec-dev libavformat-dev libavutil-dev \
-  libswscale-dev libpango1.0-dev libssh2-1-dev libtelnet-dev libvncserver-dev \
-  libpulse-dev libssl-dev libvorbis-dev libwebp-dev tomcat9 mysql-server \
-  mysql-client libmysql-java wget nano cmake git libx11-dev libxkbfile-dev \
-  libxext-dev libxinerama-dev libxcursor-dev libxv-dev libxi-dev libxrandr-dev \
-  libasound2-dev libavcodec-dev libavutil-dev libswscale-dev
+libtool-bin libossp-uuid-dev libavcodec-dev libavformat-dev libavutil-dev \
+libswscale-dev libpango1.0-dev libssh2-1-dev libtelnet-dev libvncserver-dev \
+libpulse-dev libssl-dev libvorbis-dev libwebp-dev tomcat9 mysql-server \
+mysql-client libmysql-java wget nano cmake git libx11-dev libxkbfile-dev \
+libxext-dev libxinerama-dev libxcursor-dev libxv-dev libxi-dev libxrandr-dev \
+libasound2-dev libavcodec-dev libavutil-dev libswscale-dev
 
 # Purge any existing FreeRDP 2.x packages to avoid conflicts
 apt remove --purge -y freerdp2-dev libfreerdp2-* || true
@@ -78,6 +78,30 @@ EOF
 
 # Permissions
 chown -R tomcat9:tomcat9 /etc/guacamole /usr/share/tomcat9/.guacamole
+
+# Prompt for MySQL root password to modify connection parameters
+read -sp "Enter MySQL root password for webcam configuration: " mysql_root_password
+
+# Enable Webcam Redirection for default connection
+mysql -u root -p"${mysql_root_password}" <<EOF
+USE guacamole_db;
+SET @conn_id = (SELECT connection_id FROM guacamole_connection WHERE connection_name = 'Windows Server' LIMIT 1);
+INSERT INTO guacamole_connection_parameter (connection_id, parameter_name, parameter_value)
+SELECT @conn_id, 'enable-webcam', 'true'
+WHERE @conn_id IS NOT NULL;
+INSERT INTO guacamole_connection_parameter (connection_id, parameter_name, parameter_value)
+SELECT @conn_id, 'webcam-name', 'Integrated Webcam'
+WHERE @conn_id IS NOT NULL;
+INSERT INTO guacamole_connection_parameter (connection_id, parameter_name, parameter_value)
+SELECT @conn_id, 'webcam-fps', '15'
+WHERE @conn_id IS NOT NULL;
+INSERT INTO guacamole_connection_parameter (connection_id, parameter_name, parameter_value)
+SELECT @conn_id, 'webcam-width', '640'
+WHERE @conn_id IS NOT NULL;
+INSERT INTO guacamole_connection_parameter (connection_id, parameter_name, parameter_value)
+SELECT @conn_id, 'webcam-height', '480'
+WHERE @conn_id IS NOT NULL;
+EOF
 
 # Restart services
 systemctl restart guacd
