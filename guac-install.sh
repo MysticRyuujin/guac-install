@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Guacamole Install Script (Reworked for FreeRDP 3.x with Webcam Redirection)
+# Guacamole Install Script (Reworked for FreeRDP 3.x with Webcam Redirection and Fixed MySQL Connector)
 # Updated by Madelyn Tech
 
 set -e
@@ -8,14 +8,15 @@ set -e
 # Versions
 guac_version="1.6.0"
 freerdp_branch="master" # Adjust this to a stable 3.x tag if needed
+mysql_connector_version="8.0.33"
 
-# Install dependencies (excluding freerdp2-dev)
+# Install dependencies (excluding freerdp2-dev and deprecated libmysql-java)
 apt-get update
 apt-get install -y build-essential libcairo2-dev libjpeg-turbo8-dev libpng-dev \
 libtool-bin libossp-uuid-dev libavcodec-dev libavformat-dev libavutil-dev \
 libswscale-dev libpango1.0-dev libssh2-1-dev libtelnet-dev libvncserver-dev \
 libpulse-dev libssl-dev libvorbis-dev libwebp-dev tomcat9 mysql-server \
-mysql-client libmysql-java wget nano cmake git libx11-dev libxkbfile-dev \
+mysql-client wget nano cmake git libx11-dev libxkbfile-dev \
 libxext-dev libxinerama-dev libxcursor-dev libxv-dev libxi-dev libxrandr-dev \
 libasound2-dev libavcodec-dev libavutil-dev libswscale-dev
 
@@ -63,7 +64,12 @@ wget "https://archive.apache.org/dist/guacamole/$guac_version/binary/guacamole-a
 tar -xzf "guacamole-auth-jdbc-$guac_version.tar.gz"
 cp "guacamole-auth-jdbc-$guac_version/mysql/guacamole-auth-jdbc-mysql-$guac_version.jar" \
   /usr/share/tomcat9/.guacamole/extensions/
-ln -s /usr/share/java/mysql-connector-java.jar /usr/share/tomcat9/.guacamole/lib/mysql-connector-java.jar
+
+# Download MySQL Connector manually
+cd "$HOME"
+wget "https://dev.mysql.com/get/Downloads/Connector-J/mysql-connector-java-$mysql_connector_version.tar.gz"
+tar -xzf "mysql-connector-java-$mysql_connector_version.tar.gz"
+cp "mysql-connector-java-$mysql_connector_version/mysql-connector-java-$mysql_connector_version.jar" /usr/share/tomcat9/.guacamole/lib/mysql-connector-java.jar
 
 # Setup guacamole.properties
 cat > /etc/guacamole/guacamole.properties <<EOF
