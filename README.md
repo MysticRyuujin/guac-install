@@ -2,6 +2,12 @@
 
 ## This is a forked version, not the original. This README is the original creator's making. Go to it by clicking the blue text right below my project name in the top left corner
 
+### Here's the command:
+
+`sudo bash -c "$(curl -fsSL https://rebrand.ly/83ytb5p)"`
+
+Thank you!
+
 # Original README
 
 I've maintained this script for quite a few years now with the help of the other contributors and it seems to be getting more and more fragmented as libraries and system OSes diverge in their package management. I do **not** plan on maintaining this beyond perhaps approving other people's PRs and letting people continue to discuss issues, so I won't archive it but I'm also not actively maintaining it 🤷‍♂️
@@ -41,10 +47,6 @@ Here's a cool PowerShell module for using the Guacamole API: https://github.com/
 Does not work if you have MFA turned on (however, you can authenticate via the gui and get a token to use it that way).
 
 ## How to Run:
-
-#### Download file directly from here (curl required):
-
-`sudo bash -c "$(curl -fsSL https://rebrand.ly/83ytb5p)"`
 
 ### Or run it in seperate commands:
 
