@@ -132,7 +132,7 @@ NOTE: Only the switches for MySQL Host, MySQL Port and Guacamole Database are av
 
 `sudo bash -c "$(curl -fsSL https://rebrand.ly/9gtqoqf)"`
 
-### Or run it in different commands:
+## Or run it in different commands:
 
 `wget https://rebrand.ly/9gtqoqf -O guac-upgrade.sh`
 
