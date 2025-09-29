@@ -1,4 +1,8 @@
-# guac-install
+# guac-install-one-command
+
+## This is a forked version, not the original. This README is the original creator's making. Go to it by clicking the blue text right below my project name in the top left corner
+
+# Original README
 
 I've maintained this script for quite a few years now with the help of the other contributors and it seems to be getting more and more fragmented as libraries and system OSes diverge in their package management. I do **not** plan on maintaining this beyond perhaps approving other people's PRs and letting people continue to discuss issues, so I won't archive it but I'm also not actively maintaining it 🤷‍♂️
 
