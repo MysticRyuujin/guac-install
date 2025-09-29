@@ -128,7 +128,7 @@ NOTE: Only the switches for MySQL Host, MySQL Port and Guacamole Database are av
 
 ## How to Upgrade:
 
-#### Download file directly from here (curl required):
+## Simple upgrade
 
 `sudo bash -c "$(curl -fsSL https://rebrand.ly/9gtqoqf)"`
 
