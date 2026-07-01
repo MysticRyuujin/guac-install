@@ -16,10 +16,15 @@ INSTALLFOLDER="/opt/guacamole"
 # This is where we'll store persistent data for mysql
 MYSQLDATAFOLDER="/opt/mysql"
 
+# This is where we'll store persistent data for guacd
+GUACDFOLDER="/opt/guacd"
+
 # Make folders!
 mkdir -p ${INSTALLFOLDER}/install_files
 mkdir ${INSTALLFOLDER}/extensions
 mkdir ${MYSQLDATAFOLDER}
+mkdir ${GUACDFOLDER}
+chown 1000:1000 ${GUACDFOLDER}
 
 cd ${INSTALLFOLDER}/install_files
 
@@ -241,8 +246,8 @@ echo $SQLCODE | docker exec -i mysql-guacamole mysql -h 127.0.0.1 -P 3306 -u roo
 
 cat guacamole-auth-jdbc-${GUACVERSION}/mysql/schema/*.sql | docker exec -i mysql-guacamole mysql -u root -p$mysqlrootpassword -h 127.0.0.1 -P 3306 guacamole_db
 
-docker run --restart=always --name guacd --network guacamole --detach guacamole/guacd:${GUACVERSION}
-docker run --restart=always --name guacamole --network guacamole --detach -v ${INSTALLFOLDER}:/etc/guacamole -e MYSQL_HOSTNAME=mysql-guacamole -e MYSQL_DATABASE=guacamole_db -e MYSQL_USER=guacamole_user -e MYSQL_PASSWORD=$guacdbuserpassword -e GUACAMOLE_HOME=/etc/guacamole -p 8080:8080 guacamole/guacamole:${GUACVERSION}
+docker run --restart=always --name guacd --network guacamole --detach -v ${GUACDFOLDER}:/data guacamole/guacd:${GUACVERSION}
+docker run --restart=always --name guacamole --network guacamole --detach -v ${INSTALLFOLDER}:/etc/guacamole -e MYSQL_HOSTNAME=mysql-guacamole -e MYSQL_DATABASE=guacamole_db -e MYSQL_USER=guacamole_user -e MYSQL_PASSWORD=$guacdbuserpassword -e GUACAMOLE_HOME=/etc/guacamole -e GUACD_HOSTNAME=guacd -p 8080:8080 guacamole/guacamole:${GUACVERSION}
 
 # Done
 echo
