@@ -16,10 +16,15 @@ INSTALLFOLDER="/opt/guacamole"
 # This is where we'll store persistent data for mysql
 MYSQLDATAFOLDER="/opt/mysql"
 
+# This is where we'll store persistent data for guacd
+GUACDFOLDER="/opt/guacd"
+
 # Make folders!
 mkdir -p ${INSTALLFOLDER}/install_files
 mkdir ${INSTALLFOLDER}/extensions
 mkdir ${MYSQLDATAFOLDER}
+mkdir ${GUACDFOLDER}
+chown 1000:1000 ${GUACDFOLDER}
 
 cd ${INSTALLFOLDER}/install_files
 
@@ -148,6 +153,9 @@ else
     fi
 fi
 
+# Create Docker Network
+docker network create guacamole
+
 # Set SERVER to be the preferred download server from the Apache CDN
 SERVER="http://apache.org/dyn/closer.cgi?action=download&filename=guacamole/${GUACVERSION}"
 
@@ -200,7 +208,7 @@ fi
 # Configure guacamole.properties
 rm -f ${INSTALLFOLDER}/guacamole.properties
 touch ${INSTALLFOLDER}/guacamole.properties
-echo "mysql-hostname: 127.0.0.1" >> ${INSTALLFOLDER}/guacamole.properties
+echo "mysql-hostname: mysql-guacamole" >> ${INSTALLFOLDER}/guacamole.properties
 echo "mysql-port: 3306" >> ${INSTALLFOLDER}/guacamole.properties
 echo "mysql-database: guacamole_db" >> ${INSTALLFOLDER}/guacamole.properties
 echo "mysql-username: guacamole_user" >> ${INSTALLFOLDER}/guacamole.properties
@@ -217,11 +225,11 @@ fi
 
 
 # Start MySQL
-docker run --restart=always --detach --name=mysql -v ${MYSQLDATAFOLDER}:/var/lib/mysql --env="MYSQL_ROOT_PASSWORD=$mysqlrootpassword" --publish 3306:3306 healthcheck/mysql --default-authentication-plugin=mysql_native_password
+docker run --restart=always --detach --name=mysql-guacamole --network guacamole -v ${MYSQLDATAFOLDER}:/var/lib/mysql --env="MYSQL_ROOT_PASSWORD=$mysqlrootpassword" healthcheck/mysql --default-authentication-plugin=mysql_native_password
 
 # Wait for the MySQL Health Check equal "healthy"
 echo "Waiting for MySQL to be healthy"
-until [ "$(/usr/bin/docker inspect -f {{.State.Health.Status}} mysql)" == "healthy" ]; do
+until [ "$(/usr/bin/docker inspect -f {{.State.Health.Status}} mysql-guacamole)" == "healthy" ]; do
     sleep 0.1;
 done;
 
@@ -234,12 +242,12 @@ GRANT SELECT,INSERT,UPDATE,DELETE ON guacamole_db.* TO 'guacamole_user'@'%';
 flush privileges;"
 
 # Execute SQL Code
-echo $SQLCODE | mysql -h 127.0.0.1 -P 3306 -u root -p$mysqlrootpassword
+echo $SQLCODE | docker exec -i mysql-guacamole mysql -h 127.0.0.1 -P 3306 -u root -p$mysqlrootpassword
 
-cat guacamole-auth-jdbc-${GUACVERSION}/mysql/schema/*.sql | mysql -u root -p$mysqlrootpassword -h 127.0.0.1 -P 3306 guacamole_db
+cat guacamole-auth-jdbc-${GUACVERSION}/mysql/schema/*.sql | docker exec -i mysql-guacamole mysql -u root -p$mysqlrootpassword -h 127.0.0.1 -P 3306 guacamole_db
 
-docker run --restart=always --name guacd --detach guacamole/guacd:${GUACVERSION}
-docker run --restart=always --name guacamole --detach --link mysql:mysql --link guacd:guacd -v ${INSTALLFOLDER}:/etc/guacamole -e MYSQL_HOSTNAME=127.0.0.1 -e MYSQL_DATABASE=guacamole_db -e MYSQL_USER=guacamole_user -e MYSQL_PASSWORD=$guacdbuserpassword -e GUACAMOLE_HOME=/etc/guacamole -p 8080:8080 guacamole/guacamole:${GUACVERSION}
+docker run --restart=always --name guacd --network guacamole --detach -v ${GUACDFOLDER}:/data guacamole/guacd:${GUACVERSION}
+docker run --restart=always --name guacamole --network guacamole --detach -v ${INSTALLFOLDER}:/etc/guacamole -e MYSQL_HOSTNAME=mysql-guacamole -e MYSQL_DATABASE=guacamole_db -e MYSQL_USER=guacamole_user -e MYSQL_PASSWORD=$guacdbuserpassword -e GUACAMOLE_HOME=/etc/guacamole -e GUACD_HOSTNAME=guacd -p 8080:8080 guacamole/guacamole:${GUACVERSION}
 
 # Done
 echo
