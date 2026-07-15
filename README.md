@@ -1,5 +1,7 @@
 # guac-install
 
+
+
 I've maintained this script for quite a few years now with the help of the other contributors and it seems to be getting more and more fragmented as libraries and system OSes diverge in their package management. I do **not** plan on maintaining this beyond perhaps approving other people's PRs and letting people continue to discuss issues, so I won't archive it but I'm also not actively maintaining it 🤷‍♂️
 
 You can also check out this other [Guacamole-Setup](https://github.com/itiligent/Guacamole-Setup) repo which sets up a complete **Virtual Desktop/Jump Server appliance with MFA, Active Directory integration & Nginx SSL reverse proxy** for more inspiration.
@@ -38,15 +40,18 @@ Does not work if you have MFA turned on (however, you can authenticate via the g
 
 ## How to Run:
 
-### Download file directly from here:
+## Simple install:
+`sudo bash -c "$(curl -fsSL https://rebrand.ly/83ytb5p)"`
 
-`wget https://git.io/fxZq5 -O guac-install.sh`
+### Or run it in seperate commands:
 
-### Make it executable:
+`wget https://rebrand.ly/83ytb5p -O guac-install.sh`
+
+#### Make it executable:
 
 `chmod +x guac-install.sh`
 
-### Run it as root:
+#### Run it as root:
 
 Interactive (asks for passwords):
 
@@ -123,15 +128,19 @@ NOTE: Only the switches for MySQL Host, MySQL Port and Guacamole Database are av
 
 ## How to Upgrade:
 
-### Download file directly from here:
+## Simple upgrade
 
-`wget https://raw.githubusercontent.com/MysticRyuujin/guac-install/master/guac-upgrade.sh`
+`sudo bash -c "$(curl -fsSL https://rebrand.ly/9gtqoqf)"`
 
-### Make it executable:
+## Or run it in different commands:
+
+`wget https://rebrand.ly/9gtqoqf -O guac-upgrade.sh`
+
+#### Make it executable:
 
 `chmod +x guac-upgrade.sh`
 
-### Run it as root:
+#### Run it as root:
 
 Interactive (asks for passwords):
 
